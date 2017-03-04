@@ -6,10 +6,18 @@ An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, 
 * Updates and deletes must include a where-clause specifying the primary key.
 
 The driver is designed to work with applications using JPA/Hibernate.
+The driver currently ignores transaction statements (commit/rollback) and effectively runs in autocommit mode.
 
 Example usage:
 spring.datasource.driver-class-name=nl.topicus.jdbc.CloudSpannerDriver
 spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL
 
+You need to create an environment variable GOOGLE_APPLICATION_CREDENTIALS that points to a credentials file for a Google Cloud Spanner project.
+
 The server name (in the example above: localhost) is ignored by the driver, but as it is a mandatory part of a JDBC URL it needs to be specified.
 The property 'SimulateProductName' indicates what database name should be returned by the method DatabaseMetaData.getDatabaseProductName().
+
+TODO:
+* Implement transactions
+* Support DDL-statements (CREATE TABLE..., ALTER TABLE ..., etc)
+
