@@ -1,5 +1,6 @@
 package nl.topicus.jdbc.statement;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -219,6 +220,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			else if (Double.class.isAssignableFrom(value.getClass()))
 			{
 				binder.to(((Double) value).doubleValue());
+			}
+			else if (BigDecimal.class.isAssignableFrom(value.getClass()))
+			{
+				binder.to(((BigDecimal) value).doubleValue());
 			}
 			else if (Date.class.isAssignableFrom(value.getClass()))
 			{
