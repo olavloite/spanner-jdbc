@@ -16,8 +16,6 @@ import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
-import com.google.cloud.spanner.TransactionContext;
-import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
 /**
  * JDBC Driver for Google Cloud Spanner.
@@ -110,26 +108,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public void commit() throws SQLException
 	{
-		TransactionCallable<Void> callable = new TransactionCallable<Void>()
-		{
-
-			@Override
-			public Void run(TransactionContext transaction) throws Exception
-			{
-				// TODO Auto-generated method stub
-				return null;
-			}
-		};
-		dbClient.readWriteTransaction().run(callable);
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void rollback() throws SQLException
 	{
-		// TODO Auto-generated method stub
-
 	}
 
 	protected void startNewTransaction()
