@@ -21,3 +21,11 @@ TODO:
 * Implement transactions
 * Support DDL-statements (CREATE TABLE..., ALTER TABLE ..., etc)
 
+
+Credits
+This application uses Open Source components. You can find the source code of their open source projects along with license information below.
+
+A special thanks to Tobias for his great JSqlParser library.
+Project: JSqlParser https://github.com/JSQLParser/JSqlParser 
+Copyright (C) 2004 - 2017 JSQLParser Tobias
+
