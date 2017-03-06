@@ -1,6 +1,7 @@
 package nl.topicus.jdbc;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
@@ -741,8 +742,34 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException
 	{
-		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION FROM information_schema.tables AS t ORDER BY TABLE_NAME";
-		return connection.createStatement().executeQuery(sql);
+		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION "
+				+ "FROM information_schema.tables AS t " + "WHERE 1=1 ";
+		if (catalog != null)
+			sql = sql + "AND UPPER(t.TABLE_CAT) like ? ";
+		if (schemaPattern != null)
+			sql = sql + "AND UPPER(t.TABLE_SCHEMA) like ? ";
+		if (tableNamePattern != null)
+			sql = sql + "AND UPPER(t.TABLE_NAME) like ? ";
+		sql = sql + "ORDER BY TABLE_NAME";
+
+		PreparedStatement statement = connection.prepareStatement(sql);
+		int paramIndex = 1;
+		if (catalog != null)
+		{
+			statement.setString(paramIndex, catalog.toUpperCase());
+			paramIndex++;
+		}
+		if (schemaPattern != null)
+		{
+			statement.setString(paramIndex, schemaPattern.toUpperCase());
+			paramIndex++;
+		}
+		if (tableNamePattern != null)
+		{
+			statement.setString(paramIndex, tableNamePattern.toUpperCase());
+			paramIndex++;
+		}
+		return statement.executeQuery();
 	}
 
 	@Override
@@ -769,22 +796,48 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 			throws SQLException
 	{
 		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, 1 AS DATA_TYPE, SPANNER_TYPE AS TYPE_NAME, "
-				+ "0 AS COLUMN_LENGTH, 0 AS BUFFER_LENGTH, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, "
+				+ "0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, "
 				+ "CASE "
 				+ "	WHEN IS_NULLABLE = 'YES' THEN 1 "
 				+ "	WHEN IS_NULLABLE = 'NO' THEN 0 "
 				+ "	ELSE 2 "
 				+ "END AS NULLABLE, NULL AS REMARKS, NULL AS COLUMN_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATETIME_SUB, 0 AS CHAR_OCTET_LENGTH, ORDINAL_POSITION, IS_NULLABLE, NULL AS SCOPE_CATALOG, "
 				+ "NULL AS SCOPE_SCHEMA, NULL AS SCOPE_TABLE, NULL AS SOURCE_DATA_TYPE, 'NO' AS IS_AUTOINCREMENT, 'NO' AS IS_GENERATEDCOLUMN "
-				+ "FROM information_schema.columns "
-				+ "WHERE TABLE_NAME LIKE %TABLE_NAME% "
-				+ "AND COLUMN_NAME LIKE %COLUMN_NAME% "
-				+ "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
+				+ "FROM information_schema.columns " + "WHERE 1=1 ";
 
-		sql = sql.replace("%TABLE_NAME%", tableNamePattern == null ? "%" : tableNamePattern);
-		sql = sql.replace("%COLUMN_NAME%", columnNamePattern == null ? "%" : columnNamePattern);
+		if (catalog != null)
+			sql = sql + "AND UPPER(TABLE_CATALOG) like ? ";
+		if (schemaPattern != null)
+			sql = sql + "AND UPPER(TABLE_SCHEMA) like ? ";
+		if (tableNamePattern != null)
+			sql = sql + "AND UPPER(TABLE_NAME) like ? ";
+		if (columnNamePattern != null)
+			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
+		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
 
-		return connection.createStatement().executeQuery(sql);
+		PreparedStatement statement = connection.prepareStatement(sql);
+		int paramIndex = 1;
+		if (catalog != null)
+		{
+			statement.setString(paramIndex, catalog.toUpperCase());
+			paramIndex++;
+		}
+		if (schemaPattern != null)
+		{
+			statement.setString(paramIndex, schemaPattern.toUpperCase());
+			paramIndex++;
+		}
+		if (tableNamePattern != null)
+		{
+			statement.setString(paramIndex, tableNamePattern.toUpperCase());
+			paramIndex++;
+		}
+		if (columnNamePattern != null)
+		{
+			statement.setString(paramIndex, columnNamePattern.toUpperCase());
+			paramIndex++;
+		}
+		return statement.executeQuery();
 	}
 
 	@Override
@@ -828,7 +881,39 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 	@Override
 	public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT PARENT.TABLE_CATALOG AS PKTABLE_CAT, PARENT.TABLE_SCHEMA AS PKTABLE_SCHEM, PARENT.TABLE_NAME AS PKTABLE_NAME, COL.COLUMN_NAME AS PKCOLUMN_NAME, CHILD.TABLE_CATALOG AS FKTABLE_CAT, CHILD.TABLE_SCHEMA AS FKTABLE_SCHEM, CHILD.TABLE_NAME AS FKTABLE_NAME, COL.COLUMN_NAME FKCOLUMN_NAME, COL.ORDINAL_POSITION AS KEY_SEQ, 3 AS UPDATE_RULE, CASE WHEN CHILD.ON_DELETE_ACTION = 'CASCADE' THEN 0 ELSE 3 END AS DELETE_RULE, NULL AS FK_NAME, INDEXES.INDEX_NAME AS PK_NAME, 7 AS DEFERRABILITY "
+				+ "FROM INFORMATION_SCHEMA.TABLES CHILD "
+				+ "INNER JOIN INFORMATION_SCHEMA.TABLES PARENT ON CHILD.TABLE_CATALOG=PARENT.TABLE_CATALOG AND CHILD.TABLE_SCHEMA=PARENT.TABLE_SCHEMA AND CHILD.PARENT_TABLE_NAME=PARENT.TABLE_NAME "
+				+ "INNER JOIN INFORMATION_SCHEMA.INDEXES ON PARENT.TABLE_CATALOG=INDEXES.TABLE_CATALOG AND PARENT.TABLE_SCHEMA=INDEXES.TABLE_SCHEMA AND PARENT.TABLE_NAME=INDEXES.TABLE_NAME AND INDEXES.INDEX_TYPE='PRIMARY_KEY' "
+				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS COL ON INDEXES.TABLE_CATALOG=COL.TABLE_CATALOG AND INDEXES.TABLE_SCHEMA=COL.TABLE_SCHEMA AND INDEXES.TABLE_NAME=COL.TABLE_NAME AND INDEXES.INDEX_NAME=COL.INDEX_NAME "
+				+ "WHERE CHILD.PARENT_TABLE_NAME IS NOT NULL ";
+
+		if (catalog != null)
+			sql = sql + "AND UPPER(CHILD.TABLE_CATALOG) like ? ";
+		if (schema != null)
+			sql = sql + "AND UPPER(CHILD.TABLE_SCHEMA) like ? ";
+		if (table != null)
+			sql = sql + "AND UPPER(CHILD.TABLE_NAME) like ? ";
+		sql = sql + "ORDER BY PARENT.TABLE_CATALOG, PARENT.TABLE_SCHEMA, PARENT.TABLE_NAME, COL.ORDINAL_POSITION ";
+
+		PreparedStatement statement = connection.prepareStatement(sql);
+		int paramIndex = 1;
+		if (catalog != null)
+		{
+			statement.setString(paramIndex, catalog.toUpperCase());
+			paramIndex++;
+		}
+		if (schema != null)
+		{
+			statement.setString(paramIndex, schema.toUpperCase());
+			paramIndex++;
+		}
+		if (table != null)
+		{
+			statement.setString(paramIndex, table.toUpperCase());
+			paramIndex++;
+		}
+		return statement.executeQuery();
 	}
 
 	@Override
@@ -854,7 +939,39 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 	public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
 			throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "select idx.TABLE_CATALOG AS TABLE_CAT, idx.TABLE_SCHEMA AS TABLE_SCHEM, idx.TABLE_NAME, CASE WHEN IS_UNIQUE THEN FALSE ELSE TRUE END AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, idx.INDEX_NAME, 3 AS TYPE, ORDINAL_POSITION, COLUMN_NAME, SUBSTR(COLUMN_ORDERING, 0, 1) AS ASC_OR_DESC, -1 AS CARDINALITY, -1 AS PAGES, NULL AS FILTER_CONDITION "
+				+ "FROM information_schema.indexes idx "
+				+ "INNER JOIN information_schema.index_columns col on idx.table_catalog=col.table_catalog and idx.table_schema=col.table_schema and idx.table_name=col.table_name and idx.index_name=col.index_name "
+				+ "WHERE 1=1 ";
+
+		if (catalog != null)
+			sql = sql + "AND UPPER(idx.TABLE_CATALOG) like ? ";
+		if (schema != null)
+			sql = sql + "AND UPPER(idx.TABLE_SCHEMA) like ? ";
+		if (table != null)
+			sql = sql + "AND UPPER(idx.TABLE_NAME) like ? ";
+		if (unique)
+			sql = sql + "AND IS_UNIQUE ";
+		sql = sql + "ORDER BY IS_UNIQUE, INDEX_NAME, ORDINAL_POSITION ";
+
+		PreparedStatement statement = connection.prepareStatement(sql);
+		int paramIndex = 1;
+		if (catalog != null)
+		{
+			statement.setString(paramIndex, catalog.toUpperCase());
+			paramIndex++;
+		}
+		if (schema != null)
+		{
+			statement.setString(paramIndex, schema.toUpperCase());
+			paramIndex++;
+		}
+		if (table != null)
+		{
+			statement.setString(paramIndex, table.toUpperCase());
+			paramIndex++;
+		}
+		return statement.executeQuery();
 	}
 
 	@Override
