@@ -1,5 +1,6 @@
 package nl.topicus.jdbc.statement;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -41,7 +42,8 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public int executeUpdate(String sql) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		return ps.executeUpdate();
 	}
 
 	@Override
