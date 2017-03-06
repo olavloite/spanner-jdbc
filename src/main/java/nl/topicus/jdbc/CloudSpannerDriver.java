@@ -1,8 +1,5 @@
 package nl.topicus.jdbc;
 
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
@@ -71,15 +68,7 @@ public class CloudSpannerDriver implements Driver
 			else
 				throw new SQLException("Unknown URL parameter " + conPart);
 		}
-		if (keyFile != null)
-		{
-			Path path = FileSystems.getDefault().getPath(keyFile);
-			if (!Files.isReadable(path))
-			{
-				throw new SQLException("Could not find or read key file " + keyFile);
-			}
-		}
-		CloudSpannerConnection connection = new CloudSpannerConnection(project, instance, database);
+		CloudSpannerConnection connection = new CloudSpannerConnection(url, project, instance, database, keyFile);
 		connection.setSimulateProductName(productName);
 		return connection;
 	}

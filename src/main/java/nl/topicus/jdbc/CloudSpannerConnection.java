@@ -1,5 +1,10 @@
 package nl.topicus.jdbc;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.AccessControlException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -7,15 +12,23 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
+import com.google.cloud.spanner.Operation;
 import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
+import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
 /**
  * JDBC Driver for Google Cloud Spanner.
@@ -25,7 +38,11 @@ import com.google.cloud.spanner.SpannerOptions.Builder;
  */
 public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 {
+	private Spanner spanner;
+
 	private DatabaseClient dbClient;
+
+	private DatabaseAdminClient adminClient;
 
 	private boolean autoCommit;
 
@@ -37,29 +54,96 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private String simulateProductName;
 
-	CloudSpannerConnection(String projectId, String instanceId, String database) throws SQLException
+	private String instanceId;
+
+	private String database;
+
+	CloudSpannerConnection(String url, String projectId, String instanceId, String database, String credentialsPath)
+			throws SQLException
 	{
+		this.instanceId = instanceId;
+		this.database = database;
+		this.url = url;
 		try
 		{
 			Builder builder = SpannerOptions.newBuilder();
 			if (projectId != null)
 				builder.setProjectId(projectId);
+			if (credentialsPath != null)
+			{
+				GoogleCredentials credentials = getCredentialsFromFile(credentialsPath);
+				builder.setCredentials(credentials);
+			}
 
 			SpannerOptions options = builder.build();
-			Spanner spanner = options.getService();
+			spanner = options.getService();
 			dbClient = spanner.getDatabaseClient(DatabaseId.of(options.getProjectId(), instanceId, database));
+			adminClient = spanner.getDatabaseAdminClient();
 		}
 		catch (Exception e)
 		{
 			throw new SQLException("Error when opening Google Cloud Spanner connection", e);
 		}
-		url = "jdbc:cloudspanner://localhost;Project=" + projectId + ";Instance=" + instanceId + ";Database="
-				+ database;
+	}
+
+	private final GoogleCredentials getCredentialsFromFile(String credentialsPath) throws IOException
+	{
+		HttpTransport transport = new NetHttpTransport();
+		// First try the environment variable
+		GoogleCredentials credentials = null;
+		if (credentialsPath != null && credentialsPath.length() > 0)
+		{
+			InputStream credentialsStream = null;
+			try
+			{
+				File credentialsFile = new File(credentialsPath);
+				if (!credentialsFile.isFile())
+				{
+					// Path will be put in the message from the catch block
+					// below
+					throw new IOException("File does not exist.");
+				}
+				credentialsStream = new FileInputStream(credentialsFile);
+				credentials = GoogleCredentials.fromStream(credentialsStream, transport);
+			}
+			catch (IOException e)
+			{
+				throw new IOException(String.format("Error reading credential file %s: %s", credentialsPath,
+						e.getMessage()), e);
+			}
+			catch (AccessControlException expected)
+			{
+				// Exception querying file system is expected on App-Engine
+			}
+			finally
+			{
+				if (credentialsStream != null)
+				{
+					credentialsStream.close();
+				}
+			}
+		}
+		return credentials;
 	}
 
 	public void setSimulateProductName(String productName)
 	{
 		this.simulateProductName = productName;
+	}
+
+	public Void executeDDL(String sql) throws SQLException
+	{
+		try
+		{
+			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(instanceId, database,
+					Arrays.asList(sql), null);
+			operation.waitFor();
+			return operation.getResult();
+		}
+		catch (SpannerException e)
+		{
+			throw new SQLException("Could not execute DDL statement", e);
+		}
 	}
 
 	String getProductName()
@@ -124,6 +208,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void close() throws SQLException
 	{
 		// TODO Stop running transaction
+		spanner.closeAsync();
 		closed = true;
 	}
 
