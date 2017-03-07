@@ -82,7 +82,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 		catch (Exception e)
 		{
-			throw new SQLException("Error when opening Google Cloud Spanner connection", e);
+			throw new SQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(), e);
 		}
 	}
 
