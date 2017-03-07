@@ -212,15 +212,17 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	 * 
 	 * @param sql
 	 *            The sql to format
-	 * @return The formatted DDL statement
+	 * @return The formatted DDL statement.
+	 * @throws SQLException
 	 */
-	private String formatDDLStatement(String sql)
+	private String formatDDLStatement(String sql) throws SQLException
 	{
-		String res = sql.toUpperCase();
+		String res = sql.trim().toUpperCase();
 		String[] parts = res.split("\\s+");
 		if (parts.length >= 2)
 		{
-			if (parts[0].equals("CREATE") && parts[1].equals("TABLE"))
+			String sqlWithSingleSpaces = String.join(" ", parts);
+			if (sqlWithSingleSpaces.startsWith("CREATE TABLE"))
 			{
 				int primaryKeyIndex = res.indexOf(", PRIMARY KEY (");
 				if (primaryKeyIndex > -1)
