@@ -5,7 +5,7 @@ An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, 
 * Inserts can only insert one row at a time
 * Updates and deletes must include a where-clause specifying the primary key.
 
-The driver is designed to work with applications using JPA/Hibernate.
+The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 The driver currently ignores transaction statements (commit/rollback) and effectively runs in autocommit mode.
 
 Example usage:
