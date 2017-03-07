@@ -8,18 +8,23 @@ An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, 
 The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 The driver currently ignores transaction statements (commit/rollback) and effectively runs in autocommit mode.
 
+The driver also supports DDL-statements, although the DDL syntax of Google Cloud Spanner is quite limited in comparison to most relational databases.
+
 Example usage:
 spring.datasource.driver-class-name=nl.topicus.jdbc.CloudSpannerDriver
-spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL
+spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL;PvtKeyPath=key_file
 
-You need to create an environment variable GOOGLE_APPLICATION_CREDENTIALS that points to a credentials file for a Google Cloud Spanner project.
+The last two properties (SimulateProductName and PvtKeyPath) are optional.
+
+You either need to
+	1. Create an environment variable GOOGLE_APPLICATION_CREDENTIALS that points to a credentials file for a Google Cloud 	Spanner project.
+	2. OR Supply the parameter PvtKeyPath that points to a file containing the credentials to use.
 
 The server name (in the example above: localhost) is ignored by the driver, but as it is a mandatory part of a JDBC URL it needs to be specified.
 The property 'SimulateProductName' indicates what database name should be returned by the method DatabaseMetaData.getDatabaseProductName().
 
 TODO:
 * Implement transactions
-* Support DDL-statements (CREATE TABLE..., ALTER TABLE ..., etc)
 
 
 Credits
