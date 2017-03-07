@@ -14,8 +14,28 @@
 	<version>${spannerjdbc.version}</version>
 	<name>spanner-jdbc</name>
 	<description>JDBC Driver for Google Cloud Spanner</description>
+	<url>https://github.com/olavloite/spanner-jdbc</url>
 	<packaging>jar</packaging>
-
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>http://www.opensource.org/licenses/mit-license.php</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Knut Olav Loite</name>
+			<email>koloite@gmail.com</email>
+			<organization>Topicus</organization>
+			<organizationUrl>http://www.topicus.nl</organizationUrl>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git://github.com/olavloite/spanner-jdbc.git</connection>
+		<developerConnection>scm:git:ssh://github.com:olavloite/spanner-jdbc.git</developerConnection>
+		<url>https://github.com/olavloite/spanner-jdbc</url>
+	</scm>
+	
 	<dependencies>
 		<dependency>
 			<groupId>com.google.cloud</groupId>
@@ -36,6 +56,16 @@
 				<filtering>false</filtering>
 			</resource>
 		</resources>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 </project>
