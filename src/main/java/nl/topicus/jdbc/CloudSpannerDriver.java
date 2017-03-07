@@ -10,6 +10,16 @@ import java.util.logging.Logger;
 
 public class CloudSpannerDriver implements Driver
 {
+	static
+	{
+		try
+		{
+			java.sql.DriverManager.registerDriver(new CloudSpannerDriver());
+		}
+		catch (SQLException e)
+		{
+		}
+	}
 	static final int MAJOR_VERSION = 1;
 
 	static final int MINOR_VERSION = 0;
@@ -82,7 +92,9 @@ public class CloudSpannerDriver implements Driver
 	@Override
 	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException
 	{
-		return null;
+		DriverPropertyInfo[] res = new DriverPropertyInfo[0];
+
+		return res;
 	}
 
 	@Override
@@ -100,7 +112,7 @@ public class CloudSpannerDriver implements Driver
 	@Override
 	public boolean jdbcCompliant()
 	{
-		return false;
+		return true;
 	}
 
 	@Override
