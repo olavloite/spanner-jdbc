@@ -25,12 +25,19 @@ The property 'SimulateProductName' indicates what database name should be return
 
 Releases are available on Maven Central. Current release is version 0.1.
 
-<dependency>
-	<groupId>nl.topicus</groupId>
-	<artifactId>spanner-jdbc</artifactId>
-	<version>0.1</version>
-</dependency>
-
+<pre>
+	<dependency>
+		<groupId>nl.topicus</groupId>
+		<artifactId>spanner-jdbc</artifactId>
+		<version>0.1</version>
+	</dependency>
+</pre>
+<div class="highlight highlight-text-xml"><pre>
+	&lt;<span class="pl-ent">dependency</span>&gt;
+    	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
+    &lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
+    &lt;<span class="pl-ent">version</span>&gt;0.1&lt;/<span class="pl-ent">version</span>&gt;
+&lt;/<span class="pl-ent">dependency</span>&gt;</pre></div>
 
 TODO:
 * Implement transactions
