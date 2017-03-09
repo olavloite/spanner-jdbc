@@ -28,9 +28,10 @@ Releases are available on Maven Central. Current release is version 0.1.
 <div class="highlight highlight-text-xml"><pre>
 	&lt;<span class="pl-ent">dependency</span>&gt;
     	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
-    &lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    &lt;<span class="pl-ent">version</span>&gt;0.1&lt;/<span class="pl-ent">version</span>&gt;
-&lt;/<span class="pl-ent">dependency</span>&gt;</pre></div>
+    	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.1&lt;/<span class="pl-ent">version</span>&gt;
+	&lt;/<span class="pl-ent">dependency</span>&gt;
+</pre></div>
 
 TODO:
 * Implement transactions
