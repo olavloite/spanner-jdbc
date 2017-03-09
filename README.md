@@ -23,6 +23,15 @@ You either need to
 The server name (in the example above: localhost) is ignored by the driver, but as it is a mandatory part of a JDBC URL it needs to be specified.
 The property 'SimulateProductName' indicates what database name should be returned by the method DatabaseMetaData.getDatabaseProductName().
 
+Releases are available on Maven Central. Current release is version 0.1.
+
+<dependency>
+	<groupId>nl.topicus</groupId>
+	<artifactId>spanner-jdbc</artifactId>
+	<version>0.1</version>
+</dependency>
+
+
 TODO:
 * Implement transactions
 
