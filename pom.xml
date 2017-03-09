@@ -31,7 +31,7 @@
 	</developers>
 	<scm>
 		<connection>scm:git:https://github.com/olavloite/spanner-jdbc.git</connection>
-		<developerConnection>scm:git:https://github.com:olavloite/spanner-jdbc.git</developerConnection>
+		<developerConnection>scm:git:https://github.com/olavloite/spanner-jdbc.git</developerConnection>
 		<url>https://github.com/olavloite/spanner-jdbc</url>
 	  <tag>spanner-jdbc-0.1</tag>
   </scm>
