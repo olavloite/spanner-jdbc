@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -11,7 +10,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.topicus</groupId>
 	<artifactId>spanner-jdbc</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<name>spanner-jdbc</name>
 	<description>JDBC Driver for Google Cloud Spanner</description>
 	<url>https://github.com/olavloite/spanner-jdbc</url>
@@ -34,7 +33,8 @@
 		<connection>scm:git:olavloite://github.com/olavloite/spanner-jdbc.git</connection>
 		<developerConnection>scm:git:olavloite://github.com/olavloite/spanner-jdbc.git</developerConnection>
 		<url>https://github.com/olavloite/spanner-jdbc</url>
-	</scm>
+	  <tag>spanner-jdbc-0.1</tag>
+  </scm>
 
 	<dependencies>
 		<dependency>
