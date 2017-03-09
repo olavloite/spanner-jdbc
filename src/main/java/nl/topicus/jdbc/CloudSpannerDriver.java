@@ -44,8 +44,10 @@ public class CloudSpannerDriver implements Driver
 	 *            ;Database=databaseName;PvtKeyPath
 	 *            =path_to_key_file;SimulateProductName=product_name
 	 * @param info
+	 *            not used
 	 * @return A CloudSpannerConnection
 	 * @throws SQLException
+	 *             if an error occurs while connecting to Google Cloud Spanner
 	 */
 	@Override
 	public Connection connect(String url, Properties info) throws SQLException
