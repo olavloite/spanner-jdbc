@@ -25,13 +25,6 @@ The property 'SimulateProductName' indicates what database name should be return
 
 Releases are available on Maven Central. Current release is version 0.1.
 
-<pre>
-	<dependency>
-		<groupId>nl.topicus</groupId>
-		<artifactId>spanner-jdbc</artifactId>
-		<version>0.1</version>
-	</dependency>
-</pre>
 <div class="highlight highlight-text-xml"><pre>
 	&lt;<span class="pl-ent">dependency</span>&gt;
     	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
