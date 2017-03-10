@@ -1,14 +1,9 @@
 package nl.topicus.jdbc.statement;
 
-import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Timestamp;
 import java.util.List;
-
-import javax.xml.bind.DatatypeConverter;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.DateValue;
@@ -18,7 +13,6 @@ import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
 import net.sf.jsqlparser.expression.HexValue;
 import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.NullValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.TimeValue;
 import net.sf.jsqlparser.expression.TimestampValue;
@@ -39,16 +33,13 @@ import net.sf.jsqlparser.statement.select.WithItem;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
-import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
-import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
-import com.google.cloud.spanner.ValueBinder;
 
 /**
  * 
@@ -147,8 +138,9 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				@Override
 				public void visit(JdbcParameter parameter)
 				{
-					parameter.accept(new SpannerExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder>(
-							builder.bind("p" + parameter.getIndex())));
+					parameter
+							.accept(new ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder>(
+									getParameteStore(), builder.bind("p" + parameter.getIndex())));
 				}
 
 				@Override
@@ -247,134 +239,6 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return res;
 	}
 
-	private class SpannerExpressionVisitorAdapter<R> extends ExpressionVisitorAdapter
-	{
-		private ValueBinder<R> binder;
-
-		private SpannerExpressionVisitorAdapter(ValueBinder<R> binder)
-		{
-			this.binder = binder;
-		}
-
-		private void setValue(Object value)
-		{
-			if (value == null)
-			{
-				// Set to null, type does not matter
-				binder.to((Boolean) null);
-			}
-			else if (Boolean.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to((Boolean) value);
-			}
-			else if (Byte.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to(((Byte) value).longValue());
-			}
-			else if (Integer.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to(((Integer) value).longValue());
-			}
-			else if (Long.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to(((Long) value).longValue());
-			}
-			else if (Float.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to(((Float) value).doubleValue());
-			}
-			else if (Double.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to(((Double) value).doubleValue());
-			}
-			else if (BigDecimal.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to(((BigDecimal) value).doubleValue());
-			}
-			else if (Date.class.isAssignableFrom(value.getClass()))
-			{
-				Date dateValue = (Date) value;
-				binder.to(CloudSpannerConversionUtil.toCloudSpannerDate(dateValue));
-			}
-			else if (Timestamp.class.isAssignableFrom(value.getClass()))
-			{
-				Timestamp timeValue = (Timestamp) value;
-				binder.to(CloudSpannerConversionUtil.toCloudSpannerTimestamp(timeValue));
-			}
-			else if (String.class.isAssignableFrom(value.getClass()))
-			{
-				binder.to((String) value);
-			}
-			else if (byte[].class.isAssignableFrom(value.getClass()))
-			{
-				binder.to(ByteArray.copyFrom((byte[]) value));
-			}
-			else
-			{
-				throw new IllegalArgumentException("Unsupported parameter type: " + value.getClass().getName() + " - "
-						+ value.toString());
-			}
-		}
-
-		@Override
-		public void visit(JdbcParameter parameter)
-		{
-			Object value = getParameteStore().getParameter(parameter.getIndex());
-			setValue(value);
-		}
-
-		@Override
-		public void visit(NullValue value)
-		{
-			setValue(null);
-		}
-
-		@Override
-		public void visit(DoubleValue value)
-		{
-			setValue(value.getValue());
-		}
-
-		@Override
-		public void visit(LongValue value)
-		{
-			setValue(value.getValue());
-		}
-
-		@Override
-		public void visit(DateValue value)
-		{
-			setValue(value.getValue());
-		}
-
-		@Override
-		public void visit(TimeValue value)
-		{
-			setValue(value.getValue());
-		}
-
-		@Override
-		public void visit(TimestampValue value)
-		{
-			setValue(value.getValue());
-		}
-
-		@Override
-		public void visit(StringValue value)
-		{
-			setValue(value.getValue());
-		}
-
-		@Override
-		public void visit(HexValue value)
-		{
-			String stringValue = value.getValue().substring(2);
-			byte[] byteValue = DatatypeConverter.parseHexBinary(stringValue);
-			setValue(byteValue);
-		}
-
-	}
-
 	private int performInsert(Insert insert) throws SQLException
 	{
 		return getDbClient().readWriteTransaction().run(new TransactionCallable<Integer>()
@@ -393,8 +257,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				int index = 0;
 				for (Column col : insert.getColumns())
 				{
-					expressions.get(index)
-							.accept(new SpannerExpressionVisitorAdapter<WriteBuilder>(builder.set(col
+					expressions.get(index).accept(
+							new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
 									.getFullyQualifiedName())));
 					index++;
 				}
@@ -423,33 +287,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				int index = 0;
 				for (Column col : update.getColumns())
 				{
-					expressions.get(index)
-							.accept(new SpannerExpressionVisitorAdapter<WriteBuilder>(builder.set(col
+					expressions.get(index).accept(
+							new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
 									.getFullyQualifiedName())));
 					index++;
 				}
-				Expression where = update.getWhere();
-				if (where != null)
-				{
-					where.accept(new ExpressionVisitorAdapter()
-					{
-						private Column col;
-
-						@Override
-						public void visit(Column column)
-						{
-							this.col = column;
-						}
-
-						@Override
-						public void visit(JdbcParameter parameter)
-						{
-							parameter.accept(new SpannerExpressionVisitorAdapter<WriteBuilder>(builder.set(col
-									.getFullyQualifiedName())));
-						}
-
-					});
-				}
+				visitUpdateWhereClause(update.getWhere(), builder);
 
 				transaction.buffer(builder.build());
 
@@ -471,22 +314,85 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				Key.Builder keyBuilder = Key.newBuilder();
 				if (where != null)
 				{
-					where.accept(new ExpressionVisitorAdapter()
-					{
-						@Override
-						public void visit(JdbcParameter parameter)
-						{
-							Object value = getParameteStore().getParameter(parameter.getIndex());
-							keyBuilder.appendObject(value);
-						}
-
-					});
+					where.accept(new KeyBuilderExpressionVisitorAdapter<>(getParameteStore(), keyBuilder));
 				}
 				transaction.buffer(Mutation.delete(table, keyBuilder.build()));
 
 				return 1;
 			}
 		});
+	}
+
+	private void visitUpdateWhereClause(Expression where, WriteBuilder builder)
+	{
+		if (where != null)
+		{
+			where.accept(new ExpressionVisitorAdapter()
+			{
+				private Column col;
+
+				@Override
+				public void visit(Column column)
+				{
+					this.col = column;
+				}
+
+				private void visitExpression(Expression expression)
+				{
+					expression.accept(new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder
+							.set(col.getFullyQualifiedName())));
+				}
+
+				@Override
+				public void visit(JdbcParameter parameter)
+				{
+					visitExpression(parameter);
+				}
+
+				@Override
+				public void visit(DoubleValue value)
+				{
+					visitExpression(value);
+				}
+
+				@Override
+				public void visit(LongValue value)
+				{
+					visitExpression(value);
+				}
+
+				@Override
+				public void visit(DateValue value)
+				{
+					visitExpression(value);
+				}
+
+				@Override
+				public void visit(TimeValue value)
+				{
+					visitExpression(value);
+				}
+
+				@Override
+				public void visit(TimestampValue value)
+				{
+					visitExpression(value);
+				}
+
+				@Override
+				public void visit(StringValue value)
+				{
+					visitExpression(value);
+				}
+
+				@Override
+				public void visit(HexValue value)
+				{
+					visitExpression(value);
+				}
+
+			});
+		}
 	}
 
 	private int executeDDL(String ddl) throws SQLException
