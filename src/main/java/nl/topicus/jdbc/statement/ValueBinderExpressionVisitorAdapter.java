@@ -9,7 +9,7 @@ import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.ValueBinder;
 
-class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerSetValueVisitor<R>
+class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVisitorAdapter<R>
 {
 	private ValueBinder<R> binder;
 
