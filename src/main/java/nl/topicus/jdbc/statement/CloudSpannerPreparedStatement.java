@@ -305,10 +305,6 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				String table = delete.getTable().getFullyQualifiedName();
 				Expression where = delete.getWhere();
 				Key.Builder keyBuilder = Key.newBuilder();
-//				if (where != null)
-//				{
-//					where.accept(new KeyBuilderExpressionVisitorAdapter<>(getParameteStore(), keyBuilder));
-//				}
 				visitDeleteWhereClause(where, keyBuilder);
 				transaction.buffer(Mutation.delete(table, keyBuilder.build()));
 
