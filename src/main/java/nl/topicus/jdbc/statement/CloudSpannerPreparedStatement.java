@@ -67,7 +67,6 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new SQLException("Error while parsing sql statement", e);
 		}
-		;
 		if (statement instanceof Select)
 		{
 			String namedSql = convertPositionalParametersToNamedParameters(sql);

@@ -5,6 +5,7 @@ import java.math.MathContext;
 import java.sql.Date;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -19,6 +20,12 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	private boolean closed = false;
 
 	private boolean wasNull = false;
+
+	private boolean beforeFirst = true;
+
+	private boolean nextCalledForMetaData = false;
+
+	private boolean nextCalledForMetaDataResult = false;
 
 	private Statement statement;
 
@@ -36,6 +43,12 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public boolean next() throws SQLException
 	{
+		if (!beforeFirst && nextCalledForMetaData)
+		{
+			nextCalledForMetaData = false;
+			return nextCalledForMetaDataResult;
+		}
+		beforeFirst = false;
 		return resultSet.next();
 	}
 
@@ -170,6 +183,12 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException
 	{
+		if (beforeFirst)
+		{
+			nextCalledForMetaDataResult = resultSet.next();
+			beforeFirst = false;
+			nextCalledForMetaData = true;
+		}
 		return new CloudSpannerResultSetMetaData(resultSet);
 	}
 
@@ -301,6 +320,17 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public float getFloat(String columnLabel) throws SQLException
 	{
 		return isNull(columnLabel) ? 0 : (float) resultSet.getDouble(columnLabel);
+	}
+
+	@Override
+	public SQLWarning getWarnings() throws SQLException
+	{
+		return null;
+	}
+
+	@Override
+	public void clearWarnings() throws SQLException
+	{
 	}
 
 }

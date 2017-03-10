@@ -50,13 +50,13 @@ public class CloudSpannerResultSetMetaData implements ResultSetMetaData
 	@Override
 	public boolean isSearchable(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return true;
 	}
 
 	@Override
 	public boolean isCurrency(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return false;
 	}
 
 	@Override
@@ -68,13 +68,14 @@ public class CloudSpannerResultSetMetaData implements ResultSetMetaData
 	@Override
 	public boolean isSigned(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		int type = getColumnType(column);
+		return type == Types.DOUBLE || type == Types.BIGINT;
 	}
 
 	@Override
 	public int getColumnDisplaySize(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return 0;
 	}
 
 	@Override
@@ -92,31 +93,31 @@ public class CloudSpannerResultSetMetaData implements ResultSetMetaData
 	@Override
 	public String getSchemaName(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return "";
 	}
 
 	@Override
 	public int getPrecision(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return 0;
 	}
 
 	@Override
 	public int getScale(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return 0;
 	}
 
 	@Override
 	public String getTableName(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return "";
 	}
 
 	@Override
 	public String getCatalogName(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return "";
 	}
 
 	@Override

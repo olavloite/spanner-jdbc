@@ -5,6 +5,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
@@ -18,6 +22,10 @@ import com.google.cloud.spanner.DatabaseClient;
 public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 {
 	private DatabaseClient dbClient;
+
+	private ResultSet lastResultSet = null;
+
+	private int lastUpdateCount = -1;
 
 	public CloudSpannerStatement(CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
@@ -49,13 +57,53 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public boolean execute(String sql) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		Statement statement;
+		try
+		{
+			statement = CCJSqlParserUtil.parse(sql);
+		}
+		catch (JSQLParserException e)
+		{
+			throw new SQLException("Error while parsing sql statement", e);
+		}
+		if (statement instanceof Select)
+		{
+			lastResultSet = executeQuery(sql);
+			lastUpdateCount = -1;
+			return true;
+		}
+		else
+		{
+			lastUpdateCount = executeUpdate(sql);
+			lastResultSet = null;
+			return false;
+		}
+	}
+
+	@Override
+	public ResultSet getResultSet() throws SQLException
+	{
+		return lastResultSet;
 	}
 
 	@Override
 	public int getUpdateCount() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return lastUpdateCount;
+	}
+
+	@Override
+	public boolean getMoreResults() throws SQLException
+	{
+		lastResultSet.close();
+		lastResultSet = null;
+		return false;
+	}
+
+	@Override
+	public boolean getMoreResults(int current) throws SQLException
+	{
+		return getMoreResults();
 	}
 
 	@Override

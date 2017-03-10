@@ -129,12 +129,6 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	}
 
 	@Override
-	public boolean getMoreResults() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public void setFetchDirection(int direction) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
@@ -171,12 +165,6 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	}
 
 	@Override
-	public ResultSet getResultSet() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public void addBatch(String sql) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
@@ -198,12 +186,6 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	public CloudSpannerConnection getConnection() throws SQLException
 	{
 		return connection;
-	}
-
-	@Override
-	public boolean getMoreResults(int current) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
 	}
 
 	@Override
