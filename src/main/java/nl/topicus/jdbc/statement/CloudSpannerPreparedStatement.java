@@ -8,10 +8,20 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Timestamp;
 import java.util.List;
 
+import javax.xml.bind.DatatypeConverter;
+
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.DateValue;
+import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
+import net.sf.jsqlparser.expression.HexValue;
 import net.sf.jsqlparser.expression.JdbcParameter;
+import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.NullValue;
+import net.sf.jsqlparser.expression.StringValue;
+import net.sf.jsqlparser.expression.TimeValue;
+import net.sf.jsqlparser.expression.TimestampValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -311,6 +321,56 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			Object value = getParameteStore().getParameter(parameter.getIndex());
 			setValue(value);
+		}
+
+		@Override
+		public void visit(NullValue value)
+		{
+			setValue(null);
+		}
+
+		@Override
+		public void visit(DoubleValue value)
+		{
+			setValue(value.getValue());
+		}
+
+		@Override
+		public void visit(LongValue value)
+		{
+			setValue(value.getValue());
+		}
+
+		@Override
+		public void visit(DateValue value)
+		{
+			setValue(value.getValue());
+		}
+
+		@Override
+		public void visit(TimeValue value)
+		{
+			setValue(value.getValue());
+		}
+
+		@Override
+		public void visit(TimestampValue value)
+		{
+			setValue(value.getValue());
+		}
+
+		@Override
+		public void visit(StringValue value)
+		{
+			setValue(value.getValue());
+		}
+
+		@Override
+		public void visit(HexValue value)
+		{
+			String stringValue = value.getValue().substring(2);
+			byte[] byteValue = DatatypeConverter.parseHexBinary(stringValue);
+			setValue(byteValue);
 		}
 
 	}
