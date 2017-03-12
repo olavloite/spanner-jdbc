@@ -86,7 +86,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 	}
 
-	private final GoogleCredentials getCredentialsFromFile(String credentialsPath) throws IOException
+	public static GoogleCredentials getCredentialsFromFile(String credentialsPath) throws IOException
 	{
 		HttpTransport transport = new NetHttpTransport();
 		// First try the environment variable
