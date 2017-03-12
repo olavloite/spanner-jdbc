@@ -745,7 +745,7 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION "
 				+ "FROM information_schema.tables AS t " + "WHERE 1=1 ";
 		if (catalog != null)
-			sql = sql + "AND UPPER(t.TABLE_CAT) like ? ";
+			sql = sql + "AND UPPER(t.TABLE_CATALOG) like ? ";
 		if (schemaPattern != null)
 			sql = sql + "AND UPPER(t.TABLE_SCHEMA) like ? ";
 		if (tableNamePattern != null)
