@@ -7,6 +7,7 @@ An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, 
 
 The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 The driver currently ignores transaction statements (commit/rollback) and effectively runs in autocommit mode.
+A simple example project using Spring Boot + JPA + Hibernate + this JDBC Driver can be found here: https://github.com/olavloite/spanner-jpa-example
 
 The driver also supports DDL-statements, although the DDL syntax of Google Cloud Spanner is quite limited in comparison to most relational databases.
 
