@@ -23,7 +23,7 @@ public class CloudSpannerConversionUtil
 
 	public static Timestamp toSqlTimestamp(com.google.cloud.spanner.Timestamp ts)
 	{
-		Timestamp res = new Timestamp(ts.getSeconds());
+		Timestamp res = ts.toSqlTimestamp();
 		return res;
 	}
 
