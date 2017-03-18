@@ -13,6 +13,8 @@ import java.util.Calendar;
 
 import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
+import com.google.cloud.spanner.Type;
+
 public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 {
 	private com.google.cloud.spanner.ResultSet resultSet;
@@ -277,25 +279,25 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public byte getByte(int columnIndex) throws SQLException
 	{
-		return isNull(columnIndex) ? 0 : (byte) resultSet.getLong(columnIndex);
+		return isNull(columnIndex) ? 0 : (byte) resultSet.getLong(columnIndex - 1);
 	}
 
 	@Override
 	public short getShort(int columnIndex) throws SQLException
 	{
-		return isNull(columnIndex) ? 0 : (short) resultSet.getLong(columnIndex);
+		return isNull(columnIndex) ? 0 : (short) resultSet.getLong(columnIndex - 1);
 	}
 
 	@Override
 	public int getInt(int columnIndex) throws SQLException
 	{
-		return isNull(columnIndex) ? 0 : (int) resultSet.getLong(columnIndex);
+		return isNull(columnIndex) ? 0 : (int) resultSet.getLong(columnIndex - 1);
 	}
 
 	@Override
 	public float getFloat(int columnIndex) throws SQLException
 	{
-		return isNull(columnIndex) ? 0 : (float) resultSet.getDouble(columnIndex);
+		return isNull(columnIndex) ? 0 : (float) resultSet.getDouble(columnIndex - 1);
 	}
 
 	@Override
@@ -320,6 +322,44 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public float getFloat(String columnLabel) throws SQLException
 	{
 		return isNull(columnLabel) ? 0 : (float) resultSet.getDouble(columnLabel);
+	}
+
+	@Override
+	public Object getObject(String columnLabel) throws SQLException
+	{
+		Type type = resultSet.getColumnType(columnLabel);
+		return isNull(columnLabel) ? null : getObject(type, columnLabel);
+	}
+
+	@Override
+	public Object getObject(int columnIndex) throws SQLException
+	{
+		Type type = resultSet.getColumnType(columnIndex - 1);
+		return isNull(columnIndex) ? null : getObject(type, columnIndex);
+	}
+
+	private Object getObject(Type type, String columnLabel) throws SQLException
+	{
+		return getObject(type, resultSet.getColumnIndex(columnLabel));
+	}
+
+	private Object getObject(Type type, int columnIndex) throws SQLException
+	{
+		if (type == Type.bool())
+			return getBoolean(columnIndex);
+		if (type == Type.bytes())
+			return getBytes(columnIndex);
+		if (type == Type.date())
+			return getDate(columnIndex);
+		if (type == Type.float64())
+			return getFloat(columnIndex);
+		if (type == Type.int64())
+			return getInt(columnIndex);
+		if (type == Type.string())
+			return getString(columnIndex);
+		if (type == Type.timestamp())
+			return getTimestamp(columnIndex);
+		throw new SQLException("Unknown type: " + type.toString());
 	}
 
 	@Override

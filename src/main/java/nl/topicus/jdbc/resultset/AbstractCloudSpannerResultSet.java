@@ -77,18 +77,6 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 	}
 
 	@Override
-	public Object getObject(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Object getObject(String columnLabel) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public Reader getCharacterStream(int columnIndex) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
