@@ -38,7 +38,9 @@ public class TableDDLTester
 	private void runCreateTableTests() throws IOException, URISyntaxException, SQLException
 	{
 		runCreateTableTest("TEST", "CreateTableTest.sql");
+		verifyPrimaryKey("TEST", "ID");
 		runCreateTableTest("TESTCHILD", "CreateTableTestChild.sql");
+		verifyPrimaryKey("TESTCHILD", "ID, CHILDID");
 	}
 
 	private void runCreateTableTest(String tableName, String fileName) throws IOException, URISyntaxException,
@@ -61,6 +63,22 @@ public class TableDDLTester
 			}
 			if (count != 1 || !table.equalsIgnoreCase(tableFound))
 				throw new AssertionError("Table " + table + " not found");
+		}
+	}
+
+	private void verifyPrimaryKey(String table, String expectedColumns) throws SQLException
+	{
+		String colsFound = "";
+		try (ResultSet rs = connection.getMetaData().getPrimaryKeys("", "", table))
+		{
+			while (rs.next())
+			{
+				if (!colsFound.equals(""))
+					colsFound = colsFound + ", ";
+				colsFound = colsFound + rs.getString("COLUMN_NAME");
+			}
+			if (!expectedColumns.equalsIgnoreCase(colsFound))
+				throw new AssertionError("Primary key columns expected: " + expectedColumns + ", found: " + colsFound);
 		}
 	}
 
