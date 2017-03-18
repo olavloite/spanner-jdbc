@@ -1,10 +1,12 @@
-package nl.topicus.jdbc.test;
+package nl.topicus.jdbc.test.ddl;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import nl.topicus.jdbc.test.TestUtil;
 
 /**
  * Class for testing Table DDL statements, such as CREATE TABLE, ALTER TABLE,
@@ -17,15 +19,19 @@ public class TableDDLTester
 {
 	private Connection connection;
 
-	TableDDLTester(Connection connection)
+	public TableDDLTester(Connection connection)
 	{
 		this.connection = connection;
 	}
 
-	void runTests() throws IOException, URISyntaxException, SQLException
+	public void runCreateTests() throws IOException, URISyntaxException, SQLException
 	{
 		runCreateTableTests();
 		runAlterTableTests();
+	}
+
+	public void runDropTests()
+	{
 		runDropTableTests();
 	}
 
@@ -65,6 +71,9 @@ public class TableDDLTester
 		// STRING(50) to INT64
 		executeDdl("AlterTableTestChildAlterColumn.sql", true);
 		verifyColumn("TESTCHILD", "NEW_COLUMN", true, "STRING(50)");
+
+		executeDdl("AlterTableTestChildAlterColumn2.sql");
+		verifyColumn("TESTCHILD", "NEW_COLUMN", true, "STRING(100)");
 
 		executeDdl("AlterTableTestChildDropColumn.sql");
 		verifyColumn("TESTCHILD", "NEW_COLUMN", false, "");
@@ -107,7 +116,7 @@ public class TableDDLTester
 
 	private void executeDdl(String file, boolean expectsError) throws IOException, URISyntaxException, SQLException
 	{
-		String sql = TestUtil.getResource(getClass(), file);
+		String sql = TestUtil.getSingleStatement(getClass(), file);
 		try
 		{
 			connection.createStatement().executeUpdate(sql);

@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.test.ddl.TableDDLTester;
+import nl.topicus.jdbc.test.dml.DMLTester;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.spanner.Database;
@@ -106,7 +108,14 @@ public class JdbcTester
 		try (Connection connection = createConnection())
 		{
 			// Test Table DDL statements
-			new TableDDLTester(connection).runTests();
+			TableDDLTester tableDDLTester = new TableDDLTester(connection);
+			tableDDLTester.runCreateTests();
+			// Test DML statements
+			DMLTester dmlTester = new DMLTester(connection);
+			dmlTester.runInsertAndUpdateTests();
+
+			// Test drop statements
+			tableDDLTester.runDropTests();
 		}
 		catch (SQLException e)
 		{
@@ -142,14 +151,14 @@ public class JdbcTester
 		Instance instance = instanceAdminClient.newInstanceBuilder(InstanceId.of(projectId, INSTANCE_ID))
 				.setDisplayName("Test Instance").setInstanceConfigId(configId).setNodeCount(1).build();
 		Operation<Instance, CreateInstanceMetadata> createInstance = instanceAdminClient.createInstance(instance);
-		createInstance.waitFor();
+		createInstance = createInstance.waitFor();
 	}
 
 	private void createDatabase()
 	{
 		Operation<Database, CreateDatabaseMetadata> createDatabase = spanner.getDatabaseAdminClient().createDatabase(
 				INSTANCE_ID, DATABASE_ID, Arrays.asList());
-		createDatabase.waitFor();
+		createDatabase = createDatabase.waitFor();
 	}
 
 	private void cleanUpInstance()
