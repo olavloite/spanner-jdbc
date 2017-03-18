@@ -4,11 +4,13 @@ import javax.xml.bind.DatatypeConverter;
 
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.DoubleValue;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
 import net.sf.jsqlparser.expression.HexValue;
 import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
+import net.sf.jsqlparser.expression.SignedExpression;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.TimeValue;
 import net.sf.jsqlparser.expression.TimestampValue;
@@ -42,6 +44,28 @@ abstract class AbstractSpannerExpressionVisitorAdapter<R> extends ExpressionVisi
 	public void visit(DoubleValue value)
 	{
 		setValue(value.getValue());
+	}
+
+	@Override
+	public void visit(SignedExpression value)
+	{
+		Expression underlyingValue = value.getExpression();
+		if (underlyingValue instanceof DoubleValue)
+		{
+			DoubleValue doubleValue = (DoubleValue) underlyingValue;
+			doubleValue.setValue(value.getSign() == '-' ? -doubleValue.getValue() : doubleValue.getValue());
+			visit(doubleValue);
+		}
+		else if (underlyingValue instanceof LongValue)
+		{
+			LongValue longValue = (LongValue) underlyingValue;
+			longValue.setValue(value.getSign() == '-' ? -longValue.getValue() : longValue.getValue());
+			visit(longValue);
+		}
+		else
+		{
+			super.visit(value);
+		}
 	}
 
 	@Override
