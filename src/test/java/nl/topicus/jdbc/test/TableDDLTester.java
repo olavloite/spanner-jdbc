@@ -38,8 +38,7 @@ public class TableDDLTester
 	private void runCreateTableTest(String tableName, String fileName) throws IOException, URISyntaxException,
 			SQLException
 	{
-		String sql = TestUtil.getResource(getClass(), fileName);
-		connection.createStatement().executeUpdate(sql);
+		executeDdl(fileName);
 		verifyTableExists(tableName);
 	}
 
@@ -57,12 +56,70 @@ public class TableDDLTester
 			throw new AssertionError("Table " + table + " not found");
 	}
 
-	private void runAlterTableTests()
+	private void runAlterTableTests() throws IOException, URISyntaxException, SQLException
 	{
+		executeDdl("AlterTableTestChildAddColumn.sql");
+		verifyColumn("TESTCHILD", "NEW_COLUMN", true, "STRING(50)");
+
+		// This statement will fail as it is not allowed to change the type from
+		// STRING(50) to INT64
+		executeDdl("AlterTableTestChildAlterColumn.sql", true);
+		verifyColumn("TESTCHILD", "NEW_COLUMN", true, "STRING(50)");
+
+		executeDdl("AlterTableTestChildDropColumn.sql");
+		verifyColumn("TESTCHILD", "NEW_COLUMN", false, "");
+	}
+
+	private void verifyColumn(String table, String column, boolean mustExist, String type) throws SQLException
+	{
+		String colFound = "";
+		String typeFound = "";
+		ResultSet rs = connection.getMetaData().getColumns("", "", table, column);
+		int count = 0;
+		while (rs.next())
+		{
+			colFound = rs.getString("COLUMN_NAME");
+			typeFound = rs.getString("TYPE_NAME");
+			count++;
+		}
+		if (mustExist)
+		{
+			if (count != 1 || !column.equalsIgnoreCase(colFound))
+				throw new AssertionError("Column " + column + " not found");
+			if (!type.equalsIgnoreCase(typeFound))
+				throw new AssertionError("Column " + column + " has type " + typeFound + ", expected was " + type);
+		}
+		else
+		{
+			if (count != 0)
+				throw new AssertionError("Column " + column + " found, expected was no column");
+		}
 	}
 
 	private void runDropTableTests()
 	{
+	}
+
+	private void executeDdl(String file) throws IOException, URISyntaxException, SQLException
+	{
+		executeDdl(file, false);
+	}
+
+	private void executeDdl(String file, boolean expectsError) throws IOException, URISyntaxException, SQLException
+	{
+		String sql = TestUtil.getResource(getClass(), file);
+		try
+		{
+			connection.createStatement().executeUpdate(sql);
+		}
+		catch (SQLException e)
+		{
+			if (!expectsError)
+				throw e;
+			return;
+		}
+		if (expectsError)
+			throw new SQLException("Expected exception, but statement was succesfull");
 	}
 
 }
