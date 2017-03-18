@@ -7,6 +7,8 @@ import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
+import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
+
 public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 {
 	private CloudSpannerConnection connection;
@@ -738,6 +740,22 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 		throw new SQLFeatureNotSupportedException();
 	}
 
+	private CloudSpannerPreparedStatement prepareStatement(String sql, String... params) throws SQLException
+	{
+		CloudSpannerPreparedStatement statement = connection.prepareStatement(sql);
+		statement.setForceSingleUseReadContext(true);
+		int paramIndex = 1;
+		for (String param : params)
+		{
+			if (param != null)
+			{
+				statement.setString(paramIndex, param.toUpperCase());
+				paramIndex++;
+			}
+		}
+		return statement;
+	}
+
 	@Override
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException
@@ -752,23 +770,7 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 			sql = sql + "AND UPPER(t.TABLE_NAME) like ? ";
 		sql = sql + "ORDER BY TABLE_NAME";
 
-		PreparedStatement statement = connection.prepareStatement(sql);
-		int paramIndex = 1;
-		if (catalog != null)
-		{
-			statement.setString(paramIndex, catalog.toUpperCase());
-			paramIndex++;
-		}
-		if (schemaPattern != null)
-		{
-			statement.setString(paramIndex, schemaPattern.toUpperCase());
-			paramIndex++;
-		}
-		if (tableNamePattern != null)
-		{
-			statement.setString(paramIndex, tableNamePattern.toUpperCase());
-			paramIndex++;
-		}
+		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern);
 		return statement.executeQuery();
 	}
 
@@ -788,7 +790,7 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 	public ResultSet getTableTypes() throws SQLException
 	{
 		String sql = "select 'TABLE' AS TABLE_TYPE";
-		return connection.createStatement().executeQuery(sql);
+		return prepareStatement(sql).executeQuery();
 	}
 
 	@Override
@@ -815,28 +817,8 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
 		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
 
-		PreparedStatement statement = connection.prepareStatement(sql);
-		int paramIndex = 1;
-		if (catalog != null)
-		{
-			statement.setString(paramIndex, catalog.toUpperCase());
-			paramIndex++;
-		}
-		if (schemaPattern != null)
-		{
-			statement.setString(paramIndex, schemaPattern.toUpperCase());
-			paramIndex++;
-		}
-		if (tableNamePattern != null)
-		{
-			statement.setString(paramIndex, tableNamePattern.toUpperCase());
-			paramIndex++;
-		}
-		if (columnNamePattern != null)
-		{
-			statement.setString(paramIndex, columnNamePattern.toUpperCase());
-			paramIndex++;
-		}
+		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern,
+				columnNamePattern);
 		return statement.executeQuery();
 	}
 
@@ -882,23 +864,7 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 			sql = sql + "AND UPPER(IDX.TABLE_NAME) like ? ";
 		sql = sql + "ORDER BY COLS.ORDINAL_POSITION ";
 
-		PreparedStatement statement = connection.prepareStatement(sql);
-		int paramIndex = 1;
-		if (catalog != null)
-		{
-			statement.setString(paramIndex, catalog.toUpperCase());
-			paramIndex++;
-		}
-		if (schema != null)
-		{
-			statement.setString(paramIndex, schema.toUpperCase());
-			paramIndex++;
-		}
-		if (table != null)
-		{
-			statement.setString(paramIndex, table.toUpperCase());
-			paramIndex++;
-		}
+		PreparedStatement statement = prepareStatement(sql, catalog, schema, table);
 		return statement.executeQuery();
 	}
 
@@ -920,23 +886,7 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 			sql = sql + "AND UPPER(CHILD.TABLE_NAME) like ? ";
 		sql = sql + "ORDER BY PARENT.TABLE_CATALOG, PARENT.TABLE_SCHEMA, PARENT.TABLE_NAME, COL.ORDINAL_POSITION ";
 
-		PreparedStatement statement = connection.prepareStatement(sql);
-		int paramIndex = 1;
-		if (catalog != null)
-		{
-			statement.setString(paramIndex, catalog.toUpperCase());
-			paramIndex++;
-		}
-		if (schema != null)
-		{
-			statement.setString(paramIndex, schema.toUpperCase());
-			paramIndex++;
-		}
-		if (table != null)
-		{
-			statement.setString(paramIndex, table.toUpperCase());
-			paramIndex++;
-		}
+		PreparedStatement statement = prepareStatement(sql, catalog, schema, table);
 		return statement.executeQuery();
 	}
 
@@ -978,23 +928,7 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 			sql = sql + "AND IS_UNIQUE ";
 		sql = sql + "ORDER BY IS_UNIQUE, INDEX_NAME, ORDINAL_POSITION ";
 
-		PreparedStatement statement = connection.prepareStatement(sql);
-		int paramIndex = 1;
-		if (catalog != null)
-		{
-			statement.setString(paramIndex, catalog.toUpperCase());
-			paramIndex++;
-		}
-		if (schema != null)
-		{
-			statement.setString(paramIndex, schema.toUpperCase());
-			paramIndex++;
-		}
-		if (table != null)
-		{
-			statement.setString(paramIndex, table.toUpperCase());
-			paramIndex++;
-		}
+		PreparedStatement statement = prepareStatement(sql, catalog, schema, table);
 		return statement.executeQuery();
 	}
 

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -22,6 +23,8 @@ import nl.topicus.jdbc.test.TestUtil;
  */
 public class DMLTester
 {
+	private static final Logger log = Logger.getLogger(DMLTester.class.getName());
+
 	private Connection connection;
 
 	public DMLTester(Connection connection)
@@ -38,7 +41,9 @@ public class DMLTester
 	@SuppressWarnings("deprecation")
 	private void runInsertTests() throws IOException, URISyntaxException, SQLException
 	{
+		log.info("Starting insert tests");
 		executeStatements("InsertIntoTest.sql");
+		log.info("Verifying parent table contents");
 		verifyTableContents("SELECT DESCRIPTION FROM TEST WHERE ID=1", "Description 1");
 		verifyTableContents("SELECT CREATED_DATE FROM TEST WHERE ID=1", new Date(2017 - 1900, 2, 18));
 		verifyTableContents("SELECT LAST_UPDATED FROM TEST WHERE ID=1", new Timestamp(2017 - 1900, 2, 18, 7, 0, 0, 0));
@@ -47,13 +52,17 @@ public class DMLTester
 		verifyTableContents("SELECT DESCRIPTION FROM TEST WHERE ID=2", "Description 2");
 		verifyTableContents("SELECT AMOUNT FROM TEST WHERE ID=2", Float.valueOf(-29.95f));
 
+		log.info("Starting insert tests of child table");
 		executeStatements("InsertIntoTestChild.sql");
+		log.info("Verifying parent table contents");
 		verifyTableContents("SELECT DESCRIPTION FROM TESTCHILD WHERE ID=1 AND CHILDID=1", "Child description 1.1");
+		log.info("Finished insert tests");
 	}
 
 	@SuppressWarnings("deprecation")
 	private void runUpdateTests() throws IOException, URISyntaxException, SQLException
 	{
+		log.info("Starting update tests");
 		executeStatements("UpdateTest.sql");
 		verifyTableContents("SELECT UUID FROM TEST WHERE ID=1", DatatypeConverter.parseHexBinary("aabbcc"));
 		verifyTableContents("SELECT ACTIVE FROM TEST WHERE ID=1", Boolean.FALSE);
@@ -64,15 +73,18 @@ public class DMLTester
 		verifyTableContents("SELECT LAST_UPDATED FROM TEST WHERE ID=2", new Timestamp(2017 - 1900, 1, 17, 8, 0, 0, 0));
 
 		executeStatements("UpdateTestChild.sql");
+		log.info("Finished update tests");
 	}
 
 	public void runDeleteTests() throws IOException, URISyntaxException, SQLException
 	{
+		log.info("Starting delete tests");
 		verifyTableContents("SELECT COUNT(*) FROM TEST", 2);
 		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 4);
 		executeStatements("DeleteFromTest.sql");
 		verifyTableContents("SELECT COUNT(*) FROM TEST", 1);
 		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 2);
+		log.info("Finished delete tests");
 	}
 
 	private void verifyTableContents(String sql, Object expectedValue) throws SQLException
@@ -110,6 +122,7 @@ public class DMLTester
 		{
 			connection.createStatement().executeUpdate(sql);
 		}
+		connection.commit();
 	}
 
 }

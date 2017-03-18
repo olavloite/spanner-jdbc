@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 import nl.topicus.jdbc.test.TestUtil;
 
@@ -17,6 +18,8 @@ import nl.topicus.jdbc.test.TestUtil;
  */
 public class TableDDLTester
 {
+	private static final Logger log = Logger.getLogger(TableDDLTester.class.getName());
+
 	private Connection connection;
 
 	public TableDDLTester(Connection connection)
@@ -37,10 +40,14 @@ public class TableDDLTester
 
 	private void runCreateTableTests() throws IOException, URISyntaxException, SQLException
 	{
+		log.info("Starting CreateTableTests");
 		runCreateTableTest("TEST", "CreateTableTest.sql");
+		log.info("Verifying primary keys of parent table");
 		verifyPrimaryKey("TEST", "ID");
 		runCreateTableTest("TESTCHILD", "CreateTableTestChild.sql");
+		log.info("Verifying primary keys of child table");
 		verifyPrimaryKey("TESTCHILD", "ID, CHILDID");
+		log.info("Finished CreateTableTests");
 	}
 
 	private void runCreateTableTest(String tableName, String fileName) throws IOException, URISyntaxException,
@@ -84,6 +91,7 @@ public class TableDDLTester
 
 	private void runAlterTableTests() throws IOException, URISyntaxException, SQLException
 	{
+		log.info("Starting AlterTableTests");
 		executeDdl("AlterTableTestChildAddColumn.sql");
 		verifyColumn("TESTCHILD", "NEW_COLUMN", true, "STRING(50)");
 
@@ -97,6 +105,7 @@ public class TableDDLTester
 
 		executeDdl("AlterTableTestChildDropColumn.sql");
 		verifyColumn("TESTCHILD", "NEW_COLUMN", false, "");
+		log.info("Finished AlterTableTests");
 	}
 
 	private void verifyColumn(String table, String column, boolean mustExist, String type) throws SQLException

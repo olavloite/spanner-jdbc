@@ -16,6 +16,7 @@ import java.util.Arrays;
 
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
+import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -44,7 +45,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private DatabaseAdminClient adminClient;
 
-	private boolean autoCommit;
+	private boolean autoCommit = true;
 
 	private boolean closed;
 
@@ -57,6 +58,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private String instanceId;
 
 	private String database;
+
+	private CloudSpannerTransaction transaction;
 
 	CloudSpannerConnection(String url, String projectId, String instanceId, String database, String credentialsPath)
 			throws SQLException
@@ -79,6 +82,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			spanner = options.getService();
 			dbClient = spanner.getDatabaseClient(DatabaseId.of(options.getProjectId(), instanceId, database));
 			adminClient = spanner.getDatabaseAdminClient();
+			transaction = new CloudSpannerTransaction(dbClient);
 		}
 		catch (Exception e)
 		{
@@ -154,13 +158,13 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	}
 
 	@Override
-	public Statement createStatement() throws SQLException
+	public CloudSpannerStatement createStatement() throws SQLException
 	{
 		return new CloudSpannerStatement(this, dbClient);
 	}
 
 	@Override
-	public PreparedStatement prepareStatement(String sql) throws SQLException
+	public CloudSpannerPreparedStatement prepareStatement(String sql) throws SQLException
 	{
 		return new CloudSpannerPreparedStatement(sql, this, dbClient);
 	}
@@ -189,25 +193,32 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return autoCommit;
 	}
 
+	public void begin()
+	{
+		transaction.begin();
+	}
+
 	@Override
 	public void commit() throws SQLException
 	{
+		transaction.commit();
 	}
 
 	@Override
 	public void rollback() throws SQLException
 	{
+		transaction.rollback();
 	}
 
-	protected void startNewTransaction()
+	public CloudSpannerTransaction getTransaction()
 	{
-
+		return transaction;
 	}
 
 	@Override
 	public void close() throws SQLException
 	{
-		// TODO Stop running transaction
+		transaction.rollback();
 		spanner.closeAsync();
 		closed = true;
 	}

@@ -107,6 +107,7 @@ public class JdbcTester
 		// Get a JDBC connection
 		try (Connection connection = createConnection())
 		{
+			connection.setAutoCommit(false);
 			// Test Table DDL statements
 			TableDDLTester tableDDLTester = new TableDDLTester(connection);
 			tableDDLTester.runCreateTests();

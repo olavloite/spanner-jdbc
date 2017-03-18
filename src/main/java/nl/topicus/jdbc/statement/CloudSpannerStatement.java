@@ -21,27 +21,19 @@ import com.google.cloud.spanner.DatabaseClient;
  */
 public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 {
-	private DatabaseClient dbClient;
-
 	private ResultSet lastResultSet = null;
 
 	private int lastUpdateCount = -1;
 
 	public CloudSpannerStatement(CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
-		super(connection);
-		this.dbClient = dbClient;
-	}
-
-	protected DatabaseClient getDbClient()
-	{
-		return dbClient;
+		super(connection, dbClient);
 	}
 
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException
 	{
-		com.google.cloud.spanner.ResultSet rs = dbClient.singleUse().executeQuery(
+		com.google.cloud.spanner.ResultSet rs = getReadContext().executeQuery(
 				com.google.cloud.spanner.Statement.of(sql));
 
 		return new CloudSpannerResultSet(rs);

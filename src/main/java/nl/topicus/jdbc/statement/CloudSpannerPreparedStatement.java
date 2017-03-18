@@ -31,8 +31,6 @@ import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
-import com.google.cloud.spanner.TransactionContext;
-import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
 /**
  * 
@@ -67,7 +65,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			com.google.cloud.spanner.Statement.Builder builder = com.google.cloud.spanner.Statement
 					.newBuilder(namedSql);
 			setSelectParameters(((Select) statement).getSelectBody(), builder);
-			com.google.cloud.spanner.ResultSet rs = getDbClient().singleUse().executeQuery(builder.build());
+			com.google.cloud.spanner.ResultSet rs = getReadContext().executeQuery(builder.build());
 
 			return new CloudSpannerResultSet(rs);
 		}
@@ -234,83 +232,58 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private int performInsert(Insert insert) throws SQLException
 	{
-		return getDbClient().readWriteTransaction().run(new TransactionCallable<Integer>()
+		ItemsList items = insert.getItemsList();
+		if (!(items instanceof ExpressionList))
 		{
+			throw new SQLException("Insert statement must contain a list of values");
+		}
+		List<Expression> expressions = ((ExpressionList) items).getExpressions();
+		WriteBuilder builder = Mutation.newInsertBuilder(insert.getTable().getFullyQualifiedName());
+		int index = 0;
+		for (Column col : insert.getColumns())
+		{
+			expressions.get(index).accept(
+					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
+							.getFullyQualifiedName())));
+			index++;
+		}
+		writeMutation(builder.build());
 
-			@Override
-			public Integer run(TransactionContext transaction) throws Exception
-			{
-				ItemsList items = insert.getItemsList();
-				if (!(items instanceof ExpressionList))
-				{
-					throw new SQLException("Insert statement must contain a list of values");
-				}
-				List<Expression> expressions = ((ExpressionList) items).getExpressions();
-				WriteBuilder builder = Mutation.newInsertBuilder(insert.getTable().getFullyQualifiedName());
-				int index = 0;
-				for (Column col : insert.getColumns())
-				{
-					expressions.get(index).accept(
-							new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
-									.getFullyQualifiedName())));
-					index++;
-				}
-				transaction.buffer(builder.build());
-
-				return 1;
-			}
-		});
+		return 1;
 	}
 
 	private int performUpdate(Update update) throws SQLException
 	{
-		return getDbClient().readWriteTransaction().run(new TransactionCallable<Integer>()
+		if (update.getTables().isEmpty())
+			throw new SQLException("No table found in update statement");
+		if (update.getTables().size() > 1)
+			throw new SQLException("Update statements for multiple tables at once are not supported");
+		String table = update.getTables().get(0).getFullyQualifiedName();
+		List<Expression> expressions = update.getExpressions();
+		WriteBuilder builder = Mutation.newUpdateBuilder(table);
+		int index = 0;
+		for (Column col : update.getColumns())
 		{
+			expressions.get(index).accept(
+					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
+							.getFullyQualifiedName())));
+			index++;
+		}
+		visitInsertWhereClause(update.getWhere(), builder);
+		writeMutation(builder.build());
 
-			@Override
-			public Integer run(TransactionContext transaction) throws Exception
-			{
-				if (update.getTables().isEmpty())
-					throw new SQLException("No table found in update statement");
-				if (update.getTables().size() > 1)
-					throw new SQLException("Update statements for multiple tables at once are not supported");
-				String table = update.getTables().get(0).getFullyQualifiedName();
-				List<Expression> expressions = update.getExpressions();
-				WriteBuilder builder = Mutation.newUpdateBuilder(table);
-				int index = 0;
-				for (Column col : update.getColumns())
-				{
-					expressions.get(index).accept(
-							new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
-									.getFullyQualifiedName())));
-					index++;
-				}
-				visitInsertWhereClause(update.getWhere(), builder);
-
-				transaction.buffer(builder.build());
-
-				return 1;
-			}
-		});
+		return 1;
 	}
 
 	private int performDelete(Delete delete) throws SQLException
 	{
-		return getDbClient().readWriteTransaction().run(new TransactionCallable<Integer>()
-		{
+		String table = delete.getTable().getFullyQualifiedName();
+		Expression where = delete.getWhere();
+		Key.Builder keyBuilder = Key.newBuilder();
+		visitDeleteWhereClause(where, keyBuilder);
+		writeMutation(Mutation.delete(table, keyBuilder.build()));
 
-			@Override
-			public Integer run(TransactionContext transaction) throws Exception
-			{
-				String table = delete.getTable().getFullyQualifiedName();
-				Expression where = delete.getWhere();
-				Key.Builder keyBuilder = Key.newBuilder();
-				visitDeleteWhereClause(where, keyBuilder);
-				transaction.buffer(Mutation.delete(table, keyBuilder.build()));
-
-				return 1;
-			}
-		});
+		return 1;
 	}
 
 	private void visitDeleteWhereClause(Expression where, Key.Builder keyBuilder)

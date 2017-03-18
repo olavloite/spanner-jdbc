@@ -8,6 +8,12 @@ import java.sql.Statement;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 
+import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.ReadContext;
+import com.google.cloud.spanner.TransactionContext;
+import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
+
 /**
  * 
  * @author loite
@@ -15,6 +21,16 @@ import nl.topicus.jdbc.CloudSpannerConnection;
  */
 abstract class AbstractCloudSpannerStatement implements Statement
 {
+	private DatabaseClient dbClient;
+
+	/**
+	 * Flag to indicate that this statement should use a SingleUseReadContext
+	 * regardless whether a transaction is running or not. This is for example
+	 * needed for meta data operations (select statements on
+	 * INFORMATION_SCHEMA).
+	 */
+	private boolean forceSingleUseReadContext;
+
 	private boolean closed;
 
 	private int queryTimeout;
@@ -27,9 +43,55 @@ abstract class AbstractCloudSpannerStatement implements Statement
 
 	private int maxRows;
 
-	AbstractCloudSpannerStatement(CloudSpannerConnection connection)
+	AbstractCloudSpannerStatement(CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
 		this.connection = connection;
+		this.dbClient = dbClient;
+	}
+
+	protected DatabaseClient getDbClient()
+	{
+		return dbClient;
+	}
+
+	public boolean isForceSingleUseReadContext()
+	{
+		return forceSingleUseReadContext;
+	}
+
+	public void setForceSingleUseReadContext(boolean forceSingleUseReadContext)
+	{
+		this.forceSingleUseReadContext = forceSingleUseReadContext;
+	}
+
+	protected ReadContext getReadContext() throws SQLException
+	{
+		if (connection.getAutoCommit() || forceSingleUseReadContext)
+		{
+			return dbClient.singleUse();
+		}
+		return connection.getTransaction();
+	}
+
+	protected void writeMutation(Mutation mutation) throws SQLException
+	{
+		if (connection.getAutoCommit())
+		{
+			dbClient.readWriteTransaction().run(new TransactionCallable<Void>()
+			{
+
+				@Override
+				public Void run(TransactionContext transaction) throws Exception
+				{
+					transaction.buffer(mutation);
+					return null;
+				}
+			});
+		}
+		else
+		{
+			connection.getTransaction().buffer(mutation);
+		}
 	}
 
 	@Override
