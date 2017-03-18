@@ -137,7 +137,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		{
 			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(instanceId, database,
 					Arrays.asList(sql), null);
-			operation.waitFor();
+			operation = operation.waitFor();
 			return operation.getResult();
 		}
 		catch (SpannerException e)
