@@ -870,12 +870,36 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 	@Override
 	public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException
 	{
-		String sql = "select IDX.TABLE_CATALOG AS TABLE_CAT, IDX.TABLE_SCHEMA AS TABLE_SCHEM, IDX.TABLE_NAME AS TABLE_NAME, COLS.COLUMN_NAME AS COLUMN_NAME, ORDINAL_POSITION AS KEY_SEQ, IDX.INDEX_NAME AS PK_NAME "
-				+ "from information_schema.indexes idx "
-				+ "inner join information_schema.index_columns cols on idx.table_catalog=cols.table_catalog and idx.table_schema=cols.table_schema and idx.table_name=cols.table_name and idx.index_name=cols.index_name "
-				+ "where index_type='PRIMARY_KEY' and idx.table_name = %TABLE_NAME% ORDER BY ORDINAL_POSITION";
-		sql = sql.replace("%TABLE_NAME%", table);
-		return connection.createStatement().executeQuery(sql);
+		String sql = "SELECT IDX.TABLE_CATALOG AS TABLE_CAT, IDX.TABLE_SCHEMA AS TABLE_SCHEM, IDX.TABLE_NAME AS TABLE_NAME, COLS.COLUMN_NAME AS COLUMN_NAME, ORDINAL_POSITION AS KEY_SEQ, IDX.INDEX_NAME AS PK_NAME "
+				+ "FROM INFORMATION_SCHEMA.INDEXES IDX "
+				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS COLS ON IDX.TABLE_CATALOG=COLS.TABLE_CATALOG AND IDX.TABLE_SCHEMA=COLS.TABLE_SCHEMA AND IDX.TABLE_NAME=COLS.TABLE_NAME AND IDX.INDEX_NAME=COLS.INDEX_NAME "
+				+ "WHERE IDX.INDEX_TYPE='PRIMARY_KEY' ";
+		if (catalog != null)
+			sql = sql + "AND UPPER(IDX.TABLE_CATALOG) like ? ";
+		if (schema != null)
+			sql = sql + "AND UPPER(IDX.TABLE_SCHEMA) like ? ";
+		if (table != null)
+			sql = sql + "AND UPPER(IDX.TABLE_NAME) like ? ";
+		sql = sql + "ORDER BY COLS.ORDINAL_POSITION ";
+
+		PreparedStatement statement = connection.prepareStatement(sql);
+		int paramIndex = 1;
+		if (catalog != null)
+		{
+			statement.setString(paramIndex, catalog.toUpperCase());
+			paramIndex++;
+		}
+		if (schema != null)
+		{
+			statement.setString(paramIndex, schema.toUpperCase());
+			paramIndex++;
+		}
+		if (table != null)
+		{
+			statement.setString(paramIndex, table.toUpperCase());
+			paramIndex++;
+		}
+		return statement.executeQuery();
 	}
 
 	@Override
