@@ -7,7 +7,10 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Objects;
+
+import javax.xml.bind.DatatypeConverter;
 
 import nl.topicus.jdbc.test.TestUtil;
 
@@ -52,13 +55,13 @@ public class DMLTester
 	private void runUpdateTests() throws IOException, URISyntaxException, SQLException
 	{
 		executeStatements("UpdateTest.sql");
-		verifyTableContents("SELECT UUID FROM TEST WHERE ID=1", new byte[] { (byte) 170, (byte) 187, (byte) 204 });
+		verifyTableContents("SELECT UUID FROM TEST WHERE ID=1", DatatypeConverter.parseHexBinary("aabbcc"));
 		verifyTableContents("SELECT ACTIVE FROM TEST WHERE ID=1", Boolean.FALSE);
 		verifyTableContents("SELECT AMOUNT FROM TEST WHERE ID=1", Float.valueOf(129.95f));
 
 		verifyTableContents("SELECT AMOUNT FROM TEST WHERE ID=2", Float.valueOf(-129.95f));
-		verifyTableContents("SELECT CREATED_DATE FROM TEST WHERE ID=2", new Date(2017 - 1900, 2, 17));
-		verifyTableContents("SELECT LAST_UPDATED FROM TEST WHERE ID=2", new Timestamp(2017 - 1900, 2, 17, 8, 0, 0, 0));
+		verifyTableContents("SELECT CREATED_DATE FROM TEST WHERE ID=2", new Date(2017 - 1900, 1, 17));
+		verifyTableContents("SELECT LAST_UPDATED FROM TEST WHERE ID=2", new Timestamp(2017 - 1900, 1, 17, 8, 0, 0, 0));
 
 		executeStatements("UpdateTestChild.sql");
 	}
@@ -69,21 +72,30 @@ public class DMLTester
 
 	private void verifyTableContents(String sql, Object expectedValue) throws SQLException
 	{
-		ResultSet rs = connection.createStatement().executeQuery(sql);
-		if (rs.next())
+		try (ResultSet rs = connection.createStatement().executeQuery(sql))
 		{
-			Object value = rs.getObject(1);
-			if (!Objects.equals(value, expectedValue))
+			if (rs.next())
 			{
-				throw new SQLException("Expected value: " + String.valueOf(expectedValue) + ", found value: "
-						+ String.valueOf(value));
+				Object value = rs.getObject(1);
+				if (expectedValue != null && expectedValue instanceof byte[])
+				{
+					if (!Arrays.equals((byte[]) value, (byte[]) expectedValue))
+					{
+						throw new SQLException("Expected value: " + Arrays.toString((byte[]) expectedValue)
+								+ ", found value: " + Arrays.toString((byte[]) value));
+					}
+				}
+				else if (!Objects.equals(value, expectedValue))
+				{
+					throw new SQLException("Expected value: " + String.valueOf(expectedValue) + ", found value: "
+							+ String.valueOf(value));
+				}
+			}
+			else
+			{
+				throw new SQLException("No records found");
 			}
 		}
-		else
-		{
-			throw new SQLException("No records found");
-		}
-		rs.close();
 	}
 
 	private void executeStatements(String file) throws IOException, URISyntaxException, SQLException

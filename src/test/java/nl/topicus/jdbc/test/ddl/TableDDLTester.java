@@ -51,15 +51,17 @@ public class TableDDLTester
 	private void verifyTableExists(String table) throws SQLException
 	{
 		String tableFound = "";
-		ResultSet rs = connection.getMetaData().getTables("", "", table, null);
-		int count = 0;
-		while (rs.next())
+		try (ResultSet rs = connection.getMetaData().getTables("", "", table, null))
 		{
-			tableFound = rs.getString("TABLE_NAME");
-			count++;
+			int count = 0;
+			while (rs.next())
+			{
+				tableFound = rs.getString("TABLE_NAME");
+				count++;
+			}
+			if (count != 1 || !table.equalsIgnoreCase(tableFound))
+				throw new AssertionError("Table " + table + " not found");
 		}
-		if (count != 1 || !table.equalsIgnoreCase(tableFound))
-			throw new AssertionError("Table " + table + " not found");
 	}
 
 	private void runAlterTableTests() throws IOException, URISyntaxException, SQLException
