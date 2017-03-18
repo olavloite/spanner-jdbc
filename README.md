@@ -30,7 +30,7 @@ Releases are available on Maven Central. Current release is version 0.2.
 	&lt;<span class="pl-ent">dependency</span>&gt;
     	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.2&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.3&lt;/<span class="pl-ent">version</span>&gt;
 	&lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
