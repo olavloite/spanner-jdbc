@@ -113,6 +113,7 @@ public class JdbcTester
 			// Test DML statements
 			DMLTester dmlTester = new DMLTester(connection);
 			dmlTester.runInsertAndUpdateTests();
+			dmlTester.runDeleteTests();
 
 			// Test drop statements
 			tableDDLTester.runDropTests();

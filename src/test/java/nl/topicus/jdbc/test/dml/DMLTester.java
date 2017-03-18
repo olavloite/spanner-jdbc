@@ -66,8 +66,13 @@ public class DMLTester
 		executeStatements("UpdateTestChild.sql");
 	}
 
-	public void runDeleteTests()
+	public void runDeleteTests() throws IOException, URISyntaxException, SQLException
 	{
+		verifyTableContents("SELECT COUNT(*) FROM TEST", 2);
+		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 4);
+		executeStatements("DeleteFromTest.sql");
+		verifyTableContents("SELECT COUNT(*) FROM TEST", 1);
+		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 2);
 	}
 
 	private void verifyTableContents(String sql, Object expectedValue) throws SQLException
