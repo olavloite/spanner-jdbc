@@ -25,6 +25,35 @@ public class DMLTester
 {
 	private static final Logger log = Logger.getLogger(DMLTester.class.getName());
 
+	private static enum ExecuteMode
+	{
+		Commit
+		{
+			@Override
+			public void execute(Connection connection) throws SQLException
+			{
+				connection.commit();
+			}
+		},
+		Rollback
+		{
+			@Override
+			public void execute(Connection connection) throws SQLException
+			{
+				connection.rollback();
+			}
+		},
+		None
+		{
+			@Override
+			public void execute(Connection connection) throws SQLException
+			{
+			}
+		};
+
+		public abstract void execute(Connection connection) throws SQLException;
+	}
+
 	private Connection connection;
 
 	public DMLTester(Connection connection)
@@ -32,18 +61,31 @@ public class DMLTester
 		this.connection = connection;
 	}
 
-	public void runInsertAndUpdateTests() throws IOException, URISyntaxException, SQLException
+	public void runDMLTests() throws IOException, URISyntaxException, SQLException
 	{
 		runInsertTests();
+		log.info("Verifying table contents");
+		verifyTableContentsAfterInsert();
+
 		runUpdateTests();
+		log.info("Verifying table contents");
+		verifyTableContentsAfterUpdate();
+
+		runDeleteTests();
+		runRollbackTests();
 	}
 
-	@SuppressWarnings("deprecation")
 	private void runInsertTests() throws IOException, URISyntaxException, SQLException
 	{
 		log.info("Starting insert tests");
 		executeStatements("InsertIntoTest.sql");
-		log.info("Verifying parent table contents");
+		executeStatements("InsertIntoTestChild.sql");
+		log.info("Finished insert tests");
+	}
+
+	@SuppressWarnings("deprecation")
+	private void verifyTableContentsAfterInsert() throws SQLException
+	{
 		verifyTableContents("SELECT DESCRIPTION FROM TEST WHERE ID=1", "Description 1");
 		verifyTableContents("SELECT CREATED_DATE FROM TEST WHERE ID=1", new Date(2017 - 1900, 2, 18));
 		verifyTableContents("SELECT LAST_UPDATED FROM TEST WHERE ID=1", new Timestamp(2017 - 1900, 2, 18, 7, 0, 0, 0));
@@ -52,18 +94,25 @@ public class DMLTester
 		verifyTableContents("SELECT DESCRIPTION FROM TEST WHERE ID=2", "Description 2");
 		verifyTableContents("SELECT AMOUNT FROM TEST WHERE ID=2", Float.valueOf(-29.95f));
 
-		log.info("Starting insert tests of child table");
-		executeStatements("InsertIntoTestChild.sql");
-		log.info("Verifying parent table contents");
 		verifyTableContents("SELECT DESCRIPTION FROM TESTCHILD WHERE ID=1 AND CHILDID=1", "Child description 1.1");
-		log.info("Finished insert tests");
+	}
+
+	private void runUpdateTests() throws IOException, URISyntaxException, SQLException
+	{
+		runUpdateTests(ExecuteMode.Commit);
+	}
+
+	private void runUpdateTests(ExecuteMode mode) throws IOException, URISyntaxException, SQLException
+	{
+		log.info("Starting update tests");
+		executeStatements("UpdateTest.sql", mode);
+		executeStatements("UpdateTestChild.sql", mode);
+		log.info("Finished update tests");
 	}
 
 	@SuppressWarnings("deprecation")
-	private void runUpdateTests() throws IOException, URISyntaxException, SQLException
+	private void verifyTableContentsAfterUpdate() throws SQLException
 	{
-		log.info("Starting update tests");
-		executeStatements("UpdateTest.sql");
 		verifyTableContents("SELECT UUID FROM TEST WHERE ID=1", DatatypeConverter.parseHexBinary("aabbcc"));
 		verifyTableContents("SELECT ACTIVE FROM TEST WHERE ID=1", Boolean.FALSE);
 		verifyTableContents("SELECT AMOUNT FROM TEST WHERE ID=1", Float.valueOf(129.95f));
@@ -71,12 +120,9 @@ public class DMLTester
 		verifyTableContents("SELECT AMOUNT FROM TEST WHERE ID=2", Float.valueOf(-129.95f));
 		verifyTableContents("SELECT CREATED_DATE FROM TEST WHERE ID=2", new Date(2017 - 1900, 1, 17));
 		verifyTableContents("SELECT LAST_UPDATED FROM TEST WHERE ID=2", new Timestamp(2017 - 1900, 1, 17, 8, 0, 0, 0));
-
-		executeStatements("UpdateTestChild.sql");
-		log.info("Finished update tests");
 	}
 
-	public void runDeleteTests() throws IOException, URISyntaxException, SQLException
+	private void runDeleteTests() throws IOException, URISyntaxException, SQLException
 	{
 		log.info("Starting delete tests");
 		verifyTableContents("SELECT COUNT(*) FROM TEST", 2);
@@ -84,7 +130,25 @@ public class DMLTester
 		executeStatements("DeleteFromTest.sql");
 		verifyTableContents("SELECT COUNT(*) FROM TEST", 1);
 		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 2);
+		executeStatements("DeleteFromTest2.sql");
+		verifyTableContents("SELECT COUNT(*) FROM TEST", 0);
+		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 0);
 		log.info("Finished delete tests");
+	}
+
+	private void runRollbackTests() throws IOException, URISyntaxException, SQLException
+	{
+		log.info("Starting rollback tests, initializing table contents");
+		runInsertTests();
+		log.info("Verifying initial table contents");
+		verifyTableContentsAfterInsert();
+
+		log.info("Running updates with rollback");
+		runUpdateTests(ExecuteMode.Rollback);
+		log.info("Verifying unchanged table contents");
+		verifyTableContentsAfterInsert();
+
+		log.info("Finished rollback tests");
 	}
 
 	private void verifyTableContents(String sql, Object expectedValue) throws SQLException
@@ -117,12 +181,17 @@ public class DMLTester
 
 	private void executeStatements(String file) throws IOException, URISyntaxException, SQLException
 	{
+		executeStatements(file, ExecuteMode.Commit);
+	}
+
+	private void executeStatements(String file, ExecuteMode mode) throws IOException, URISyntaxException, SQLException
+	{
 		String[] statements = TestUtil.getMultipleStatements(getClass(), file);
 		for (String sql : statements)
 		{
 			connection.createStatement().executeUpdate(sql);
 		}
-		connection.commit();
+		mode.execute(connection);
 	}
 
 }
