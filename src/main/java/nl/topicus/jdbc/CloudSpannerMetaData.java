@@ -777,19 +777,25 @@ public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
 	@Override
 	public ResultSet getSchemas() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS TABLE_SCHEM, NULL AS TABLE_CAT";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getCatalogs() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT NULL AS TABLE_CAT";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getTableTypes() throws SQLException
 	{
-		String sql = "select 'TABLE' AS TABLE_TYPE";
+		String sql = "SELECT 'TABLE' AS TABLE_TYPE";
 		return prepareStatement(sql).executeQuery();
 	}
 
