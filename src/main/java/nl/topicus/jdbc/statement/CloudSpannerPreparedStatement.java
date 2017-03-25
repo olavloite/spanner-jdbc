@@ -29,6 +29,7 @@ import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
+import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
 
@@ -279,9 +280,18 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		String table = delete.getTable().getFullyQualifiedName();
 		Expression where = delete.getWhere();
-		Key.Builder keyBuilder = Key.newBuilder();
-		visitDeleteWhereClause(where, keyBuilder);
-		writeMutation(Mutation.delete(table, keyBuilder.build()));
+		if (where == null)
+		{
+			// Delete all
+			writeMutation(Mutation.delete(table, KeySet.all()));
+		}
+		else
+		{
+			// Delete one
+			Key.Builder keyBuilder = Key.newBuilder();
+			visitDeleteWhereClause(where, keyBuilder);
+			writeMutation(Mutation.delete(table, keyBuilder.build()));
+		}
 
 		return 1;
 	}
