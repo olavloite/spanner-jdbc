@@ -219,7 +219,6 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void close() throws SQLException
 	{
 		transaction.rollback();
-		spanner.closeAsync();
 		closed = true;
 	}
 
