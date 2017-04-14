@@ -68,6 +68,7 @@ class TransactionThread extends Thread
 					transaction.buffer(mutations);
 				}
 				stopped = true;
+				transaction.close();
 				return null;
 			}
 		});

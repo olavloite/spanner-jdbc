@@ -5,8 +5,14 @@ import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
+
+import com.google.cloud.spanner.Spanner;
 
 public class CloudSpannerDriver implements Driver
 {
@@ -33,6 +39,12 @@ public class CloudSpannerDriver implements Driver
 	private static final String KEY_FILE_URL_PART = "PvtKeyPath=";
 
 	private static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
+
+	/**
+	 * Keep track of all connections that are opened, so that we know which
+	 * Spanner instances to close.
+	 */
+	private Map<Spanner, List<CloudSpannerConnection>> connections = new HashMap<Spanner, List<CloudSpannerConnection>>();
 
 	/**
 	 * Connects to a Google Cloud Spanner database.
@@ -80,9 +92,48 @@ public class CloudSpannerDriver implements Driver
 			else
 				throw new SQLException("Unknown URL parameter " + conPart);
 		}
-		CloudSpannerConnection connection = new CloudSpannerConnection(url, project, instance, database, keyFile);
+		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, project, instance, database, keyFile);
 		connection.setSimulateProductName(productName);
+		registerConnection(connection);
+
 		return connection;
+	}
+
+	private void registerConnection(CloudSpannerConnection connection)
+	{
+		List<CloudSpannerConnection> list = connections.get(connection.getSpanner());
+		if (list == null)
+		{
+			list = new ArrayList<CloudSpannerConnection>();
+			connections.put(connection.getSpanner(), list);
+		}
+		list.add(connection);
+	}
+
+	void closeConnection(CloudSpannerConnection connection)
+	{
+		List<CloudSpannerConnection> list = connections.get(connection.getSpanner());
+		if (list == null)
+			throw new IllegalStateException("Connection is not registered");
+		if (!list.remove(connection))
+			throw new IllegalStateException("Connection is not registered");
+
+		if (list.isEmpty())
+		{
+			Spanner spanner = connection.getSpanner();
+			connections.remove(spanner);
+			spanner.closeAsync();
+		}
+	}
+
+	/**
+	 * Clean up method for the spanner services that are still open.
+	 */
+	public void cleanUp()
+	{
+		for (Spanner spanner : connections.keySet())
+			spanner.closeAsync();
+		connections.clear();
 	}
 
 	@Override

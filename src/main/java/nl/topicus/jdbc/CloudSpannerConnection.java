@@ -39,6 +39,8 @@ import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
  */
 public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 {
+	private final CloudSpannerDriver driver;
+
 	private Spanner spanner;
 
 	private DatabaseClient dbClient;
@@ -61,9 +63,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private CloudSpannerTransaction transaction;
 
-	CloudSpannerConnection(String url, String projectId, String instanceId, String database, String credentialsPath)
-			throws SQLException
+	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
+			String credentialsPath) throws SQLException
 	{
+		this.driver = driver;
 		this.instanceId = instanceId;
 		this.database = database;
 		this.url = url;
@@ -128,6 +131,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			}
 		}
 		return credentials;
+	}
+
+	Spanner getSpanner()
+	{
+		return spanner;
 	}
 
 	public void setSimulateProductName(String productName)
@@ -220,6 +228,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	{
 		transaction.rollback();
 		closed = true;
+		driver.closeConnection(this);
 	}
 
 	@Override
