@@ -24,20 +24,17 @@ You either need to
 The server name (in the example above: localhost) is ignored by the driver, but as it is a mandatory part of a JDBC URL it needs to be specified.
 The property 'SimulateProductName' indicates what database name should be returned by the method DatabaseMetaData.getDatabaseProductName().
 
-Releases are available on Maven Central. Current release is version 0.3.
+Releases are available on Maven Central. Current release is version 0.4.
 
 <div class="highlight highlight-text-xml"><pre>
 	&lt;<span class="pl-ent">dependency</span>&gt;
     	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.3&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.4&lt;/<span class="pl-ent">version</span>&gt;
 	&lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
 There is also a 'thick-jar'-version available for use with tools such as SQuirreL. This jar contains all the necessary dependencies for the driver. The thick-jar version can be found here: https://github.com/olavloite/spanner-jdbc/releases
-
-TODO:
-* Implement transactions (will be implemented in 0.4)
 
 
 Credits
