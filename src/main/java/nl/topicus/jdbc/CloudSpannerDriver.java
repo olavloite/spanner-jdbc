@@ -126,16 +126,6 @@ public class CloudSpannerDriver implements Driver
 		}
 	}
 
-	/**
-	 * Clean up method for the spanner services that are still open.
-	 */
-	public void cleanUp()
-	{
-		for (Spanner spanner : connections.keySet())
-			spanner.closeAsync();
-		connections.clear();
-	}
-
 	@Override
 	public boolean acceptsURL(String url) throws SQLException
 	{
