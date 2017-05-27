@@ -13,10 +13,10 @@ The driver also supports DDL-statements, although the DDL syntax of Google Cloud
 
 Example usage:
 
-------
+****
 spring.datasource.driver-class-name=nl.topicus.jdbc.CloudSpannerDriver
 spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL;PvtKeyPath=key_file
-------
+****
 
 
 The last two properties (SimulateProductName and PvtKeyPath) are optional.
