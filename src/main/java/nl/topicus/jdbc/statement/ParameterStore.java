@@ -37,4 +37,9 @@ public class ParameterStore
 		parameters[arrayIndex] = value;
 	}
 
+	int getHighestIndex()
+	{
+		return highestIndex;
+	}
+
 }

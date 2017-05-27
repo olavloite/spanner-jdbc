@@ -116,6 +116,16 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			public void visit(PlainSelect plainSelect)
 			{
 				setWhereParameters(plainSelect.getWhere(), builder);
+				if (plainSelect.getLimit() != null)
+				{
+					setWhereParameters(plainSelect.getLimit().getRowCount(), builder);
+				}
+				if (plainSelect.getOffset() != null && plainSelect.getOffset().isOffsetJdbcParameter())
+				{
+					ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder>(
+							getParameteStore(), builder.bind("p" + getParameteStore().getHighestIndex()));
+					binder.setValue(getParameteStore().getParameter(getParameteStore().getHighestIndex()));
+				}
 			}
 		});
 	}
