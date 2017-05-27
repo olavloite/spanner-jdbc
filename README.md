@@ -1,7 +1,16 @@
 # spanner-jdbc
 JDBC Driver for Google Cloud Spanner
 
-An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, globally consistent, relational database service from Google. The JDBC Driver that is supplied by Google is seriously limited, as it does not allow any inserts, updates or deletes, nor does it allow DDL-statements. This driver does allow these operations, although also limited because of the underlying limitations of Google Cloud Spanner. All data manipulation operations are limited to operations that operate on one record. This means that:
+An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, globally consistent, relational database service from Google. The JDBC Driver that is supplied by Google is quite limited, as it does not allow any inserts, updates or deletes, nor does it allow DDL-statements.
+
+This driver supports a number of unsupported features of the official JDBC driver:
+* DML-statements (INSERT, UPDATE, DELETE)
+* DDL-statements (CREATE TABLE, ALTER TABLE, CREATE INDEX, DROP TABLE, ...)
+* Transactions
+
+The driver ofcourse also supports normal SELECT-statements, including parameters.
+
+This driver does allow DML operations, although also limited because of the underlying limitations of Google Cloud Spanner. All data manipulation operations are limited to operations that operate on one record. This means that:
 * Inserts can only insert one row at a time
 * Updates and deletes must include a where-clause specifying the primary key (and nothing else).
 
@@ -9,13 +18,13 @@ The driver is designed to work with applications using JPA/Hibernate. See https:
 
 A simple example project using Spring Boot + JPA + Hibernate + this JDBC Driver can be found here: https://github.com/olavloite/spanner-jpa-example
 
-The driver also supports DDL-statements, although the DDL syntax of Google Cloud Spanner is quite limited in comparison to most relational databases.
-
 Example usage:
 
 ****
 spring.datasource.driver-class-name=nl.topicus.jdbc.CloudSpannerDriver
+
 spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL;PvtKeyPath=key_file
+
 ****
 
 
