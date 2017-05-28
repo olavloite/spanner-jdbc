@@ -166,12 +166,6 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	}
 
 	@Override
-	public void addBatch() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException
 	{
 		parameters.setParameter(parameterIndex, reader);

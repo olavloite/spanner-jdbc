@@ -3,6 +3,7 @@ package nl.topicus.jdbc.statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.jsqlparser.JSQLParserException;
@@ -41,6 +42,8 @@ import com.google.cloud.spanner.Mutation.WriteBuilder;
 public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedStatement
 {
 	private String sql;
+
+	private List<Mutation> batchMutations = new ArrayList<>();
 
 	public CloudSpannerPreparedStatement(String sql, CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
@@ -156,14 +159,62 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	}
 
 	@Override
+	public void addBatch() throws SQLException
+	{
+		if (getConnection().getAutoCommit())
+		{
+			throw new SQLFeatureNotSupportedException(
+					"Batching of statements is only allowed when not running in autocommit mode");
+		}
+		if (isDDLStatement())
+		{
+			throw new SQLFeatureNotSupportedException("DDL statements may not be batched");
+		}
+		Mutation mutation = createMutation();
+		batchMutations.add(mutation);
+		getParameteStore().clearParameters();
+	}
+
+	@Override
+	public void clearBatch() throws SQLException
+	{
+		batchMutations.clear();
+		getParameteStore().clearParameters();
+	}
+
+	@Override
+	public int[] executeBatch() throws SQLException
+	{
+		int[] res = new int[batchMutations.size()];
+		int index = 0;
+		for (Mutation mutation : batchMutations)
+		{
+			res[index] = writeMutation(mutation);
+			index++;
+		}
+		batchMutations.clear();
+		getParameteStore().clearParameters();
+		return res;
+	}
+
+	@Override
 	public int executeUpdate() throws SQLException
+	{
+		if (isDDLStatement())
+		{
+			String ddl = formatDDLStatement(sql);
+			return executeDDL(ddl);
+		}
+		return writeMutation(createMutation());
+	}
+
+	private Mutation createMutation() throws SQLException
 	{
 		try
 		{
 			if (isDDLStatement())
 			{
-				String ddl = formatDDLStatement(sql);
-				return executeDDL(ddl);
+				throw new SQLException("Cannot create mutation for DDL statement");
 			}
 			Statement statement = CCJSqlParserUtil.parse(sql);
 			if (statement instanceof Insert)
@@ -180,7 +231,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			}
 			else
 			{
-				throw new SQLFeatureNotSupportedException();
+				throw new SQLFeatureNotSupportedException(
+						"Unrecognized or unsupported SQL-statment: Expected one of INSERT, UPDATE or DELETE. Please note that batching of prepared statements is not supported for SELECT-statements.");
 			}
 		}
 		catch (JSQLParserException e)
@@ -241,7 +293,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return res;
 	}
 
-	private int performInsert(Insert insert) throws SQLException
+	private Mutation performInsert(Insert insert) throws SQLException
 	{
 		ItemsList items = insert.getItemsList();
 		if (!(items instanceof ExpressionList))
@@ -258,12 +310,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 							.getFullyQualifiedName())));
 			index++;
 		}
-		writeMutation(builder.build());
-
-		return 1;
+		return builder.build();
 	}
 
-	private int performUpdate(Update update) throws SQLException
+	private Mutation performUpdate(Update update) throws SQLException
 	{
 		if (update.getTables().isEmpty())
 			throw new SQLException("No table found in update statement");
@@ -281,29 +331,26 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			index++;
 		}
 		visitInsertWhereClause(update.getWhere(), builder);
-		writeMutation(builder.build());
 
-		return 1;
+		return builder.build();
 	}
 
-	private int performDelete(Delete delete) throws SQLException
+	private Mutation performDelete(Delete delete) throws SQLException
 	{
 		String table = delete.getTable().getFullyQualifiedName();
 		Expression where = delete.getWhere();
 		if (where == null)
 		{
 			// Delete all
-			writeMutation(Mutation.delete(table, KeySet.all()));
+			return Mutation.delete(table, KeySet.all());
 		}
 		else
 		{
 			// Delete one
 			Key.Builder keyBuilder = Key.newBuilder();
 			visitDeleteWhereClause(where, keyBuilder);
-			writeMutation(Mutation.delete(table, keyBuilder.build()));
+			return Mutation.delete(table, keyBuilder.build());
 		}
-
-		return 1;
 	}
 
 	private void visitDeleteWhereClause(Expression where, Key.Builder keyBuilder)

@@ -73,7 +73,7 @@ abstract class AbstractCloudSpannerStatement implements Statement
 		return connection.getTransaction();
 	}
 
-	protected void writeMutation(Mutation mutation) throws SQLException
+	protected int writeMutation(Mutation mutation) throws SQLException
 	{
 		if (connection.getAutoCommit())
 		{
@@ -92,6 +92,7 @@ abstract class AbstractCloudSpannerStatement implements Statement
 		{
 			connection.getTransaction().buffer(mutation);
 		}
+		return 1;
 	}
 
 	@Override
