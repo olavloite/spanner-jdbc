@@ -20,6 +20,7 @@ import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
 
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
@@ -64,7 +65,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private CloudSpannerTransaction transaction;
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
-			String credentialsPath) throws SQLException
+			String credentialsPath, String oauthToken) throws SQLException
 	{
 		this.driver = driver;
 		this.instanceId = instanceId;
@@ -80,6 +81,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 				GoogleCredentials credentials = getCredentialsFromFile(credentialsPath);
 				builder.setCredentials(credentials);
 			}
+			else if (oauthToken != null)
+			{
+				GoogleCredentials credentials = getCredentialsFromOAuthToken(oauthToken);
+				builder.setCredentials(credentials);
+			}
 
 			SpannerOptions options = builder.build();
 			spanner = options.getService();
@@ -91,6 +97,16 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		{
 			throw new SQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(), e);
 		}
+	}
+
+	public static GoogleCredentials getCredentialsFromOAuthToken(String oauthToken) throws IOException
+	{
+		GoogleCredentials credentials = null;
+		if (oauthToken != null && oauthToken.length() > 0)
+		{
+			credentials = new GoogleCredentials(new AccessToken(oauthToken, null));
+		}
+		return credentials;
 	}
 
 	public static GoogleCredentials getCredentialsFromFile(String credentialsPath) throws IOException

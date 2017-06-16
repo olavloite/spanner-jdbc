@@ -38,6 +38,8 @@ public class CloudSpannerDriver implements Driver
 
 	private static final String KEY_FILE_URL_PART = "PvtKeyPath=";
 
+	private static final String OAUTH_ACCESS_TOKEN_URL_PART = "OAuthAccessToken=";
+
 	private static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
 
 	/**
@@ -74,8 +76,10 @@ public class CloudSpannerDriver implements Driver
 		String instance = null;
 		String database = null;
 		String keyFile = null;
+		String oauthToken = null;
 		String productName = null;
 
+		// Get connection properties from connection string
 		for (int i = 1; i < connectionParts.length; i++)
 		{
 			String conPart = connectionParts[i].replace(" ", "");
@@ -87,12 +91,25 @@ public class CloudSpannerDriver implements Driver
 				database = conPart.substring(DATABASE_URL_PART.length());
 			else if (conPart.startsWith(KEY_FILE_URL_PART))
 				keyFile = conPart.substring(KEY_FILE_URL_PART.length());
+			else if (conPart.startsWith(OAUTH_ACCESS_TOKEN_URL_PART))
+				oauthToken = conPart.substring(OAUTH_ACCESS_TOKEN_URL_PART.length());
 			else if (conPart.startsWith(SIMULATE_PRODUCT_NAME))
 				productName = conPart.substring(SIMULATE_PRODUCT_NAME.length());
 			else
 				throw new SQLException("Unknown URL parameter " + conPart);
 		}
-		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, project, instance, database, keyFile);
+		// Get connection properties from properties
+		project = info.getProperty(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
+		instance = info.getProperty(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
+		database = info.getProperty(DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1), database);
+		keyFile = info.getProperty(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1), keyFile);
+		oauthToken = info.getProperty(
+				OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), oauthToken);
+		productName = info.getProperty(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
+				productName);
+
+		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, project, instance, database, keyFile,
+				oauthToken);
 		connection.setSimulateProductName(productName);
 		registerConnection(connection);
 
