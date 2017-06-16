@@ -9,14 +9,12 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.NClob;
-import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -230,12 +228,6 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	public void setURL(int parameterIndex, URL x) throws SQLException
 	{
 		parameters.setParameter(parameterIndex, x);
-	}
-
-	@Override
-	public ParameterMetaData getParameterMetaData() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
 	}
 
 	@Override

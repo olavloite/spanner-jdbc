@@ -9,11 +9,11 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 
-public class CloudSpannerMetaData extends AbstractCloudSpannerMetaData
+public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMetaData
 {
 	private CloudSpannerConnection connection;
 
-	CloudSpannerMetaData(CloudSpannerConnection connection)
+	CloudSpannerDatabaseMetaData(CloudSpannerConnection connection)
 	{
 		this.connection = connection;
 	}

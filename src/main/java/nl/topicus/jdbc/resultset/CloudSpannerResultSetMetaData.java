@@ -5,28 +5,17 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
 
-import com.google.cloud.spanner.ResultSet;
-import com.google.cloud.spanner.Type;
+import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 
-public class CloudSpannerResultSetMetaData implements ResultSetMetaData
+import com.google.cloud.spanner.ResultSet;
+
+public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper implements ResultSetMetaData
 {
 	private ResultSet resultSet;
 
 	public CloudSpannerResultSetMetaData(ResultSet resultSet)
 	{
 		this.resultSet = resultSet;
-	}
-
-	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException
-	{
-		return null;
-	}
-
-	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException
-	{
-		return false;
 	}
 
 	@Override
@@ -124,25 +113,6 @@ public class CloudSpannerResultSetMetaData implements ResultSetMetaData
 	public int getColumnType(int column) throws SQLException
 	{
 		return extractColumnType(resultSet.getColumnType(column - 1));
-	}
-
-	public static int extractColumnType(Type type)
-	{
-		if (type.equals(Type.bool()))
-			return Types.BOOLEAN;
-		if (type.equals(Type.bytes()))
-			return Types.BINARY;
-		if (type.equals(Type.date()))
-			return Types.DATE;
-		if (type.equals(Type.float64()))
-			return Types.DOUBLE;
-		if (type.equals(Type.int64()))
-			return Types.BIGINT;
-		if (type.equals(Type.string()))
-			return Types.VARCHAR;
-		if (type.equals(Type.timestamp()))
-			return Types.TIMESTAMP;
-		return Types.OTHER;
 	}
 
 	@Override

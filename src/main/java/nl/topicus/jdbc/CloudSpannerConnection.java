@@ -256,7 +256,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public DatabaseMetaData getMetaData() throws SQLException
 	{
-		return new CloudSpannerMetaData(this);
+		return new CloudSpannerDatabaseMetaData(this);
 	}
 
 	@Override
