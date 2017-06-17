@@ -2,7 +2,6 @@ package nl.topicus.jdbc.resultset;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
 
 import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
@@ -142,7 +141,7 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public String getColumnClassName(int column) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return getClassName(getColumnType(column));
 	}
 
 }

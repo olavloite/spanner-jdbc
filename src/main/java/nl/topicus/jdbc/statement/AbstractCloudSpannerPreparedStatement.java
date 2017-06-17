@@ -46,7 +46,7 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	@Override
 	public void setNull(int parameterIndex, int sqlType) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, null);
+		parameters.setParameter(parameterIndex, null, sqlType, null);
 	}
 
 	@Override
@@ -130,19 +130,19 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	@Override
 	public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, x);
+		parameters.setParameter(parameterIndex, x, null, length);
 	}
 
 	@Override
 	public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, x);
+		parameters.setParameter(parameterIndex, x, null, length);
 	}
 
 	@Override
 	public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, x);
+		parameters.setParameter(parameterIndex, x, null, length);
 	}
 
 	@Override
@@ -154,7 +154,7 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	@Override
 	public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, x);
+		parameters.setParameter(parameterIndex, x, targetSqlType, null);
 	}
 
 	@Override
@@ -166,7 +166,7 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	@Override
 	public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, reader);
+		parameters.setParameter(parameterIndex, reader, null, length);
 	}
 
 	@Override
@@ -221,7 +221,7 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	@Override
 	public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, null);
+		parameters.setParameter(parameterIndex, null, sqlType, null);
 	}
 
 	@Override
@@ -281,7 +281,7 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	@Override
 	public void setObject(int parameterIndex, Object x, int targetSqlType, int scaleOrLength) throws SQLException
 	{
-		parameters.setParameter(parameterIndex, x);
+		parameters.setParameter(parameterIndex, x, targetSqlType, scaleOrLength);
 	}
 
 	@Override

@@ -1,6 +1,8 @@
 package nl.topicus.jdbc.metadata;
 
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.sql.Wrapper;
 
@@ -46,6 +48,26 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 			return Type.timestamp().getCode().name();
 
 		return "Other";
+	}
+
+	public static String getClassName(int sqlType)
+	{
+		if (sqlType == Types.BOOLEAN)
+			return Boolean.class.getName();
+		if (sqlType == Types.BINARY)
+			return Byte[].class.getName();
+		if (sqlType == Types.DATE)
+			return Date.class.getName();
+		if (sqlType == Types.DOUBLE || sqlType == Types.FLOAT || sqlType == Types.DECIMAL)
+			return Double.class.getName();
+		if (sqlType == Types.BIGINT || sqlType == Types.INTEGER || sqlType == Types.TINYINT)
+			return Long.class.getName();
+		if (sqlType == Types.VARCHAR)
+			return String.class.getName();
+		if (sqlType == Types.TIMESTAMP)
+			return Timestamp.class.getName();
+
+		return null;
 	}
 
 	@Override

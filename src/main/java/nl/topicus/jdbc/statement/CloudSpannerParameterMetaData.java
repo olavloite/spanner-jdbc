@@ -72,12 +72,17 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public int getScale(int param) throws SQLException
 	{
-		return 0;
+		Integer scale = parameters.getScaleOrLength(param);
+		return scale == null ? 0 : scale.intValue();
 	}
 
 	@Override
 	public int getParameterType(int param) throws SQLException
 	{
+		Integer type = parameters.getType(param);
+		if (type != null)
+			return type.intValue();
+
 		Object value = parameters.getParameter(param);
 		if (value == null)
 		{
@@ -145,6 +150,9 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 		Object value = parameters.getParameter(param);
 		if (value != null)
 			return value.getClass().getName();
+		Integer type = parameters.getType(param);
+		if (type != null)
+			return getClassName(type.intValue());
 		return null;
 	}
 
@@ -152,6 +160,33 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 	public int getParameterMode(int param) throws SQLException
 	{
 		return parameterModeIn;
+	}
+
+	@Override
+	public String toString()
+	{
+		StringBuilder res = new StringBuilder();
+		try
+		{
+			res.append("CloudSpannerPreparedStatementParameterMetaData, parameter count: ").append(getParameterCount());
+			for (int param = 1; param <= getParameterCount(); param++)
+			{
+				res.append("\nParameter ").append(param).append(":\n\t Class name: ")
+						.append(getParameterClassName(param));
+				res.append(",\n\t Parameter type name: ").append(getParameterTypeName(param));
+				res.append(",\n\t Parameter type: ").append(getParameterType(param));
+				res.append(",\n\t Parameter precision: ").append(getPrecision(param));
+				res.append(",\n\t Parameter scale: ").append(getScale(param));
+				res.append(",\n\t Parameter signed: ").append(isSigned(param));
+				res.append(",\n\t Parameter nullable: ").append(isNullable(param));
+				res.append(",\n\t Parameter mode: ").append(getParameterMode(param));
+			}
+		}
+		catch (SQLException e)
+		{
+			res.append("Error while fetching parameter metadata: ").append(e.getMessage());
+		}
+		return res.toString();
 	}
 
 }
