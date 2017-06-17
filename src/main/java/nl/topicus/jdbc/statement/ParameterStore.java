@@ -20,6 +20,8 @@ public class ParameterStore
 	void clearParameters()
 	{
 		parameters = new Object[10];
+		types = new Integer[10];
+		scalesOrLengths = new Integer[10];
 	}
 
 	Object getParameter(int parameterIndex)
