@@ -166,13 +166,13 @@ public abstract class AbstractCloudSpannerConnection implements Connection
 	@Override
 	public String getClientInfo(String name) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return null;
 	}
 
 	@Override
 	public Properties getClientInfo() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return new Properties();
 	}
 
 	@Override
@@ -190,13 +190,13 @@ public abstract class AbstractCloudSpannerConnection implements Connection
 	@Override
 	public void setSchema(String schema) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		// silently ignore
 	}
 
 	@Override
 	public String getSchema() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return null;
 	}
 
 	@Override

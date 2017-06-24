@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Types;
 
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 
@@ -39,7 +40,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public String getUserName() throws SQLException
 	{
-		return null;
+		return connection.getClientId();
 	}
 
 	@Override
@@ -81,7 +82,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public String getDatabaseProductVersion() throws SQLException
 	{
-		return null;
+		return getDatabaseMajorVersion() + "." + getDatabaseMinorVersion();
 	}
 
 	@Override
@@ -93,7 +94,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public String getDriverVersion() throws SQLException
 	{
-		return CloudSpannerDriver.MAJOR_VERSION + "." + CloudSpannerDriver.MINOR_VERSION;
+		return getDriverMajorVersion() + "." + getDriverMinorVersion();
 	}
 
 	@Override
@@ -803,7 +804,36 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
 			throws SQLException
 	{
-		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, 1 AS DATA_TYPE, SPANNER_TYPE AS TYPE_NAME, "
+		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
+				+ "CASE " + "	WHEN SPANNER_TYPE = 'ARRAY' THEN "
+				+ Types.ARRAY
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN "
+				+ Types.BOOLEAN
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'BYTES' THEN "
+				+ Types.BINARY
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'DATE' THEN "
+				+ Types.DATE
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'FLOAT64' THEN "
+				+ Types.DOUBLE
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'INT64' THEN "
+				+ Types.BIGINT
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'STRING' THEN "
+				+ Types.NVARCHAR
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'STRUCT' THEN "
+				+ Types.STRUCT
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN "
+				+ Types.TIMESTAMP
+				+ " "
+				+ "END AS DATA_TYPE, "
+				+ "SPANNER_TYPE AS TYPE_NAME, "
 				+ "0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, "
 				+ "CASE "
 				+ "	WHEN IS_NULLABLE = 'YES' THEN 1 "
@@ -1081,31 +1111,31 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public int getDatabaseMajorVersion() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return 1;
 	}
 
 	@Override
 	public int getDatabaseMinorVersion() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return 0;
 	}
 
 	@Override
 	public int getJDBCMajorVersion() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return CloudSpannerDriver.getDriverMajorVersion();
 	}
 
 	@Override
 	public int getJDBCMinorVersion() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return CloudSpannerDriver.getDriverMinorVersion();
 	}
 
 	@Override
 	public int getSQLStateType() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return sqlStateSQL;
 	}
 
 	@Override
@@ -1129,7 +1159,12 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CATALOG " + "FROM information_schema.tables tbl "
+				+ "WHERE 1=2 ";
+		sql = sql + "ORDER BY TABLE_SCHEM ";
+
+		PreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
@@ -1147,27 +1182,86 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getClientInfoProperties() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS NAME, 0 AS MAX_LEN, '' AS DEFAULT_VALUE, '' AS DESCRIPTION "
+				+ "FROM information_schema.tables tbl " + "WHERE 1=2 ";
+		sql = sql + "ORDER BY NAME ";
+
+		PreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS REMARKS, 0 AS FUNCTION_TYPE, '' AS SPECIFIC_NAME "
+				+ "FROM information_schema.tables tbl " + "WHERE 1=2 ";
+		sql = sql + "ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
+
+		PreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
 			String columnNamePattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS COLUMN_NAME, 0 AS COLUMN_TYPE, 1111 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS PRECISION, 0 AS LENGTH, 0 AS SCALE, 0 AS RADIX, 0 AS NULLABLE, '' AS REMARKS, 0 AS CHAR_OCTET_LENGTH, 0 AS ORDINAL_POSITION, '' AS IS_NULLABLE, '' AS SPECIFIC_NAME "
+				+ "FROM information_schema.tables tbl " + "WHERE 1=2 ";
+		sql = sql + "ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
+
+		PreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
 			String columnNamePattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
+				+ "CASE " + "	WHEN SPANNER_TYPE = 'ARRAY' THEN "
+				+ Types.ARRAY
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN "
+				+ Types.BOOLEAN
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'BYTES' THEN "
+				+ Types.BINARY
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'DATE' THEN "
+				+ Types.DATE
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'FLOAT64' THEN "
+				+ Types.DOUBLE
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'INT64' THEN "
+				+ Types.BIGINT
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'STRING' THEN "
+				+ Types.NVARCHAR
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'STRUCT' THEN "
+				+ Types.STRUCT
+				+ " "
+				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN "
+				+ Types.TIMESTAMP
+				+ " "
+				+ "END AS DATA_TYPE, "
+				+ "0 AS COLUMN_SIZE, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, 'USAGE_UNKNOWN' AS COLUMN_USAGE, NULL AS REMARKS, 0 AS CHAR_OCTET_LENGTH, IS_NULLABLE "
+				+ "FROM information_schema.columns " + "WHERE 1=2 ";
+
+		if (catalog != null)
+			sql = sql + "AND UPPER(TABLE_CATALOG) like ? ";
+		if (schemaPattern != null)
+			sql = sql + "AND UPPER(TABLE_SCHEMA) like ? ";
+		if (tableNamePattern != null)
+			sql = sql + "AND UPPER(TABLE_NAME) like ? ";
+		if (columnNamePattern != null)
+			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
+		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern,
+				columnNamePattern);
+		return statement.executeQuery();
 	}
 
 	@Override

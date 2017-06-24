@@ -25,6 +25,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private boolean beforeFirst = true;
 
+	private boolean afterLast = false;
+
 	private boolean nextCalledForMetaData = false;
 
 	private boolean nextCalledForMetaDataResult = false;
@@ -51,7 +53,10 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			return nextCalledForMetaDataResult;
 		}
 		beforeFirst = false;
-		return resultSet.next();
+		boolean res = resultSet.next();
+		afterLast = !res;
+
+		return res;
 	}
 
 	@Override
@@ -188,6 +193,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		if (beforeFirst)
 		{
 			nextCalledForMetaDataResult = resultSet.next();
+			afterLast = !nextCalledForMetaDataResult;
 			beforeFirst = false;
 			nextCalledForMetaData = true;
 		}
@@ -197,11 +203,24 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public int findColumn(String columnLabel) throws SQLException
 	{
-		return resultSet.getColumnIndex(columnLabel) + 1;
+		try
+		{
+			return resultSet.getColumnIndex(columnLabel) + 1;
+		}
+		catch (IllegalArgumentException e)
+		{
+			throw new SQLException("Column not found: " + columnLabel, e);
+		}
 	}
 
-	private boolean isNull(int columnIndex)
+	private boolean isNull(int columnIndex) throws SQLException
 	{
+		if (closed)
+			throw new SQLException("Resultset is closed");
+		if (afterLast)
+			throw new SQLException("After last record");
+		if (beforeFirst)
+			throw new SQLException("Before first record");
 		boolean res = resultSet.isNull(columnIndex - 1);
 		wasNull = res;
 		return res;

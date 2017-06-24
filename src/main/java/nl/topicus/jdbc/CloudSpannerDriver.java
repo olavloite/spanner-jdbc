@@ -160,11 +160,21 @@ public class CloudSpannerDriver implements Driver
 	@Override
 	public int getMajorVersion()
 	{
+		return getDriverMajorVersion();
+	}
+
+	public static int getDriverMajorVersion()
+	{
 		return MAJOR_VERSION;
 	}
 
 	@Override
 	public int getMinorVersion()
+	{
+		return getDriverMinorVersion();
+	}
+
+	public static int getDriverMinorVersion()
 	{
 		return MINOR_VERSION;
 	}

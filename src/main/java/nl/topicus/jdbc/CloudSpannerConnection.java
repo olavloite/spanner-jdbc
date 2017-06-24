@@ -22,6 +22,8 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.auth.oauth2.UserCredentials;
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
@@ -43,6 +45,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private final CloudSpannerDriver driver;
 
 	private Spanner spanner;
+
+	private String clientId;
 
 	private DatabaseClient dbClient;
 
@@ -76,15 +80,27 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			Builder builder = SpannerOptions.newBuilder();
 			if (projectId != null)
 				builder.setProjectId(projectId);
+			GoogleCredentials credentials = null;
 			if (credentialsPath != null)
 			{
-				GoogleCredentials credentials = getCredentialsFromFile(credentialsPath);
+				credentials = getCredentialsFromFile(credentialsPath);
 				builder.setCredentials(credentials);
 			}
 			else if (oauthToken != null)
 			{
-				GoogleCredentials credentials = getCredentialsFromOAuthToken(oauthToken);
+				credentials = getCredentialsFromOAuthToken(oauthToken);
 				builder.setCredentials(credentials);
+			}
+			if (credentials != null)
+			{
+				if (credentials instanceof UserCredentials)
+				{
+					clientId = ((UserCredentials) credentials).getClientId();
+				}
+				if (credentials instanceof ServiceAccountCredentials)
+				{
+					clientId = ((ServiceAccountCredentials) credentials).getClientId();
+				}
 			}
 
 			SpannerOptions options = builder.build();
@@ -335,6 +351,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public String getUrl()
 	{
 		return url;
+	}
+
+	public String getClientId()
+	{
+		return clientId;
 	}
 
 }
