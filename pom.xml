@@ -113,7 +113,6 @@
 										</includes>
 										<excludes>
 											<exclude>java:*</exclude>
-											<exclude>javax:*</exclude>
 											<exclude>junit:*</exclude>
 										</excludes>
 									</artifactSet>
@@ -122,6 +121,30 @@
 											implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 									</transformers>
 									<relocations>
+										<relocation>
+											<pattern>javax.annotation.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.annotation.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.inject.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.inject.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.jdo.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.jdo.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.annotation.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.annotation.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.servlet.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.servlet.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.transaction.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.transaction.</shadedPattern>
+										</relocation>
 										<relocation>
 											<pattern>com.</pattern>
 											<shadedPattern>nl.topicus.jdbc.shaded.com.</shadedPattern>
