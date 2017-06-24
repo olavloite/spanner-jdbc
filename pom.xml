@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<properties>
 		<java.version>1.8</java.version>
@@ -85,22 +86,96 @@
 			<id>single-jar</id>
 			<build>
 				<plugins>
+					<!-- <plugin> <artifactId>maven-assembly-plugin</artifactId> <executions> 
+						<execution> <id>jar-with-dependencies</id> <phase>package</phase> <goals> 
+						<goal>single</goal> </goals> </execution> </executions> <configuration> <descriptorRefs> 
+						<descriptorRef>jar-with-dependencies</descriptorRef> </descriptorRefs> </configuration> 
+						</plugin> -->
 					<plugin>
-						<artifactId>maven-assembly-plugin</artifactId>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<version>3.0.0</version>
 						<executions>
 							<execution>
-								<id>jar-with-dependencies</id>
 								<phase>package</phase>
 								<goals>
-									<goal>single</goal>
+									<goal>shade</goal>
 								</goals>
+								<configuration>
+									<createSourcesJar>true</createSourcesJar>
+									<shadeSourcesContent>true</shadeSourcesContent>
+									<shadedArtifactAttached>false</shadedArtifactAttached>
+									<promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+									<dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+									<artifactSet>
+										<includes>
+											<include>*:*</include>
+										</includes>
+										<excludes>
+											<exclude>java:*</exclude>
+											<exclude>javax:*</exclude>
+											<exclude>junit:*</exclude>
+										</excludes>
+									</artifactSet>
+									<transformers>
+										<transformer
+											implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+									</transformers>
+									<relocations>
+										<relocation>
+											<pattern>com.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.com.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>net.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.net.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>io.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.io.</shadedPattern>
+										</relocation>
+										<!-- 
+										<relocation>
+											<pattern>google.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.google.</shadedPattern>
+										</relocation>
+										 -->
+										<relocation>
+											<pattern>autovalue.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.autovalue.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.json.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.json.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.aopalliance.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.aopalliance.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.codehaus.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.codehaus.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.joda.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.joda.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.hamcrest.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.hamcrest.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.apache.commons.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.apache.commons.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.apache.http.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.apache.http.</shadedPattern>
+										</relocation>
+									</relocations>
+								</configuration>
 							</execution>
 						</executions>
-						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>
