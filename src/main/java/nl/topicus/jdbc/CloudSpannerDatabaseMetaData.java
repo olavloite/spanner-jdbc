@@ -761,7 +761,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException
 	{
-		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION "
+		String sql = "select CASE WHEN TABLE_CATALOG='' THEN NULL ELSE TABLE_CATALOG END AS TABLE_CAT, CASE WHEN TABLE_SCHEMA='' THEN NULL ELSE TABLE_SCHEMA END AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION "
 				+ "FROM information_schema.tables AS t " + "WHERE 1=1 ";
 		if (catalog != null)
 			sql = sql + "AND UPPER(t.TABLE_CATALOG) like ? ";
@@ -778,7 +778,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSchemas() throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_SCHEM, NULL AS TABLE_CAT";
+		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CAT WHERE 1=2";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -787,7 +787,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getCatalogs() throws SQLException
 	{
-		String sql = "SELECT NULL AS TABLE_CAT";
+		String sql = "SELECT '' AS TABLE_CAT WHERE 1=2";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
