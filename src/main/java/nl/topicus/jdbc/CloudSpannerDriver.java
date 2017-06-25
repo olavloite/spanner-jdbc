@@ -135,7 +135,7 @@ public class CloudSpannerDriver implements Driver
 			List<String> arguments = runtimeMxBean.getInputArguments();
 			for (String arg : arguments)
 			{
-				if (arg.startsWith("-Djava.util.logging.config.file"))
+				if (arg.startsWith("-Djava.util.logging.config"))
 					return;
 			}
 		}
