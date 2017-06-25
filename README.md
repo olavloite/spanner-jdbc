@@ -31,23 +31,23 @@ spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=i
 The last two properties (SimulateProductName and PvtKeyPath) are optional.
 
 You either need to
-* Create an environment variable GOOGLE_APPLICATION_CREDENTIALS that points to a credentials file for a Google Cloud 	Spanner project.
+* Create an environment variable GOOGLE_APPLICATION_CREDENTIALS that points to a credentials file for a Google Cloud Spanner project.
 * OR Supply the parameter PvtKeyPath that points to a file containing the credentials to use.
 
 The server name (in the example above: localhost) is ignored by the driver, but as it is a mandatory part of a JDBC URL it needs to be specified.
 The property 'SimulateProductName' indicates what database name should be returned by the method DatabaseMetaData.getDatabaseProductName(). This can be used in combination with for example Spring Batch. Spring Batch automatically generates a schema for batch jobs, parameters etc., but does so only if it recognizes the underlying database. Supplying PostgreSQL as a value for this parameter, ensures the correct schema generation.
 
-Releases are available on Maven Central. Current release is version 0.5.
+Releases are available on Maven Central. Current release is version 0.6.
 
 <div class="highlight highlight-text-xml"><pre>
 	&lt;<span class="pl-ent">dependency</span>&gt;
     		&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     		&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    		&lt;<span class="pl-ent">version</span>&gt;0.5&lt;/<span class="pl-ent">version</span>&gt;
+    		&lt;<span class="pl-ent">version</span>&gt;0.6&lt;/<span class="pl-ent">version</span>&gt;
 	&lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
-There is also a 'thick-jar'-version available for use with tools such as SQuirreL. This jar contains all the necessary dependencies for the driver. The thick-jar version can be found here: https://github.com/olavloite/spanner-jdbc/releases
+There is also a 'thick-jar'-version available for use with tools such as SQuirreL, DbVisualizer or Safe FME. This jar contains all the necessary dependencies for the driver. The thick-jar version can be found here: https://github.com/olavloite/spanner-jdbc/releases
 
 
 Credits
