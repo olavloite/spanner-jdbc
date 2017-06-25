@@ -839,18 +839,6 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 	}
 
 	@Override
-	public boolean isBeforeFirst() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public boolean isAfterLast() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public boolean isFirst() throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();

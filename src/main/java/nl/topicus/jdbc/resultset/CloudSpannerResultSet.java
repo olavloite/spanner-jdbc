@@ -392,4 +392,16 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	{
 	}
 
+	@Override
+	public boolean isBeforeFirst() throws SQLException
+	{
+		return beforeFirst;
+	}
+
+	@Override
+	public boolean isAfterLast() throws SQLException
+	{
+		return afterLast;
+	}
+
 }
