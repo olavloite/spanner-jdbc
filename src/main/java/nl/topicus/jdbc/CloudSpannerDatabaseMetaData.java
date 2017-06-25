@@ -12,6 +12,10 @@ import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 
 public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMetaData
 {
+	private final int JDBC_MAJOR_VERSION = 4;
+
+	private final int JDBC_MINOR_VERSION = 2;
+
 	private CloudSpannerConnection connection;
 
 	CloudSpannerDatabaseMetaData(CloudSpannerConnection connection)
@@ -1123,13 +1127,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public int getJDBCMajorVersion() throws SQLException
 	{
-		return CloudSpannerDriver.getDriverMajorVersion();
+		return JDBC_MAJOR_VERSION;
 	}
 
 	@Override
 	public int getJDBCMinorVersion() throws SQLException
 	{
-		return CloudSpannerDriver.getDriverMinorVersion();
+		return JDBC_MINOR_VERSION;
 	}
 
 	@Override
