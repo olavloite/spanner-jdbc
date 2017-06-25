@@ -1,5 +1,7 @@
 package nl.topicus.jdbc;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
@@ -10,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.google.cloud.spanner.Spanner;
@@ -68,6 +73,7 @@ public class CloudSpannerDriver implements Driver
 	{
 		if (!acceptsURL(url))
 			return null;
+		checkAndSetLogging();
 
 		String[] parts = url.split(":", 3);
 		String[] connectionParts = parts[2].split(";");
@@ -114,6 +120,35 @@ public class CloudSpannerDriver implements Driver
 		registerConnection(connection);
 
 		return connection;
+	}
+
+	/**
+	 * Checks whether a logging properties file has been specified for this VM.
+	 * If not, the default logging level is changed to avoid a lot of debugging
+	 * logging.
+	 */
+	private void checkAndSetLogging()
+	{
+		try
+		{
+			RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+			List<String> arguments = runtimeMxBean.getInputArguments();
+			for (String arg : arguments)
+			{
+				if (arg.startsWith("-Djava.util.logging.config.file"))
+					return;
+			}
+		}
+		catch (Exception e)
+		{
+			// ignore
+			return;
+		}
+		Logger logger = LogManager.getLogManager().getLogger("");
+		for (Handler handler : logger.getHandlers())
+		{
+			handler.setLevel(Level.WARNING);
+		}
 	}
 
 	private void registerConnection(CloudSpannerConnection connection)
