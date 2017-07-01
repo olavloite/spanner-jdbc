@@ -125,7 +125,7 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 		}
 		else if (String.class.isAssignableFrom(value.getClass()))
 		{
-			return Types.VARCHAR;
+			return Types.NVARCHAR;
 		}
 		else if (byte[].class.isAssignableFrom(value.getClass()))
 		{

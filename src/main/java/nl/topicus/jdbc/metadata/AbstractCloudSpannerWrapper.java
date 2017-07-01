@@ -24,7 +24,7 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 		if (type.equals(Type.int64()))
 			return Types.BIGINT;
 		if (type.equals(Type.string()))
-			return Types.VARCHAR;
+			return Types.NVARCHAR;
 		if (type.equals(Type.timestamp()))
 			return Types.TIMESTAMP;
 		return Types.OTHER;
@@ -42,7 +42,7 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 			return Type.float64().getCode().name();
 		if (sqlType == Types.BIGINT || sqlType == Types.INTEGER || sqlType == Types.TINYINT)
 			return Type.int64().getCode().name();
-		if (sqlType == Types.VARCHAR)
+		if (sqlType == Types.NVARCHAR)
 			return Type.string().getCode().name();
 		if (sqlType == Types.TIMESTAMP)
 			return Type.timestamp().getCode().name();
@@ -62,7 +62,7 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 			return Double.class.getName();
 		if (sqlType == Types.BIGINT || sqlType == Types.INTEGER || sqlType == Types.TINYINT)
 			return Long.class.getName();
-		if (sqlType == Types.VARCHAR)
+		if (sqlType == Types.NVARCHAR)
 			return String.class.getName();
 		if (sqlType == Types.TIMESTAMP)
 			return Timestamp.class.getName();

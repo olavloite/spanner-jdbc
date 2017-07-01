@@ -809,13 +809,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
-				+ "CASE " + "	WHEN SPANNER_TYPE = 'ARRAY' THEN "
+				+ "CASE " + "	WHEN SPANNER_TYPE LIKE 'ARRAY%' THEN "
 				+ Types.ARRAY
 				+ " "
 				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN "
 				+ Types.BOOLEAN
 				+ " "
-				+ "	WHEN SPANNER_TYPE = 'BYTES' THEN "
+				+ "	WHEN SPANNER_TYPE LIKE 'BYTES%' THEN "
 				+ Types.BINARY
 				+ " "
 				+ "	WHEN SPANNER_TYPE = 'DATE' THEN "
@@ -827,10 +827,10 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "	WHEN SPANNER_TYPE = 'INT64' THEN "
 				+ Types.BIGINT
 				+ " "
-				+ "	WHEN SPANNER_TYPE = 'STRING' THEN "
+				+ "	WHEN SPANNER_TYPE LIKE 'STRING%' THEN "
 				+ Types.NVARCHAR
 				+ " "
-				+ "	WHEN SPANNER_TYPE = 'STRUCT' THEN "
+				+ "	WHEN SPANNER_TYPE LIKE 'STRUCT%' THEN "
 				+ Types.STRUCT
 				+ " "
 				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN "
