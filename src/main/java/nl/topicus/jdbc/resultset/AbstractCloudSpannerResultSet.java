@@ -35,55 +35,7 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 	}
 
 	@Override
-	public InputStream getAsciiStream(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public InputStream getUnicodeStream(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public InputStream getBinaryStream(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public InputStream getAsciiStream(String columnLabel) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public InputStream getUnicodeStream(String columnLabel) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public InputStream getBinaryStream(String columnLabel) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public String getCursorName() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Reader getCharacterStream(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Reader getCharacterStream(String columnLabel) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
 	}
@@ -103,7 +55,8 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 	@Override
 	public void setFetchDirection(int direction) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		if (direction != ResultSet.FETCH_FORWARD)
+			throw new SQLFeatureNotSupportedException("Only FETCH_FORWARD is supported");
 	}
 
 	@Override
@@ -115,13 +68,13 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 	@Override
 	public void setFetchSize(int rows) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		// silently ignore
 	}
 
 	@Override
 	public int getFetchSize() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return 1;
 	}
 
 	@Override
@@ -630,30 +583,6 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 
 	@Override
 	public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public String getNString(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public String getNString(String columnLabel) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Reader getNCharacterStream(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Reader getNCharacterStream(String columnLabel) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
 	}

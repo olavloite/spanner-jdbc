@@ -1,7 +1,13 @@
 package nl.topicus.jdbc.resultset;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -402,6 +408,90 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public boolean isAfterLast() throws SQLException
 	{
 		return afterLast;
+	}
+
+	@Override
+	public Reader getCharacterStream(int columnIndex) throws SQLException
+	{
+		String val = getString(columnIndex);
+		return val == null ? null : new StringReader(val);
+	}
+
+	@Override
+	public Reader getCharacterStream(String columnLabel) throws SQLException
+	{
+		String val = getString(columnLabel);
+		return val == null ? null : new StringReader(val);
+	}
+
+	private InputStream getInputStream(String val, Charset charset)
+	{
+		if (val == null)
+			return null;
+		byte[] b = val.getBytes(charset);
+		return new ByteArrayInputStream(b);
+	}
+
+	@Override
+	public InputStream getAsciiStream(int columnIndex) throws SQLException
+	{
+		return getInputStream(getString(columnIndex), StandardCharsets.US_ASCII);
+	}
+
+	@Override
+	public InputStream getUnicodeStream(int columnIndex) throws SQLException
+	{
+		return getInputStream(getString(columnIndex), StandardCharsets.UTF_16LE);
+	}
+
+	@Override
+	public InputStream getBinaryStream(int columnIndex) throws SQLException
+	{
+		byte[] val = getBytes(columnIndex);
+		return val == null ? null : new ByteArrayInputStream(val);
+	}
+
+	@Override
+	public InputStream getAsciiStream(String columnLabel) throws SQLException
+	{
+		return getInputStream(getString(columnLabel), StandardCharsets.US_ASCII);
+	}
+
+	@Override
+	public InputStream getUnicodeStream(String columnLabel) throws SQLException
+	{
+		return getInputStream(getString(columnLabel), StandardCharsets.UTF_16LE);
+	}
+
+	@Override
+	public InputStream getBinaryStream(String columnLabel) throws SQLException
+	{
+		byte[] val = getBytes(columnLabel);
+		return val == null ? null : new ByteArrayInputStream(val);
+	}
+
+	@Override
+	public String getNString(int columnIndex) throws SQLException
+	{
+		return getString(columnIndex);
+	}
+
+	@Override
+	public String getNString(String columnLabel) throws SQLException
+	{
+		return getString(columnLabel);
+	}
+
+	@Override
+	public Reader getNCharacterStream(int columnIndex) throws SQLException
+	{
+		return getCharacterStream(columnIndex);
+	}
+
+	@Override
+	public Reader getNCharacterStream(String columnLabel) throws SQLException
+	{
+		return getCharacterStream(columnLabel);
 	}
 
 }
