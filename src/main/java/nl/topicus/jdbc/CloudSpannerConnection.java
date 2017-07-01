@@ -9,6 +9,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
@@ -356,6 +357,19 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public String getClientId()
 	{
 		return clientId;
+	}
+
+	@Override
+	public boolean isValid(int timeout) throws SQLException
+	{
+		Statement statement = createStatement();
+		statement.setQueryTimeout(timeout);
+		try (ResultSet rs = statement.executeQuery("SELECT 1"))
+		{
+			if (rs.next())
+				return true;
+		}
+		return false;
 	}
 
 }

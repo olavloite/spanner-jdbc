@@ -6,6 +6,7 @@ import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
+import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -81,13 +82,14 @@ public abstract class AbstractCloudSpannerConnection implements Connection
 	@Override
 	public void setHoldability(int holdability) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		if (holdability != ResultSet.CLOSE_CURSORS_AT_COMMIT)
+			throw new SQLFeatureNotSupportedException();
 	}
 
 	@Override
 	public int getHoldability() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return ResultSet.CLOSE_CURSORS_AT_COMMIT;
 	}
 
 	@Override
@@ -141,12 +143,6 @@ public abstract class AbstractCloudSpannerConnection implements Connection
 
 	@Override
 	public SQLXML createSQLXML() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public boolean isValid(int timeout) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
 	}
