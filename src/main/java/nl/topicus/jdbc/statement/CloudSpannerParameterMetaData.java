@@ -11,48 +11,47 @@ import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 
 public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper implements ParameterMetaData
 {
-	private final String sql;
+	private final CloudSpannerPreparedStatement statement;
 
-	private final ParameterStore parameters;
-
-	private int parameterCount = -1;
-
-	CloudSpannerParameterMetaData(String sql, ParameterStore parameters)
+	CloudSpannerParameterMetaData(CloudSpannerPreparedStatement statement) throws SQLException
 	{
-		this.sql = sql;
-		this.parameters = parameters;
+		this.statement = statement;
+		statement.getParameterStore().fetchMetaData(statement.getConnection());
 	}
 
 	@Override
 	public int getParameterCount() throws SQLException
 	{
-		if (parameterCount == -1)
-		{
-			parameterCount = 0;
-			boolean inString = false;
-			StringBuilder res = new StringBuilder(sql);
-			int i = 0;
-			while (i < res.length())
-			{
-				char c = res.charAt(i);
-				if (c == '\'')
-				{
-					inString = !inString;
-				}
-				else if (c == '?' && !inString)
-				{
-					parameterCount++;
-				}
-				i++;
-			}
-		}
-		return parameterCount;
+		return statement.getParameterStore().getHighestIndex();
+
+		// if (parameterCount == -1)
+		// {
+		// parameterCount = 0;
+		// boolean inString = false;
+		// StringBuilder res = new StringBuilder(sql);
+		// int i = 0;
+		// while (i < res.length())
+		// {
+		// char c = res.charAt(i);
+		// if (c == '\'')
+		// {
+		// inString = !inString;
+		// }
+		// else if (c == '?' && !inString)
+		// {
+		// parameterCount++;
+		// }
+		// i++;
+		// }
+		// }
+		// return parameterCount;
 	}
 
 	@Override
 	public int isNullable(int param) throws SQLException
 	{
-		return parameterNullableUnknown;
+		Integer nullable = statement.getParameterStore().getNullable(param);
+		return nullable == null ? parameterNullableUnknown : nullable.intValue();
 	}
 
 	@Override
@@ -66,24 +65,24 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public int getPrecision(int param) throws SQLException
 	{
-		return 0;
+		Integer length = statement.getParameterStore().getScaleOrLength(param);
+		return length == null ? 0 : length.intValue();
 	}
 
 	@Override
 	public int getScale(int param) throws SQLException
 	{
-		Integer scale = parameters.getScaleOrLength(param);
-		return scale == null ? 0 : scale.intValue();
+		return 0;
 	}
 
 	@Override
 	public int getParameterType(int param) throws SQLException
 	{
-		Integer type = parameters.getType(param);
+		Integer type = statement.getParameterStore().getType(param);
 		if (type != null)
 			return type.intValue();
 
-		Object value = parameters.getParameter(param);
+		Object value = statement.getParameterStore().getParameter(param);
 		if (value == null)
 		{
 			return Types.OTHER;
@@ -147,10 +146,10 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public String getParameterClassName(int param) throws SQLException
 	{
-		Object value = parameters.getParameter(param);
+		Object value = statement.getParameterStore().getParameter(param);
 		if (value != null)
 			return value.getClass().getName();
-		Integer type = parameters.getType(param);
+		Integer type = statement.getParameterStore().getType(param);
 		if (type != null)
 			return getClassName(type.intValue());
 		return null;

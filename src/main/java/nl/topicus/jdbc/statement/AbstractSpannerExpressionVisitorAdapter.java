@@ -20,9 +20,17 @@ abstract class AbstractSpannerExpressionVisitorAdapter<R> extends ExpressionVisi
 {
 	private ParameterStore parameterStore;
 
+	private String column;
+
 	AbstractSpannerExpressionVisitorAdapter(ParameterStore parameterStore)
 	{
+		this(parameterStore, null);
+	}
+
+	AbstractSpannerExpressionVisitorAdapter(ParameterStore parameterStore, String column)
+	{
 		this.parameterStore = parameterStore;
+		this.column = column;
 	}
 
 	protected abstract void setValue(Object value);
@@ -31,6 +39,7 @@ abstract class AbstractSpannerExpressionVisitorAdapter<R> extends ExpressionVisi
 	public void visit(JdbcParameter parameter)
 	{
 		Object value = parameterStore.getParameter(parameter.getIndex());
+		parameterStore.setColumn(parameter.getIndex(), column);
 		setValue(value);
 	}
 

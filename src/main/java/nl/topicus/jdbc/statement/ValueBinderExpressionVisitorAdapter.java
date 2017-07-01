@@ -13,9 +13,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 {
 	private ValueBinder<R> binder;
 
-	ValueBinderExpressionVisitorAdapter(ParameterStore parameterStore, ValueBinder<R> binder)
+	ValueBinderExpressionVisitorAdapter(ParameterStore parameterStore, ValueBinder<R> binder, String column)
 	{
-		super(parameterStore);
+		super(parameterStore, column);
 		this.binder = binder;
 	}
 

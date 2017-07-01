@@ -4,6 +4,7 @@ import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,15 +67,21 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		if (statement instanceof Select)
 		{
-			String namedSql = convertPositionalParametersToNamedParameters(sql);
-			com.google.cloud.spanner.Statement.Builder builder = com.google.cloud.spanner.Statement
-					.newBuilder(namedSql);
-			setSelectParameters(((Select) statement).getSelectBody(), builder);
+			com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement);
 			com.google.cloud.spanner.ResultSet rs = getReadContext().executeQuery(builder.build());
 
 			return new CloudSpannerResultSet(rs);
 		}
 		throw new SQLException("SQL statement not suitable for executeQuery");
+	}
+
+	private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement)
+	{
+		String namedSql = convertPositionalParametersToNamedParameters(sql);
+		com.google.cloud.spanner.Statement.Builder builder = com.google.cloud.spanner.Statement.newBuilder(namedSql);
+		setSelectParameters(((Select) statement).getSelectBody(), builder);
+
+		return builder;
 	}
 
 	private String convertPositionalParametersToNamedParameters(String sql)
@@ -127,8 +134,9 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				if (plainSelect.getOffset() != null && plainSelect.getOffset().isOffsetJdbcParameter())
 				{
 					ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder>(
-							getParameteStore(), builder.bind("p" + getParameteStore().getHighestIndex()));
-					binder.setValue(getParameteStore().getParameter(getParameteStore().getHighestIndex()));
+							getParameterStore(), builder.bind("p" + getParameterStore().getHighestIndex()), null);
+					binder.setValue(getParameterStore().getParameter(getParameterStore().getHighestIndex()));
+					getParameterStore().setType(getParameterStore().getHighestIndex(), Types.BIGINT);
 				}
 			}
 		});
@@ -146,7 +154,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				{
 					parameter
 							.accept(new ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder>(
-									getParameteStore(), builder.bind("p" + parameter.getIndex())));
+									getParameterStore(), builder.bind("p" + parameter.getIndex()), null));
 				}
 
 				@Override
@@ -173,14 +181,14 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		Mutation mutation = createMutation();
 		batchMutations.add(mutation);
-		getParameteStore().clearParameters();
+		getParameterStore().clearParameters();
 	}
 
 	@Override
 	public void clearBatch() throws SQLException
 	{
 		batchMutations.clear();
-		getParameteStore().clearParameters();
+		getParameterStore().clearParameters();
 	}
 
 	@Override
@@ -194,7 +202,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			index++;
 		}
 		batchMutations.clear();
-		getParameteStore().clearParameters();
+		getParameterStore().clearParameters();
 		return res;
 	}
 
@@ -220,15 +228,15 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			Statement statement = CCJSqlParserUtil.parse(sql);
 			if (statement instanceof Insert)
 			{
-				return performInsert((Insert) statement);
+				return createInsertMutation((Insert) statement);
 			}
 			else if (statement instanceof Update)
 			{
-				return performUpdate((Update) statement);
+				return createUpdateMutation((Update) statement);
 			}
 			else if (statement instanceof Delete)
 			{
-				return performDelete((Delete) statement);
+				return createDeleteMutation((Delete) statement);
 			}
 			else
 			{
@@ -294,7 +302,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return res;
 	}
 
-	private Mutation performInsert(Insert insert) throws SQLException
+	private Mutation createInsertMutation(Insert insert) throws SQLException
 	{
 		ItemsList items = insert.getItemsList();
 		if (!(items instanceof ExpressionList))
@@ -302,33 +310,38 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			throw new SQLException("Insert statement must contain a list of values");
 		}
 		List<Expression> expressions = ((ExpressionList) items).getExpressions();
-		WriteBuilder builder = Mutation.newInsertBuilder(insert.getTable().getFullyQualifiedName());
+		String table = unquoteIdentifier(insert.getTable().getFullyQualifiedName());
+		getParameterStore().setTable(table);
+		WriteBuilder builder = Mutation.newInsertBuilder(table);
 		int index = 0;
 		for (Column col : insert.getColumns())
 		{
+			String columnName = unquoteIdentifier(col.getFullyQualifiedName());
 			expressions.get(index).accept(
-					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
-							.getFullyQualifiedName())));
+					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameterStore(), builder.set(columnName),
+							columnName));
 			index++;
 		}
 		return builder.build();
 	}
 
-	private Mutation performUpdate(Update update) throws SQLException
+	private Mutation createUpdateMutation(Update update) throws SQLException
 	{
 		if (update.getTables().isEmpty())
 			throw new SQLException("No table found in update statement");
 		if (update.getTables().size() > 1)
 			throw new SQLException("Update statements for multiple tables at once are not supported");
-		String table = update.getTables().get(0).getFullyQualifiedName();
+		String table = unquoteIdentifier(update.getTables().get(0).getFullyQualifiedName());
+		getParameterStore().setTable(table);
 		List<Expression> expressions = update.getExpressions();
 		WriteBuilder builder = Mutation.newUpdateBuilder(table);
 		int index = 0;
 		for (Column col : update.getColumns())
 		{
+			String columnName = unquoteIdentifier(col.getFullyQualifiedName());
 			expressions.get(index).accept(
-					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder.set(col
-							.getFullyQualifiedName())));
+					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameterStore(), builder.set(columnName),
+							columnName));
 			index++;
 		}
 		visitInsertWhereClause(update.getWhere(), builder);
@@ -336,9 +349,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return builder.build();
 	}
 
-	private Mutation performDelete(Delete delete) throws SQLException
+	private Mutation createDeleteMutation(Delete delete) throws SQLException
 	{
-		String table = delete.getTable().getFullyQualifiedName();
+		String table = unquoteIdentifier(delete.getTable().getFullyQualifiedName());
+		getParameterStore().setTable(table);
 		Expression where = delete.getWhere();
 		if (where == null)
 		{
@@ -358,13 +372,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		if (where != null)
 		{
-			where.accept(new DMLWhereClauseVisitor(getParameteStore())
+			where.accept(new DMLWhereClauseVisitor(getParameterStore())
 			{
 
 				@Override
 				protected void visitExpression(Column col, Expression expression)
 				{
-					expression.accept(new KeyBuilderExpressionVisitorAdapter<>(getParameteStore(), keyBuilder));
+					expression.accept(new KeyBuilderExpressionVisitorAdapter<>(getParameterStore(), keyBuilder));
 				}
 
 			});
@@ -375,18 +389,28 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		if (where != null)
 		{
-			where.accept(new DMLWhereClauseVisitor(getParameteStore())
+			where.accept(new DMLWhereClauseVisitor(getParameterStore())
 			{
 
 				@Override
 				protected void visitExpression(Column col, Expression expression)
 				{
-					expression.accept(new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameteStore(), builder
-							.set(col.getFullyQualifiedName())));
+					String columnName = unquoteIdentifier(col.getFullyQualifiedName());
+					expression.accept(new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameterStore(),
+							builder.set(columnName), columnName));
 				}
 
 			});
 		}
+	}
+
+	private static String unquoteIdentifier(String identifier)
+	{
+		if (identifier == null)
+			return identifier;
+		if (identifier.charAt(0) == '`' && identifier.charAt(identifier.length() - 1) == '`')
+			identifier = identifier.substring(1, identifier.length() - 1);
+		return identifier;
 	}
 
 	private int executeDDL(String ddl) throws SQLException
@@ -404,7 +428,32 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public ParameterMetaData getParameterMetaData() throws SQLException
 	{
-		return new CloudSpannerParameterMetaData(sql, getParameteStore());
+		// parse the SQL statement without executing it
+		try
+		{
+			if (isDDLStatement())
+			{
+				throw new SQLException("Cannot get parameter meta data for DDL statement");
+			}
+			Statement statement = CCJSqlParserUtil.parse(sql);
+			if (statement instanceof Insert || statement instanceof Update || statement instanceof Delete)
+			{
+				// Create mutation, but don't do anything with it. This
+				// initializes column names of the parameter store.
+				createMutation();
+			}
+			else if (statement instanceof Select)
+			{
+				// Create select builder, but don't do anything with it. This
+				// initializes column names of the parameter store.
+				createSelectBuilder(statement);
+			}
+		}
+		catch (JSQLParserException e)
+		{
+			throw new SQLException("Error while parsing sql statement " + sql, e);
+		}
+		return new CloudSpannerParameterMetaData(this);
 	}
 
 }

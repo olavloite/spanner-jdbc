@@ -38,7 +38,7 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 		super(connection, dbClient);
 	}
 
-	protected ParameterStore getParameteStore()
+	protected ParameterStore getParameterStore()
 	{
 		return parameters;
 	}
