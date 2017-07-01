@@ -35,6 +35,7 @@ import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
+import com.google.cloud.spanner.ReadContext;
 
 /**
  * 
@@ -68,9 +69,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		if (statement instanceof Select)
 		{
 			com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement);
-			com.google.cloud.spanner.ResultSet rs = getReadContext().executeQuery(builder.build());
-
-			return new CloudSpannerResultSet(rs);
+			try (ReadContext context = getReadContext())
+			{
+				com.google.cloud.spanner.ResultSet rs = context.executeQuery(builder.build());
+				return new CloudSpannerResultSet(rs);
+			}
 		}
 		throw new SQLException("SQL statement not suitable for executeQuery");
 	}

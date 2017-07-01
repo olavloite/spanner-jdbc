@@ -13,6 +13,7 @@ import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.ReadContext;
 
 /**
  * 
@@ -33,10 +34,11 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException
 	{
-		com.google.cloud.spanner.ResultSet rs = getReadContext().executeQuery(
-				com.google.cloud.spanner.Statement.of(sql));
-
-		return new CloudSpannerResultSet(rs);
+		try (ReadContext context = getReadContext())
+		{
+			com.google.cloud.spanner.ResultSet rs = context.executeQuery(com.google.cloud.spanner.Statement.of(sql));
+			return new CloudSpannerResultSet(rs);
+		}
 	}
 
 	@Override
