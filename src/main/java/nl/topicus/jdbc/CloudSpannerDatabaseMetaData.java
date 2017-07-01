@@ -735,14 +735,26 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
 			throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS PROCEDURE_CAT, '' AS PROCEDURE_SCHEM, '' AS PROCEDURE_NAME, NULL AS RES1, NULL AS RES2, NULL AS RES3, "
+				+ "'' AS REMARKS, 0 AS PROCEDURE_TYPE, '' AS SPECIFIC_NAME "
+				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		PreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
 			String columnNamePattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS PROCEDURE_CAT, '' AS PROCEDURE_SCHEM, '' AS PROCEDURE_NAME, '' AS COLUMN_NAME, 0 AS COLUMN_TYPE, "
+				+ "0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS PRECISION, 0 AS LENGTH, 0 AS SCALE, 0 AS RADIX, "
+				+ "0 AS NULLABLE, '' AS REMARKS, '' AS COLUMN_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATATIME_SUB, "
+				+ "0 AS CHAR_OCTET_LENGTH, 0 AS ORDINAL_POSITION, '' AS IS_NULLABLE, '' AS SPECIFIC_NAME "
+				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		PreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	private CloudSpannerPreparedStatement prepareStatement(String sql, String... params) throws SQLException
@@ -782,7 +794,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSchemas() throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CAT WHERE 1=2";
+		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CAT FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -791,7 +803,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getCatalogs() throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_CAT WHERE 1=2";
+		String sql = "SELECT '' AS TABLE_CAT FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -866,27 +878,43 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
 			throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS COLUMN_NAME, '' AS GRANTOR, '' AS GRANTEE, '' AS PRIVILEGE, 'NO' AS IS_GRANTABLE "
+				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
 			throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS GRANTOR, '' AS GRANTEE, '' AS PRIVILEGE, 'NO' AS IS_GRANTABLE "
+				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
 			throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT 0 AS SCOPE, '' AS COLUMN_NAME, 0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, "
+				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT 0 AS SCOPE, '' AS COLUMN_NAME, 0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, "
+				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
@@ -933,7 +961,27 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT "
+				+ "NULL AS PKTABLE_CAT, NULL AS PKTABLE_SCHEM, PARENT.TABLE_NAME AS PKTABLE_NAME, PARENT_INDEX_COLUMNS.COLUMN_NAME AS PKCOLUMN_NAME, "
+				+ "NULL AS FKTABLE_CAT, NULL AS FKTABLE_SCHEM, CHILD.TABLE_NAME AS FKTABLE_NAME, PARENT_INDEX_COLUMNS.COLUMN_NAME AS FKCOLUMN_NAME, "
+				+ "PARENT_INDEX_COLUMNS.ORDINAL_POSITION AS KEY_SEQ, 3 AS UPDATE_RULE, CASE WHEN CHILD.ON_DELETE_ACTION='CASCADE' THEN 0 ELSE 3 END AS DELETE_RULE, "
+				+ "NULL AS FK_NAME, 'PRIMARY_KEY' AS PK_NAME, 7 AS DEFERRABILITY "
+				+ "FROM INFORMATION_SCHEMA.TABLES PARENT "
+				+ "INNER JOIN INFORMATION_SCHEMA.TABLES CHILD ON CHILD.PARENT_TABLE_NAME=PARENT.TABLE_NAME "
+				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS PARENT_INDEX_COLUMNS ON PARENT_INDEX_COLUMNS.TABLE_NAME=PARENT.TABLE_NAME AND PARENT_INDEX_COLUMNS.INDEX_NAME='PRIMARY_KEY' "
+				+ "WHERE 1=1 ";
+
+		if (catalog != null)
+			sql = sql + "AND UPPER(PARENT.TABLE_CATALOG) like ? ";
+		if (schema != null)
+			sql = sql + "AND UPPER(PARENT.TABLE_SCHEMA) like ? ";
+		if (table != null)
+			sql = sql + "AND UPPER(PARENT.TABLE_NAME) like ? ";
+		sql = sql
+				+ "ORDER BY CHILD.TABLE_CATALOG, CHILD.TABLE_SCHEMA, CHILD.TABLE_NAME, PARENT_INDEX_COLUMNS.ORDINAL_POSITION ";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schema, table);
+		return statement.executeQuery();
 	}
 
 	@Override
@@ -1084,20 +1132,36 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSuperTypes(String catalog, String schemaPattern, String typeNamePattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS TYPE_CAT, '' AS TYPE_SCHEM, '' AS TYPE_NAME, "
+				+ "'' AS SUPERTYPE_CAT, '' AS SUPERTYPE_SCHEM, '' AS SUPERTYPE_NAME "
+				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "'' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS SUPERTABLE_NAME "
+				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
 	public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
 			String attributeNamePattern) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = "SELECT '' AS TYPE_CAT, '' AS TYPE_SCHEM, '' AS TYPE_NAME, '' AS ATTR_NAME, 0 AS DATA_TYPE, "
+				+ "'' AS ATTR_TYPE_NAME, 0 AS ATTR_SIZE, 0 AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, 0 AS NULLABLE, "
+				+ "'' AS REMARKS, '' AS ATTR_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATETIME_SUB, 0 AS CHAR_OCTET_LENGTH, "
+				+ "0 AS ORDINAL_POSITION, 'NO' AS IS_NULLABLE, '' AS SCOPE_CATALOG, '' AS SCOPE_SCHEMA, '' AS SCOPE_TABLE, "
+				+ "0 AS SOURCE_DATA_TYPE " + "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
