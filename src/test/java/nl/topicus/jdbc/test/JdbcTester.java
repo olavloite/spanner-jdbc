@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.CloudSpannerDriver;
+import nl.topicus.jdbc.test.ddl.MetaDataTester;
 import nl.topicus.jdbc.test.ddl.TableDDLTester;
 import nl.topicus.jdbc.test.dml.DMLTester;
 
@@ -114,6 +116,9 @@ public class JdbcTester
 			// Test DML statements
 			DMLTester dmlTester = new DMLTester(connection);
 			dmlTester.runDMLTests();
+			// Test meta data functions
+			MetaDataTester metaDataTester = new MetaDataTester(connection);
+			metaDataTester.runMetaDataTests();
 
 			// Test drop statements
 			tableDDLTester.runDropTests();
@@ -127,6 +132,14 @@ public class JdbcTester
 
 	private Connection createConnection() throws SQLException
 	{
+		try
+		{
+			Class.forName(CloudSpannerDriver.class.getName());
+		}
+		catch (ClassNotFoundException e)
+		{
+			throw new SQLException("Could not load JDBC driver", e);
+		}
 		StringBuilder url = new StringBuilder("jdbc:cloudspanner://localhost");
 		url.append(";Project=").append(projectId);
 		url.append(";Instance=").append(INSTANCE_ID);

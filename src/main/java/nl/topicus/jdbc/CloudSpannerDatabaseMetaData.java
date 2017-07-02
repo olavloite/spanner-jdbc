@@ -1143,7 +1143,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException
 	{
-		String sql = "'' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS SUPERTABLE_NAME "
+		String sql = "SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS SUPERTABLE_NAME "
 				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);

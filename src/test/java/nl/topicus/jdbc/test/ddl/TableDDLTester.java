@@ -47,6 +47,8 @@ public class TableDDLTester
 		runCreateTableTest("TESTCHILD", "CreateTableTestChild.sql");
 		log.info("Verifying primary keys of child table");
 		verifyPrimaryKey("TESTCHILD", "ID, CHILDID");
+		log.info("Creating indices");
+		runCreateIndexTests();
 		log.info("Finished CreateTableTests");
 	}
 
@@ -55,6 +57,12 @@ public class TableDDLTester
 	{
 		executeDdl(fileName);
 		verifyTableExists(tableName);
+	}
+
+	private void runCreateIndexTests() throws IOException, URISyntaxException, SQLException
+	{
+		executeDdl("CreateIndexTest.sql");
+		executeDdl("CreateIndexTestChild.sql");
 	}
 
 	private void verifyTableExists(String table) throws SQLException
