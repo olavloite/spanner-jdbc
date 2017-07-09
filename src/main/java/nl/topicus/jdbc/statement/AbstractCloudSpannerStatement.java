@@ -210,7 +210,7 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	@Override
 	public void setFetchSize(int rows) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		// silently ignore
 	}
 
 	@Override
