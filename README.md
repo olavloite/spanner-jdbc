@@ -1,3 +1,5 @@
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2KSQAN36A7NEQ)
+
 # spanner-jdbc
 JDBC Driver for Google Cloud Spanner
 
@@ -58,4 +60,3 @@ This application uses Open Source components. You can find the source code of th
 A special thanks to Tobias for his great JSqlParser library.
 Project: JSqlParser https://github.com/JSQLParser/JSqlParser 
 Copyright (C) 2004 - 2017 JSQLParser Tobias
-
