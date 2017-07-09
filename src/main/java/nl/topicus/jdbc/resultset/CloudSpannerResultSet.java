@@ -50,9 +50,35 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		return wasNull;
 	}
 
+	private void ensureOpenAndInValidPosition() throws SQLException
+	{
+		ensureOpen();
+		ensureAfterFirst();
+		ensureBeforeLast();
+	}
+
+	private void ensureAfterFirst() throws SQLException
+	{
+		if (beforeFirst)
+			throw new SQLException("Before first record");
+	}
+
+	private void ensureBeforeLast() throws SQLException
+	{
+		if (afterLast)
+			throw new SQLException("After last record");
+	}
+
+	private void ensureOpen() throws SQLException
+	{
+		if (closed)
+			throw new SQLException("Resultset is closed");
+	}
+
 	@Override
 	public boolean next() throws SQLException
 	{
+		ensureOpen();
 		if (!beforeFirst && nextCalledForMetaData)
 		{
 			nextCalledForMetaData = false;
@@ -196,6 +222,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException
 	{
+		ensureOpen();
 		if (beforeFirst)
 		{
 			nextCalledForMetaDataResult = resultSet.next();
@@ -209,6 +236,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public int findColumn(String columnLabel) throws SQLException
 	{
+		ensureOpen();
 		try
 		{
 			return resultSet.getColumnIndex(columnLabel) + 1;
@@ -221,19 +249,15 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private boolean isNull(int columnIndex) throws SQLException
 	{
-		if (closed)
-			throw new SQLException("Resultset is closed");
-		if (afterLast)
-			throw new SQLException("After last record");
-		if (beforeFirst)
-			throw new SQLException("Before first record");
+		ensureOpenAndInValidPosition();
 		boolean res = resultSet.isNull(columnIndex - 1);
 		wasNull = res;
 		return res;
 	}
 
-	private boolean isNull(String columnName)
+	private boolean isNull(String columnName) throws SQLException
 	{
+		ensureOpenAndInValidPosition();
 		boolean res = resultSet.isNull(columnName);
 		wasNull = res;
 		return res;
@@ -254,6 +278,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public Statement getStatement() throws SQLException
 	{
+		ensureOpen();
 		return statement;
 	}
 
@@ -390,23 +415,27 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public SQLWarning getWarnings() throws SQLException
 	{
+		ensureOpen();
 		return null;
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException
 	{
+		ensureOpen();
 	}
 
 	@Override
 	public boolean isBeforeFirst() throws SQLException
 	{
+		ensureOpen();
 		return beforeFirst;
 	}
 
 	@Override
 	public boolean isAfterLast() throws SQLException
 	{
+		ensureOpen();
 		return afterLast;
 	}
 
