@@ -22,9 +22,9 @@ import com.google.cloud.spanner.ReadContext;
  */
 public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 {
-	private ResultSet lastResultSet = null;
+	protected ResultSet lastResultSet = null;
 
-	private int lastUpdateCount = -1;
+	protected int lastUpdateCount = -1;
 
 	public CloudSpannerStatement(CloudSpannerConnection connection, DatabaseClient dbClient)
 	{

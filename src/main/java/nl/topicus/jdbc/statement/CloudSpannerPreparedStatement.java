@@ -425,7 +425,27 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public boolean execute() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		Statement statement;
+		try
+		{
+			statement = CCJSqlParserUtil.parse(sql);
+		}
+		catch (JSQLParserException e)
+		{
+			throw new SQLException("Error while parsing sql statement", e);
+		}
+		if (statement instanceof Select)
+		{
+			lastResultSet = executeQuery();
+			lastUpdateCount = -1;
+			return true;
+		}
+		else
+		{
+			lastUpdateCount = executeUpdate();
+			lastResultSet = null;
+			return false;
+		}
 	}
 
 	@Override

@@ -43,6 +43,8 @@ abstract class AbstractCloudSpannerStatement implements Statement
 
 	private int maxRows;
 
+	private int maxFieldSize = 0;
+
 	AbstractCloudSpannerStatement(CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
 		this.connection = connection;
@@ -132,13 +134,13 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	@Override
 	public int getMaxFieldSize() throws SQLException
 	{
-		return 0;
+		return maxFieldSize;
 	}
 
 	@Override
 	public void setMaxFieldSize(int max) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		this.maxFieldSize = max;
 	}
 
 	@Override
@@ -156,7 +158,7 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	@Override
 	public void setEscapeProcessing(boolean enable) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		// silently ignore
 	}
 
 	@Override
@@ -180,13 +182,13 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	@Override
 	public SQLWarning getWarnings() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return null;
 	}
 
 	@Override
 	public void clearWarnings() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		// silently ignore
 	}
 
 	@Override
@@ -198,7 +200,9 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	@Override
 	public void setFetchDirection(int direction) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		if (!(direction == ResultSet.FETCH_FORWARD || direction == ResultSet.FETCH_REVERSE || direction == ResultSet.FETCH_UNKNOWN))
+			throw new SQLException("Unknown direction: " + direction);
+		// silently ignore
 	}
 
 	@Override
