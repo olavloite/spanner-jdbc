@@ -75,6 +75,10 @@ abstract class AbstractCloudSpannerStatement implements Statement
 
 	protected int writeMutation(Mutation mutation) throws SQLException
 	{
+		if (connection.isReadOnly())
+		{
+			throw new SQLException("Connection is in read-only mode. Mutations are not allowed");
+		}
 		if (connection.getAutoCommit())
 		{
 			dbClient.readWriteTransaction().run(new TransactionCallable<Void>()

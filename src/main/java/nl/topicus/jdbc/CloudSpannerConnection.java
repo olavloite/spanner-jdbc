@@ -108,7 +108,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			spanner = options.getService();
 			dbClient = spanner.getDatabaseClient(DatabaseId.of(options.getProjectId(), instanceId, database));
 			adminClient = spanner.getDatabaseAdminClient();
-			transaction = new CloudSpannerTransaction(dbClient);
+			transaction = new CloudSpannerTransaction(dbClient, this);
 		}
 		catch (Exception e)
 		{
@@ -234,11 +234,6 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return autoCommit;
 	}
 
-	public void begin()
-	{
-		transaction.begin();
-	}
-
 	@Override
 	public void commit() throws SQLException
 	{
@@ -279,6 +274,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public void setReadOnly(boolean readOnly) throws SQLException
 	{
+		if (transaction.isRunning())
+			throw new SQLException(
+					"There is currently a transaction running. Commit or rollback the running transaction before changing read-only mode.");
 		this.readOnly = readOnly;
 	}
 
