@@ -33,6 +33,7 @@ spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=i
 
 
 The last two properties (SimulateProductName and PvtKeyPath) are optional.
+All properties can also be supplied in a Properties object instead of in the URL.
 
 You either need to
 * Create an environment variable GOOGLE_APPLICATION_CREDENTIALS that points to a credentials file for a Google Cloud Spanner project.
@@ -47,7 +48,7 @@ Releases are available on Maven Central. Current release is version 0.8.
 	&lt;<span class="pl-ent">dependency</span>&gt;
     		&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     		&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    		&lt;<span class="pl-ent">version</span>&gt;0.8&lt;/<span class="pl-ent">version</span>&gt;
+    		&lt;<span class="pl-ent">version</span>&gt;0.9&lt;/<span class="pl-ent">version</span>&gt;
 	&lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
