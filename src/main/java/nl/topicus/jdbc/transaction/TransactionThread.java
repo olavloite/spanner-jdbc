@@ -68,7 +68,6 @@ class TransactionThread extends Thread
 					transaction.buffer(mutations);
 				}
 				stopped = true;
-				transaction.close();
 				return null;
 			}
 		});
@@ -115,7 +114,7 @@ class TransactionThread extends Thread
 		stop = true;
 		// Add a null object in order to get the transaction thread to proceed
 		statements.add(Statement.of(commit ? "commit" : "rollback"));
-		while (!stopped)
+		while (!stopped || this.isAlive())
 		{
 			try
 			{

@@ -10,12 +10,6 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import nl.topicus.jdbc.CloudSpannerConnection;
-import nl.topicus.jdbc.CloudSpannerDriver;
-import nl.topicus.jdbc.test.ddl.MetaDataTester;
-import nl.topicus.jdbc.test.ddl.TableDDLTester;
-import nl.topicus.jdbc.test.dml.DMLTester;
-
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.spanner.Database;
 import com.google.cloud.spanner.Instance;
@@ -29,6 +23,12 @@ import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import com.google.spanner.admin.instance.v1.CreateInstanceMetadata;
+
+import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.CloudSpannerDriver;
+import nl.topicus.jdbc.test.ddl.MetaDataTester;
+import nl.topicus.jdbc.test.ddl.TableDDLTester;
+import nl.topicus.jdbc.test.dml.DMLTester;
 
 public class JdbcTester
 {
@@ -99,7 +99,7 @@ public class JdbcTester
 				cleanUpInstance();
 			if (CREATE_DATABASE)
 				cleanUpDatabase();
-			spanner.closeAsync();
+			spanner.close();
 			log.info("Clean up completed");
 		}
 	}
@@ -151,7 +151,7 @@ public class JdbcTester
 	private void createInstance()
 	{
 		InstanceAdminClient instanceAdminClient = spanner.getInstanceAdminClient();
-		Iterator<InstanceConfig> configs = instanceAdminClient.listInstanceConfigs().iterateAll();
+		Iterator<InstanceConfig> configs = instanceAdminClient.listInstanceConfigs().iterateAll().iterator();
 		InstanceConfigId configId = null;
 		while (configs.hasNext())
 		{
@@ -170,8 +170,8 @@ public class JdbcTester
 
 	private void createDatabase()
 	{
-		Operation<Database, CreateDatabaseMetadata> createDatabase = spanner.getDatabaseAdminClient().createDatabase(
-				INSTANCE_ID, DATABASE_ID, Arrays.asList());
+		Operation<Database, CreateDatabaseMetadata> createDatabase = spanner.getDatabaseAdminClient()
+				.createDatabase(INSTANCE_ID, DATABASE_ID, Arrays.asList());
 		createDatabase = createDatabase.waitFor();
 	}
 

@@ -15,12 +15,6 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Arrays;
 
-import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
-import nl.topicus.jdbc.statement.CloudSpannerStatement;
-import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
-
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -34,6 +28,10 @@ import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
 import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
+
+import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
+import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
 
 /**
  * JDBC Driver for Google Cloud Spanner.
@@ -128,7 +126,6 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	public static GoogleCredentials getCredentialsFromFile(String credentialsPath) throws IOException
 	{
-		HttpTransport transport = new NetHttpTransport();
 		// First try the environment variable
 		GoogleCredentials credentials = null;
 		if (credentialsPath != null && credentialsPath.length() > 0)
@@ -144,12 +141,13 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 					throw new IOException("File does not exist.");
 				}
 				credentialsStream = new FileInputStream(credentialsFile);
-				credentials = GoogleCredentials.fromStream(credentialsStream, transport);
+				credentials = GoogleCredentials.fromStream(credentialsStream,
+						CloudSpannerOAuthUtil.HTTP_TRANSPORT_FACTORY);
 			}
 			catch (IOException e)
 			{
-				throw new IOException(String.format("Error reading credential file %s: %s", credentialsPath,
-						e.getMessage()), e);
+				throw new IOException(
+						String.format("Error reading credential file %s: %s", credentialsPath, e.getMessage()), e);
 			}
 			catch (AccessControlException expected)
 			{

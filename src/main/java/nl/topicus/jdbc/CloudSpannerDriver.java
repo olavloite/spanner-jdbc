@@ -51,7 +51,7 @@ public class CloudSpannerDriver implements Driver
 	 * Keep track of all connections that are opened, so that we know which
 	 * Spanner instances to close.
 	 */
-	private Map<Spanner, List<CloudSpannerConnection>> connections = new HashMap<Spanner, List<CloudSpannerConnection>>();
+	private Map<Spanner, List<CloudSpannerConnection>> connections = new HashMap<>();
 
 	/**
 	 * Connects to a Google Cloud Spanner database.
@@ -156,7 +156,7 @@ public class CloudSpannerDriver implements Driver
 		List<CloudSpannerConnection> list = connections.get(connection.getSpanner());
 		if (list == null)
 		{
-			list = new ArrayList<CloudSpannerConnection>();
+			list = new ArrayList<>();
 			connections.put(connection.getSpanner(), list);
 		}
 		list.add(connection);
@@ -174,7 +174,7 @@ public class CloudSpannerDriver implements Driver
 		{
 			Spanner spanner = connection.getSpanner();
 			connections.remove(spanner);
-			spanner.closeAsync();
+			spanner.close();
 		}
 	}
 
