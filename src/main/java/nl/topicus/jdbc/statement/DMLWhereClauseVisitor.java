@@ -10,6 +10,8 @@ import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.TimeValue;
 import net.sf.jsqlparser.expression.TimestampValue;
+import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 
 abstract class DMLWhereClauseVisitor extends ExpressionVisitorAdapter
@@ -17,6 +19,8 @@ abstract class DMLWhereClauseVisitor extends ExpressionVisitorAdapter
 	private Column col;
 
 	private ParameterStore parameterStore;
+
+	private boolean valid = false;
 
 	DMLWhereClauseVisitor(ParameterStore parameterStore)
 	{
@@ -38,6 +42,20 @@ abstract class DMLWhereClauseVisitor extends ExpressionVisitorAdapter
 	}
 
 	protected abstract void visitExpression(Column col, Expression expression);
+
+	@Override
+	public void visit(EqualsTo expr)
+	{
+		valid = true;
+		super.visit(expr);
+	}
+
+	@Override
+	public void visit(InExpression expr)
+	{
+		valid = true;
+		super.visit(expr);
+	}
 
 	@Override
 	public void visit(JdbcParameter parameter)
@@ -85,6 +103,11 @@ abstract class DMLWhereClauseVisitor extends ExpressionVisitorAdapter
 	public void visit(HexValue value)
 	{
 		visitExpression(col, value);
+	}
+
+	public boolean isValid()
+	{
+		return valid;
 	}
 
 }

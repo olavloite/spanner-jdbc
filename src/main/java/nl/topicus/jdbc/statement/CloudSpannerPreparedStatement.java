@@ -8,6 +8,13 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.Key;
+import com.google.cloud.spanner.KeySet;
+import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Mutation.WriteBuilder;
+import com.google.cloud.spanner.ReadContext;
+
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
@@ -29,13 +36,6 @@ import net.sf.jsqlparser.statement.select.WithItem;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
-
-import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.Key;
-import com.google.cloud.spanner.KeySet;
-import com.google.cloud.spanner.Mutation;
-import com.google.cloud.spanner.Mutation.WriteBuilder;
-import com.google.cloud.spanner.ReadContext;
 
 /**
  * 
@@ -136,7 +136,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				}
 				if (plainSelect.getOffset() != null && plainSelect.getOffset().isOffsetJdbcParameter())
 				{
-					ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder>(
+					ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<>(
 							getParameterStore(), builder.bind("p" + getParameterStore().getHighestIndex()), null);
 					binder.setValue(getParameterStore().getParameter(getParameterStore().getHighestIndex()));
 					getParameterStore().setType(getParameterStore().getHighestIndex(), Types.BIGINT);
@@ -155,9 +155,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				@Override
 				public void visit(JdbcParameter parameter)
 				{
-					parameter
-							.accept(new ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder>(
-									getParameterStore(), builder.bind("p" + parameter.getIndex()), null));
+					parameter.accept(new ValueBinderExpressionVisitorAdapter<>(getParameterStore(),
+							builder.bind("p" + parameter.getIndex()), null));
 				}
 
 				@Override
@@ -320,9 +319,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		for (Column col : insert.getColumns())
 		{
 			String columnName = unquoteIdentifier(col.getFullyQualifiedName());
-			expressions.get(index).accept(
-					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameterStore(), builder.set(columnName),
-							columnName));
+			expressions.get(index).accept(new ValueBinderExpressionVisitorAdapter<>(getParameterStore(),
+					builder.set(columnName), columnName));
 			index++;
 		}
 		return builder.build();
@@ -342,9 +340,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		for (Column col : update.getColumns())
 		{
 			String columnName = unquoteIdentifier(col.getFullyQualifiedName());
-			expressions.get(index).accept(
-					new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameterStore(), builder.set(columnName),
-							columnName));
+			expressions.get(index).accept(new ValueBinderExpressionVisitorAdapter<>(getParameterStore(),
+					builder.set(columnName), columnName));
 			index++;
 		}
 		visitInsertWhereClause(update.getWhere(), builder);
@@ -371,11 +368,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 	}
 
-	private void visitDeleteWhereClause(Expression where, Key.Builder keyBuilder)
+	private void visitDeleteWhereClause(Expression where, Key.Builder keyBuilder) throws SQLException
 	{
 		if (where != null)
 		{
-			where.accept(new DMLWhereClauseVisitor(getParameterStore())
+			DMLWhereClauseVisitor whereClauseVisitor = new DMLWhereClauseVisitor(getParameterStore())
 			{
 
 				@Override
@@ -384,7 +381,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 					expression.accept(new KeyBuilderExpressionVisitorAdapter<>(getParameterStore(), keyBuilder));
 				}
 
-			});
+			};
+			where.accept(whereClauseVisitor);
+			if (!whereClauseVisitor.isValid())
+			{
+				throw new SQLException(
+						"The DELETE statement does not contain a valid WHERE clause. DELETE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form ID=value or ID IN (value1, value2, ...)");
+			}
 		}
 	}
 
@@ -399,7 +402,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				protected void visitExpression(Column col, Expression expression)
 				{
 					String columnName = unquoteIdentifier(col.getFullyQualifiedName());
-					expression.accept(new ValueBinderExpressionVisitorAdapter<WriteBuilder>(getParameterStore(),
+					expression.accept(new ValueBinderExpressionVisitorAdapter<>(getParameterStore(),
 							builder.set(columnName), columnName));
 				}
 
