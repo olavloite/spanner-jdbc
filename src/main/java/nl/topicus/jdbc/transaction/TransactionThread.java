@@ -17,11 +17,18 @@ import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
 class TransactionThread extends Thread
 {
+	private static enum TransactionStatus
+	{
+		NOT_STARTED, RUNNING, SUCCESS, FAIL;
+	}
+
 	private DatabaseClient dbClient;
 
 	private boolean stop;
 
 	private boolean stopped;
+
+	private TransactionStatus status = TransactionStatus.NOT_STARTED;
 
 	private boolean commit;
 
@@ -40,37 +47,44 @@ class TransactionThread extends Thread
 	@Override
 	public void run()
 	{
+		status = TransactionStatus.RUNNING;
 		TransactionRunner runner = dbClient.readWriteTransaction();
-		runner.run(new TransactionCallable<Void>()
+		synchronized (this)
 		{
-
-			@Override
-			public Void run(TransactionContext transaction) throws Exception
+			status = runner.run(new TransactionCallable<TransactionStatus>()
 			{
-				while (!stop)
+
+				@Override
+				public TransactionStatus run(TransactionContext transaction) throws Exception
 				{
-					try
+					while (!stop)
 					{
-						Statement statement = statements.take();
-						if (!(statement.getSql().equals("commit") || statement.getSql().equals("rollback")))
+						try
 						{
-							resultSets.put(transaction.executeQuery(statement));
+							Statement statement = statements.take();
+							if (!(statement.getSql().equals("commit") || statement.getSql().equals("rollback")))
+							{
+								resultSets.put(transaction.executeQuery(statement));
+							}
+						}
+						catch (InterruptedException e)
+						{
+							System.err.println("Transaction interrupted while waiting for statement");
+							stopped = true;
+							return TransactionStatus.FAIL;
 						}
 					}
-					catch (InterruptedException e)
-					{
-						System.err.println("Transaction interrupted while waiting for statement");
-					}
-				}
 
-				if (commit)
-				{
-					transaction.buffer(mutations);
+					if (commit)
+					{
+						transaction.buffer(mutations);
+					}
+					stopped = true;
+					return TransactionStatus.SUCCESS;
 				}
-				stopped = true;
-				return null;
-			}
-		});
+			});
+			this.notifyAll();
+		}
 	}
 
 	ResultSet executeQuery(Statement statement)
@@ -114,14 +128,17 @@ class TransactionThread extends Thread
 		stop = true;
 		// Add a null object in order to get the transaction thread to proceed
 		statements.add(Statement.of(commit ? "commit" : "rollback"));
-		while (!stopped || this.isAlive())
+		synchronized (this)
 		{
-			try
+			while (!stopped || status == TransactionStatus.NOT_STARTED || status == TransactionStatus.RUNNING)
 			{
-				Thread.sleep(0, 5);
-			}
-			catch (InterruptedException e)
-			{
+				try
+				{
+					this.wait();
+				}
+				catch (InterruptedException e)
+				{
+				}
 			}
 		}
 	}
