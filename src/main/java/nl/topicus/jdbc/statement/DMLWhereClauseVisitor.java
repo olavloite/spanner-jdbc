@@ -3,7 +3,6 @@ package nl.topicus.jdbc.statement;
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
 import net.sf.jsqlparser.expression.HexValue;
 import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
@@ -13,13 +12,16 @@ import net.sf.jsqlparser.expression.TimestampValue;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.schema.Column;
 
-abstract class DMLWhereClauseVisitor extends ExpressionVisitorAdapter
+abstract class DMLWhereClauseVisitor extends DMLWhereClauseVisitorAdapter
 {
 	private Column col;
 
 	private ParameterStore parameterStore;
 
-	private boolean valid = false;
+	/**
+	 * Only allow equals comparisons
+	 */
+	private boolean foundEquals = false;
 
 	DMLWhereClauseVisitor(ParameterStore parameterStore)
 	{
@@ -45,7 +47,7 @@ abstract class DMLWhereClauseVisitor extends ExpressionVisitorAdapter
 	@Override
 	public void visit(EqualsTo expr)
 	{
-		valid = true;
+		foundEquals = true;
 		super.visit(expr);
 	}
 
@@ -99,7 +101,7 @@ abstract class DMLWhereClauseVisitor extends ExpressionVisitorAdapter
 
 	public boolean isValid()
 	{
-		return valid;
+		return foundEquals && !isInvalid();
 	}
 
 }

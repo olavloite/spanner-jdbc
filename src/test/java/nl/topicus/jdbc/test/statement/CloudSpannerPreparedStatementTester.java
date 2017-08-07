@@ -48,12 +48,10 @@ public class CloudSpannerPreparedStatementTester
 	@Test
 	public void testDeleteStatementWithMultipleWhereClauses() throws SQLException
 	{
-		Mutation deleteMutation = getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
-		Assert.assertNotNull(deleteMutation);
-		Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
-		List<Key> keys = Lists.newArrayList(deleteMutation.getKeySet().getKeys());
-		Assert.assertEquals(1, keys.size());
-		Assert.assertEquals(1l, keys.get(0).getParts().iterator().next());
+		thrown.expect(SQLException.class);
+		thrown.expectMessage(
+				"The DELETE statement does not contain a valid WHERE clause. DELETE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form ID=value or ID IN (value1, value2, ...)");
+		getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
 	}
 
 	@Test()
