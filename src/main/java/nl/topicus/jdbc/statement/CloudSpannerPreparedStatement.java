@@ -44,6 +44,10 @@ import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
  */
 public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedStatement
 {
+	private static final String INVALID_WHERE_CLAUSE_DELETE_MESSAGE = "The DELETE statement does not contain a valid WHERE clause. DELETE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form 'ID=value' or 'ID1=value1 AND ID2=value2'";
+
+	private static final String INVALID_WHERE_CLAUSE_UPDATE_MESSAGE = "The UPDATE statement does not contain a valid WHERE clause. UPDATE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form 'ID=value' or 'ID1=value1 AND ID2=value2'";
+
 	private String sql;
 
 	private List<Mutation> batchMutations = new ArrayList<>();
@@ -385,17 +389,16 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			where.accept(whereClauseVisitor);
 			if (!whereClauseVisitor.isValid())
 			{
-				throw new SQLException(
-						"The DELETE statement does not contain a valid WHERE clause. DELETE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form ID=value or ID IN (value1, value2, ...)");
+				throw new SQLException(INVALID_WHERE_CLAUSE_DELETE_MESSAGE);
 			}
 		}
 	}
 
-	private void visitUpdateWhereClause(Expression where, WriteBuilder builder)
+	private void visitUpdateWhereClause(Expression where, WriteBuilder builder) throws SQLException
 	{
 		if (where != null)
 		{
-			where.accept(new DMLWhereClauseVisitor(getParameterStore())
+			DMLWhereClauseVisitor whereClauseVisitor = new DMLWhereClauseVisitor(getParameterStore())
 			{
 
 				@Override
@@ -406,7 +409,16 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 							builder.set(columnName), columnName));
 				}
 
-			});
+			};
+			where.accept(whereClauseVisitor);
+			if (!whereClauseVisitor.isValid())
+			{
+				throw new SQLException(INVALID_WHERE_CLAUSE_UPDATE_MESSAGE);
+			}
+		}
+		else
+		{
+			throw new SQLException(INVALID_WHERE_CLAUSE_UPDATE_MESSAGE);
 		}
 	}
 

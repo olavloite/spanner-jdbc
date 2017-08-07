@@ -14,6 +14,7 @@ import com.google.api.client.util.Lists;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.Op;
+import com.google.cloud.spanner.Value;
 
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 
@@ -46,11 +47,10 @@ public class CloudSpannerPreparedStatementTester
 	}
 
 	@Test
-	public void testDeleteStatementWithMultipleWhereClauses() throws SQLException
+	public void testDeleteStatementWithInWhereClauses() throws SQLException
 	{
 		thrown.expect(SQLException.class);
-		thrown.expectMessage(
-				"The DELETE statement does not contain a valid WHERE clause. DELETE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form ID=value or ID IN (value1, value2, ...)");
+		thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
 		getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
 	}
 
@@ -58,9 +58,53 @@ public class CloudSpannerPreparedStatementTester
 	public void testDeleteStatementWithInvalidWhereClause() throws SQLException
 	{
 		thrown.expect(SQLException.class);
-		thrown.expectMessage(
-				"The DELETE statement does not contain a valid WHERE clause. DELETE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form ID=value or ID IN (value1, value2, ...)");
+		thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
 		getMutation("DELETE FROM FOO WHERE ID<2");
+	}
+
+	@Test
+	public void testUpdateStatementWithoutWhereClause() throws SQLException
+	{
+		thrown.expect(SQLException.class);
+		thrown.expectMessage("The UPDATE statement does not contain a valid WHERE clause.");
+		getMutation("UPDATE FOO SET COL1=1, COL2=2");
+	}
+
+	@Test
+	public void testUpdateStatementWithWhereClause() throws SQLException
+	{
+		Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID=1");
+		Assert.assertNotNull(updateMutation);
+		Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
+		Assert.assertEquals("FOO", updateMutation.getTable());
+		List<String> columns = Lists.newArrayList(updateMutation.getColumns());
+		Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID" }, columns.toArray());
+		Assert.assertArrayEquals(new String[] { "1", "2", "1" }, getValues(updateMutation.getValues()));
+	}
+
+	@Test
+	public void testUpdateStatementWithMultipleWhereClauses() throws SQLException
+	{
+		Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID1=1 AND ID2=1");
+		Assert.assertNotNull(updateMutation);
+		Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
+		Assert.assertEquals("FOO", updateMutation.getTable());
+		List<String> columns = Lists.newArrayList(updateMutation.getColumns());
+		Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID1", "ID2" }, columns.toArray());
+		Assert.assertArrayEquals(new String[] { "1", "2", "1", "1" }, getValues(updateMutation.getValues()));
+	}
+
+	private String[] getValues(Iterable<Value> values)
+	{
+		List<Value> valueList = Lists.newArrayList(values);
+		String[] res = new String[valueList.size()];
+		int index = 0;
+		for (Value value : valueList)
+		{
+			res[index] = value.toString();
+			index++;
+		}
+		return res;
 	}
 
 	private Mutation getMutation(String sql) throws SQLException
