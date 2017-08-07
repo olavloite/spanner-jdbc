@@ -344,7 +344,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 					builder.set(columnName), columnName));
 			index++;
 		}
-		visitInsertWhereClause(update.getWhere(), builder);
+		visitUpdateWhereClause(update.getWhere(), builder);
 
 		return builder.build();
 	}
@@ -391,7 +391,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 	}
 
-	private void visitInsertWhereClause(Expression where, WriteBuilder builder)
+	private void visitUpdateWhereClause(Expression where, WriteBuilder builder)
 	{
 		if (where != null)
 		{
