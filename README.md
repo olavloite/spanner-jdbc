@@ -42,13 +42,13 @@ You either need to
 The server name (in the example above: localhost) is ignored by the driver, but as it is a mandatory part of a JDBC URL it needs to be specified.
 The property 'SimulateProductName' indicates what database name should be returned by the method DatabaseMetaData.getDatabaseProductName(). This can be used in combination with for example Spring Batch. Spring Batch automatically generates a schema for batch jobs, parameters etc., but does so only if it recognizes the underlying database. Supplying PostgreSQL as a value for this parameter, ensures the correct schema generation.
 
-Releases are available on Maven Central. Current release is version 0.8.
+Releases are available on Maven Central. Current release is version 0.10.
 
 <div class="highlight highlight-text-xml"><pre>
 	&lt;<span class="pl-ent">dependency</span>&gt;
     		&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     		&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    		&lt;<span class="pl-ent">version</span>&gt;0.9&lt;/<span class="pl-ent">version</span>&gt;
+    		&lt;<span class="pl-ent">version</span>&gt;0.10&lt;/<span class="pl-ent">version</span>&gt;
 	&lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
