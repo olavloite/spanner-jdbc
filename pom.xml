@@ -170,6 +170,10 @@
 											<shadedPattern>nl.topicus.jdbc.shaded.net.</shadedPattern>
 										</relocation>
 										<relocation>
+											<pattern>io.netty.internal</pattern>
+											<shadedPattern>io.netty.internal</shadedPattern>
+										</relocation>
+										<relocation>
 											<pattern>io.</pattern>
 											<shadedPattern>nl.topicus.jdbc.shaded.io.</shadedPattern>
 										</relocation>
@@ -180,32 +184,8 @@
 											<shadedPattern>nl.topicus.jdbc.shaded.autovalue.</shadedPattern>
 										</relocation>
 										<relocation>
-											<pattern>org.json.</pattern>
-											<shadedPattern>nl.topicus.jdbc.shaded.org.json.</shadedPattern>
-										</relocation>
-										<relocation>
-											<pattern>org.aopalliance.</pattern>
-											<shadedPattern>nl.topicus.jdbc.shaded.org.aopalliance.</shadedPattern>
-										</relocation>
-										<relocation>
-											<pattern>org.codehaus.</pattern>
-											<shadedPattern>nl.topicus.jdbc.shaded.org.codehaus.</shadedPattern>
-										</relocation>
-										<relocation>
-											<pattern>org.joda.</pattern>
-											<shadedPattern>nl.topicus.jdbc.shaded.org.joda.</shadedPattern>
-										</relocation>
-										<relocation>
-											<pattern>org.hamcrest.</pattern>
-											<shadedPattern>nl.topicus.jdbc.shaded.org.hamcrest.</shadedPattern>
-										</relocation>
-										<relocation>
-											<pattern>org.apache.commons.</pattern>
-											<shadedPattern>nl.topicus.jdbc.shaded.org.apache.commons.</shadedPattern>
-										</relocation>
-										<relocation>
-											<pattern>org.apache.http.</pattern>
-											<shadedPattern>nl.topicus.jdbc.shaded.org.apache.http.</shadedPattern>
+											<pattern>org.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.</shadedPattern>
 										</relocation>
 									</relocations>
 								</configuration>
