@@ -30,6 +30,8 @@ class TransactionThread extends Thread
 
 	private TransactionStatus status = TransactionStatus.NOT_STARTED;
 
+	private Exception exception;
+
 	private boolean commit;
 
 	private List<Mutation> mutations = new ArrayList<>(40);
@@ -51,39 +53,51 @@ class TransactionThread extends Thread
 		TransactionRunner runner = dbClient.readWriteTransaction();
 		synchronized (this)
 		{
-			status = runner.run(new TransactionCallable<TransactionStatus>()
+			try
 			{
-
-				@Override
-				public TransactionStatus run(TransactionContext transaction) throws Exception
+				status = runner.run(new TransactionCallable<TransactionStatus>()
 				{
-					while (!stop)
+
+					@Override
+					public TransactionStatus run(TransactionContext transaction) throws Exception
 					{
-						try
+						while (!stop)
 						{
-							Statement statement = statements.take();
-							if (!(statement.getSql().equals("commit") || statement.getSql().equals("rollback")))
+							try
 							{
-								resultSets.put(transaction.executeQuery(statement));
+								Statement statement = statements.take();
+								if (!(statement.getSql().equals("commit") || statement.getSql().equals("rollback")))
+								{
+									resultSets.put(transaction.executeQuery(statement));
+								}
+							}
+							catch (InterruptedException e)
+							{
+								System.err.println("Transaction interrupted while waiting for statement");
+								stopped = true;
+								exception = e;
+								return TransactionStatus.FAIL;
 							}
 						}
-						catch (InterruptedException e)
-						{
-							System.err.println("Transaction interrupted while waiting for statement");
-							stopped = true;
-							return TransactionStatus.FAIL;
-						}
-					}
 
-					if (commit)
-					{
-						transaction.buffer(mutations);
+						if (commit)
+						{
+							transaction.buffer(mutations);
+						}
+						stopped = true;
+						return TransactionStatus.SUCCESS;
 					}
-					stopped = true;
-					return TransactionStatus.SUCCESS;
-				}
-			});
-			this.notifyAll();
+				});
+			}
+			catch (Exception e)
+			{
+				status = TransactionStatus.FAIL;
+				exception = e;
+			}
+			finally
+			{
+				this.notifyAll();
+			}
 		}
 	}
 
@@ -124,6 +138,9 @@ class TransactionThread extends Thread
 
 	private void stopTransaction(boolean commit) throws SQLException
 	{
+		if (status == TransactionStatus.FAIL || status == TransactionStatus.SUCCESS)
+			return;
+
 		this.commit = commit;
 		stop = true;
 		// Add a null object in order to get the transaction thread to proceed
@@ -140,6 +157,10 @@ class TransactionThread extends Thread
 				{
 				}
 			}
+		}
+		if (status == TransactionStatus.FAIL && exception != null)
+		{
+			throw new SQLException(commit ? "Commit failed" : "Rollback failed", exception);
 		}
 	}
 
