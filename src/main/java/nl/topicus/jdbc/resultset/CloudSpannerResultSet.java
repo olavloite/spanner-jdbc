@@ -390,7 +390,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private Object getObject(Type type, String columnLabel) throws SQLException
 	{
-		return getObject(type, resultSet.getColumnIndex(columnLabel));
+		return getObject(type, resultSet.getColumnIndex(columnLabel) + 1);
 	}
 
 	private Object getObject(Type type, int columnIndex) throws SQLException
