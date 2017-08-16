@@ -16,6 +16,10 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.Op;
 import com.google.cloud.spanner.Value;
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.create.table.CreateTable;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 
 public class CloudSpannerPreparedStatementTester
@@ -94,6 +98,41 @@ public class CloudSpannerPreparedStatementTester
 		Assert.assertArrayEquals(new String[] { "1", "2", "1", "1" }, getValues(updateMutation.getValues()));
 	}
 
+	@Test
+	public void testCreateTableStatement() throws SQLException
+	{
+		testCreateTableStatement("CREATE TABLE FOO (ID INT64, NAME STRING(100)) PRIMARY KEY (ID)");
+	}
+
+	/**
+	 * TODO: quote the identifier in primary key clause when this is fixed in
+	 * the underlying SQL Parser
+	 * 
+	 * @throws SQLException
+	 */
+	@Test
+	public void testQuotedCreateTableStatement() throws SQLException
+	{
+		testCreateTableStatement("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
+	}
+
+	private void testCreateTableStatement(String sql) throws SQLException
+	{
+		boolean isDDL = isDDLStatement(sql);
+		Assert.assertTrue(isDDL);
+		Statement statement = null;
+		try
+		{
+			statement = CCJSqlParserUtil.parse(sql);
+		}
+		catch (JSQLParserException e)
+		{
+			throw new SQLException("Could not parse SQL statement", e);
+		}
+		Assert.assertNotNull(statement);
+		Assert.assertEquals(CreateTable.class, statement.getClass());
+	}
+
 	private String[] getValues(Iterable<Value> values)
 	{
 		List<Value> valueList = Lists.newArrayList(values);
@@ -103,6 +142,31 @@ public class CloudSpannerPreparedStatementTester
 		{
 			res[index] = value.toString();
 			index++;
+		}
+		return res;
+	}
+
+	private boolean isDDLStatement(String sql) throws SQLException
+	{
+		boolean res = false;
+		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, null, null);
+		try
+		{
+			Method isDDLStatement = ps.getClass().getDeclaredMethod("isDDLStatement");
+			isDDLStatement.setAccessible(true);
+			res = (boolean) isDDLStatement.invoke(ps);
+		}
+		catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e)
+		{
+			throw new RuntimeException(e);
+		}
+		catch (InvocationTargetException e)
+		{
+			if (e.getTargetException() instanceof SQLException)
+			{
+				throw (SQLException) e.getTargetException();
+			}
+			throw new RuntimeException(e);
 		}
 		return res;
 	}

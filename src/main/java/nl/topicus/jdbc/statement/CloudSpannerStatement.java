@@ -5,15 +5,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.Select;
-import nl.topicus.jdbc.CloudSpannerConnection;
-import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
-
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.ReadContext;
+
+import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 /**
  * 
@@ -51,27 +47,8 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public boolean execute(String sql) throws SQLException
 	{
-		Statement statement;
-		try
-		{
-			statement = CCJSqlParserUtil.parse(sql);
-		}
-		catch (JSQLParserException e)
-		{
-			throw new SQLException("Error while parsing sql statement", e);
-		}
-		if (statement instanceof Select)
-		{
-			lastResultSet = executeQuery(sql);
-			lastUpdateCount = -1;
-			return true;
-		}
-		else
-		{
-			lastUpdateCount = executeUpdate(sql);
-			lastResultSet = null;
-			return false;
-		}
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		return ps.execute();
 	}
 
 	@Override
