@@ -59,6 +59,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	}
 
 	@Override
+	public ResultSet executeQuery(String sql) throws SQLException
+	{
+		throw new SQLException("This method may not be called on a PreparedStatement");
+	}
+
+	@Override
 	public ResultSet executeQuery() throws SQLException
 	{
 		Statement statement;
