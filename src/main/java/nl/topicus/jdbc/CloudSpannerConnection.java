@@ -185,7 +185,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 		catch (SpannerException e)
 		{
-			throw new SQLException("Could not execute DDL statement", e);
+			throw new SQLException("Could not execute DDL statement: " + e.getLocalizedMessage(), e);
 		}
 	}
 

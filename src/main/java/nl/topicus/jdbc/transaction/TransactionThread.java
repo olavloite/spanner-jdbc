@@ -160,7 +160,8 @@ class TransactionThread extends Thread
 		}
 		if (status == TransactionStatus.FAIL && exception != null)
 		{
-			throw new SQLException(commit ? "Commit failed" : "Rollback failed", exception);
+			throw new SQLException((commit ? "Commit failed: " : "Rollback failed: ") + exception.getLocalizedMessage(),
+					exception);
 		}
 	}
 

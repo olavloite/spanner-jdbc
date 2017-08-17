@@ -61,7 +61,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 			}
 			catch (JSQLParserException e)
 			{
-				throw new SQLException("Error while parsing sql statement", e);
+				throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
 			}
 		}
 		if (!ddl && statement instanceof Select)

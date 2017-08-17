@@ -61,7 +61,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException
 	{
-		throw new SQLException("This method may not be called on a PreparedStatement");
+		throw new SQLException("The executeQuery(String sql)-method may not be called on a PreparedStatement");
 	}
 
 	@Override
@@ -74,7 +74,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Error while parsing sql statement", e);
+			throw new SQLException("Error while parsing sql statement: " + e.getLocalizedMessage(), e);
 		}
 		if (statement instanceof Select)
 		{
@@ -85,7 +85,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				return new CloudSpannerResultSet(rs);
 			}
 		}
-		throw new SQLException("SQL statement not suitable for executeQuery");
+		throw new SQLException("SQL statement not suitable for executeQuery. Expected SELECT-statement.");
 	}
 
 	private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement)
@@ -235,7 +235,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			if (isDDLStatement(sql))
 			{
-				throw new SQLException("Cannot create mutation for DDL statement");
+				throw new SQLException("Cannot create mutation for DDL statement. Expected INSERT, UPDATE or DELETE");
 			}
 			Statement statement = CCJSqlParserUtil.parse(sql);
 			if (statement instanceof Insert)
@@ -258,7 +258,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Error while parsing sql statement " + sql, e);
+			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
 		}
 	}
 
@@ -436,7 +436,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			}
 			catch (JSQLParserException e)
 			{
-				throw new SQLException("Error while parsing sql statement", e);
+				throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
 			}
 		}
 		if (!ddl && statement instanceof Select)
@@ -479,7 +479,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Error while parsing sql statement " + sql, e);
+			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
 		}
 		return new CloudSpannerParameterMetaData(this);
 	}
