@@ -23,20 +23,23 @@ public class MetaDataTester
 {
 	private static final Logger log = Logger.getLogger(MetaDataTester.class.getName());
 
-	private static final String[] TABLES = { "TEST", "TESTCHILD" };
+	private static final String[] TABLES = { "TEST", "TESTCHILD", "TEST_QUOTED" };
 
 	private static final String[][] COLUMNS = {
 			{ "ID", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" },
-			{ "ID", "CHILDID", "DESCRIPTION" } };
+			{ "ID", "CHILDID", "DESCRIPTION" },
+			{ "ID", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" } };
 
 	private static final int[][] COLUMN_TYPES = {
 			{ Types.BIGINT, Types.BINARY, Types.BOOLEAN, Types.DOUBLE, Types.NVARCHAR, Types.DATE, Types.TIMESTAMP },
-			{ Types.BIGINT, Types.BIGINT, Types.NVARCHAR } };
+			{ Types.BIGINT, Types.BIGINT, Types.NVARCHAR },
+			{ Types.BIGINT, Types.BINARY, Types.BOOLEAN, Types.DOUBLE, Types.NVARCHAR, Types.DATE, Types.TIMESTAMP } };
 
 	private static final Map<String, String[]> INDEX_COLUMNS = new HashMap<>();
 	static
 	{
 		INDEX_COLUMNS.put("TEST.PRIMARY_KEY", new String[] { "ID" });
+		INDEX_COLUMNS.put("TEST_QUOTED.PRIMARY_KEY", new String[] { "ID" });
 		INDEX_COLUMNS.put("TESTCHILD.PRIMARY_KEY", new String[] { "ID", "CHILDID" });
 		INDEX_COLUMNS.put("TEST.IDX_TEST_UUID", new String[] { "UUID" });
 		INDEX_COLUMNS.put("TESTCHILD.IDX_TESTCHILD_DESCRIPTION", new String[] { "DESCRIPTION" });
@@ -47,6 +50,7 @@ public class MetaDataTester
 	{
 		INDEX_UNIQUE.put("TEST.PRIMARY_KEY", Boolean.TRUE);
 		INDEX_UNIQUE.put("TESTCHILD.PRIMARY_KEY", Boolean.TRUE);
+		INDEX_UNIQUE.put("TEST_QUOTED.PRIMARY_KEY", Boolean.TRUE);
 		INDEX_UNIQUE.put("TEST.IDX_TEST_UUID", Boolean.TRUE);
 		INDEX_UNIQUE.put("TESTCHILD.IDX_TESTCHILD_DESCRIPTION", Boolean.FALSE);
 	}
@@ -84,7 +88,7 @@ public class MetaDataTester
 				count++;
 			}
 		}
-		assertEquals(2, count);
+		assertEquals(3, count);
 	}
 
 	private void runColumnMetaDataTests() throws SQLException
@@ -179,8 +183,8 @@ public class MetaDataTester
 			try (ResultSet rs = metadata.getImportedKeys("", "", table))
 			{
 			}
-			try (ResultSet rs = metadata
-					.getBestRowIdentifier("", "", table, DatabaseMetaData.bestRowTransaction, false))
+			try (ResultSet rs = metadata.getBestRowIdentifier("", "", table, DatabaseMetaData.bestRowTransaction,
+					false))
 			{
 			}
 			try (ResultSet rs = metadata.getColumnPrivileges("", "", table, null))

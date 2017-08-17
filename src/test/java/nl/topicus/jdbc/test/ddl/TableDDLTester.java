@@ -49,11 +49,15 @@ public class TableDDLTester
 		verifyPrimaryKey("TESTCHILD", "ID, CHILDID");
 		log.info("Creating indices");
 		runCreateIndexTests();
+
+		log.info("Starting CreateQuotedTableTest");
+		runCreateTableTest("TEST_QUOTED", "CreateQuotedTableTest.sql");
+
 		log.info("Finished CreateTableTests");
 	}
 
-	private void runCreateTableTest(String tableName, String fileName) throws IOException, URISyntaxException,
-			SQLException
+	private void runCreateTableTest(String tableName, String fileName)
+			throws IOException, URISyntaxException, SQLException
 	{
 		executeDdl(fileName);
 		verifyTableExists(tableName);
@@ -156,7 +160,7 @@ public class TableDDLTester
 		String sql = TestUtil.getSingleStatement(getClass(), file);
 		try
 		{
-			connection.createStatement().executeUpdate(sql);
+			connection.createStatement().execute(sql);
 		}
 		catch (SQLException e)
 		{
