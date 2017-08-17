@@ -52,26 +52,6 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private List<Mutation> batchMutations = new ArrayList<>();
 
-	private static final String[] DDL_STATEMENTS = { "CREATE", "ALTER", "DROP" };
-
-	/**
-	 * Do a quick check if this SQL statement is a DDL statement
-	 * 
-	 * @return true if the SQL statement is a DDL statement
-	 */
-	private boolean isDDLStatement()
-	{
-		String ddl = sql.trim();
-		ddl = ddl.substring(0, Math.min(8, ddl.length())).toUpperCase();
-		for (String statement : DDL_STATEMENTS)
-		{
-			if (ddl.startsWith(statement))
-				return true;
-		}
-
-		return false;
-	}
-
 	public CloudSpannerPreparedStatement(String sql, CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
 		super(connection, dbClient);
@@ -207,7 +187,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			throw new SQLFeatureNotSupportedException(
 					"Batching of statements is only allowed when not running in autocommit mode");
 		}
-		if (isDDLStatement())
+		if (isDDLStatement(sql))
 		{
 			throw new SQLFeatureNotSupportedException("DDL statements may not be batched");
 		}
@@ -241,7 +221,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public int executeUpdate() throws SQLException
 	{
-		if (isDDLStatement())
+		if (isDDLStatement(sql))
 		{
 			String ddl = formatDDLStatement(sql);
 			return executeDDL(ddl);
@@ -253,7 +233,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		try
 		{
-			if (isDDLStatement())
+			if (isDDLStatement(sql))
 			{
 				throw new SQLException("Cannot create mutation for DDL statement");
 			}
@@ -447,7 +427,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	public boolean execute() throws SQLException
 	{
 		Statement statement = null;
-		boolean ddl = isDDLStatement();
+		boolean ddl = isDDLStatement(sql);
 		if (!ddl)
 		{
 			try
@@ -479,7 +459,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		// parse the SQL statement without executing it
 		try
 		{
-			if (isDDLStatement())
+			if (isDDLStatement(sql))
 			{
 				throw new SQLException("Cannot get parameter meta data for DDL statement");
 			}

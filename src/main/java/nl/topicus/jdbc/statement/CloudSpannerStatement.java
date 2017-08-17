@@ -8,6 +8,10 @@ import java.sql.SQLFeatureNotSupportedException;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.ReadContext;
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
@@ -47,8 +51,51 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public boolean execute(String sql) throws SQLException
 	{
-		PreparedStatement ps = getConnection().prepareStatement(sql);
-		return ps.execute();
+		Statement statement = null;
+		boolean ddl = isDDLStatement(sql);
+		if (!ddl)
+		{
+			try
+			{
+				statement = CCJSqlParserUtil.parse(sql);
+			}
+			catch (JSQLParserException e)
+			{
+				throw new SQLException("Error while parsing sql statement", e);
+			}
+		}
+		if (!ddl && statement instanceof Select)
+		{
+			lastResultSet = executeQuery(sql);
+			lastUpdateCount = -1;
+			return true;
+		}
+		else
+		{
+			lastUpdateCount = executeUpdate(sql);
+			lastResultSet = null;
+			return false;
+		}
+	}
+
+	private static final String[] DDL_STATEMENTS = { "CREATE", "ALTER", "DROP" };
+
+	/**
+	 * Do a quick check if this SQL statement is a DDL statement
+	 * 
+	 * @return true if the SQL statement is a DDL statement
+	 */
+	protected boolean isDDLStatement(String sql)
+	{
+		String ddl = sql.trim();
+		ddl = ddl.substring(0, Math.min(8, ddl.length())).toUpperCase();
+		for (String statement : DDL_STATEMENTS)
+		{
+			if (ddl.startsWith(statement))
+				return true;
+		}
+
+		return false;
 	}
 
 	@Override
