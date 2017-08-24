@@ -1,4 +1,5 @@
-https://travis-ci.org/olavloite/spanner-jdbc.svg?branch=master
+### Status
+[![Build Status](https://travis-ci.org/olavloite/spanner-jdbc.svg?branch=master)](https://travis-ci.org/olavloite/spanner-jdbc)
 
 # spanner-jdbc
 JDBC Driver for Google Cloud Spanner
