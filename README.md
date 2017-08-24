@@ -1,4 +1,4 @@
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2KSQAN36A7NEQ)
+https://travis-ci.org/olavloite/spanner-jdbc.svg?branch=master
 
 # spanner-jdbc
 JDBC Driver for Google Cloud Spanner
