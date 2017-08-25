@@ -18,6 +18,10 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 
 	private static final String FROM_STATEMENT_WITHOUT_RESULTS = " FROM INFORMATION_SCHEMA.TABLES WHERE 1=2 ";
 
+	private static final String WHERE_1_EQUALS_1 = " WHERE 1=1 ";
+
+	private static final String FROM_TABLES_T = " FROM INFORMATION_SCHEMA.TABLES AS T ";
+
 	private CloudSpannerConnection connection;
 
 	CloudSpannerDatabaseMetaData(CloudSpannerConnection connection)
@@ -779,13 +783,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "select CASE WHEN TABLE_CATALOG='' THEN NULL ELSE TABLE_CATALOG END AS TABLE_CAT, CASE WHEN TABLE_SCHEMA='' THEN NULL ELSE TABLE_SCHEMA END AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION "
-				+ "FROM information_schema.tables AS t " + "WHERE 1=1 ";
+				+ FROM_TABLES_T + WHERE_1_EQUALS_1;
 		if (catalog != null)
-			sql = sql + "AND UPPER(t.TABLE_CATALOG) like ? ";
+			sql = sql + "AND UPPER(T.TABLE_CATALOG) like ? ";
 		if (schemaPattern != null)
-			sql = sql + "AND UPPER(t.TABLE_SCHEMA) like ? ";
+			sql = sql + "AND UPPER(T.TABLE_SCHEMA) like ? ";
 		if (tableNamePattern != null)
-			sql = sql + "AND UPPER(t.TABLE_NAME) like ? ";
+			sql = sql + "AND UPPER(T.TABLE_NAME) like ? ";
 		sql = sql + "ORDER BY TABLE_NAME";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern);
@@ -835,7 +839,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "	WHEN IS_NULLABLE = 'YES' THEN 1 " + "	WHEN IS_NULLABLE = 'NO' THEN 0 " + "	ELSE 2 "
 				+ "END AS NULLABLE, NULL AS REMARKS, NULL AS COLUMN_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATETIME_SUB, 0 AS CHAR_OCTET_LENGTH, ORDINAL_POSITION, IS_NULLABLE, NULL AS SCOPE_CATALOG, "
 				+ "NULL AS SCOPE_SCHEMA, NULL AS SCOPE_TABLE, NULL AS SOURCE_DATA_TYPE, 'NO' AS IS_AUTOINCREMENT, 'NO' AS IS_GENERATEDCOLUMN "
-				+ "FROM information_schema.columns " + "WHERE 1=1 ";
+				+ "FROM information_schema.columns " + WHERE_1_EQUALS_1;
 
 		if (catalog != null)
 			sql = sql + "AND UPPER(TABLE_CATALOG) like ? ";
@@ -947,7 +951,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "FROM INFORMATION_SCHEMA.TABLES PARENT "
 				+ "INNER JOIN INFORMATION_SCHEMA.TABLES CHILD ON CHILD.PARENT_TABLE_NAME=PARENT.TABLE_NAME "
 				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS PARENT_INDEX_COLUMNS ON PARENT_INDEX_COLUMNS.TABLE_NAME=PARENT.TABLE_NAME AND PARENT_INDEX_COLUMNS.INDEX_NAME='PRIMARY_KEY' "
-				+ "WHERE 1=1 ";
+				+ WHERE_1_EQUALS_1;
 
 		if (catalog != null)
 			sql = sql + "AND UPPER(PARENT.TABLE_CATALOG) like ? ";
@@ -982,7 +986,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		String sql = "select idx.TABLE_CATALOG AS TABLE_CAT, idx.TABLE_SCHEMA AS TABLE_SCHEM, idx.TABLE_NAME, CASE WHEN IS_UNIQUE THEN FALSE ELSE TRUE END AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, idx.INDEX_NAME, 3 AS TYPE, ORDINAL_POSITION, COLUMN_NAME, SUBSTR(COLUMN_ORDERING, 0, 1) AS ASC_OR_DESC, -1 AS CARDINALITY, -1 AS PAGES, NULL AS FILTER_CONDITION "
 				+ "FROM information_schema.indexes idx "
 				+ "INNER JOIN information_schema.index_columns col on idx.table_catalog=col.table_catalog and idx.table_schema=col.table_schema and idx.table_name=col.table_name and idx.index_name=col.index_name "
-				+ "WHERE 1=1 ";
+				+ WHERE_1_EQUALS_1;
 
 		if (catalog != null)
 			sql = sql + "AND UPPER(idx.TABLE_CATALOG) like ? ";
