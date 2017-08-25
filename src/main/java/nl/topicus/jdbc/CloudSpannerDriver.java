@@ -29,6 +29,7 @@ public class CloudSpannerDriver implements Driver
 		}
 		catch (SQLException e)
 		{
+			java.sql.DriverManager.println("Registering driver failed: " + e.getMessage());
 		}
 	}
 	static final int MAJOR_VERSION = 1;
