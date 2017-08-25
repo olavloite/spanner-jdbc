@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.spanner.Database;
@@ -28,10 +29,12 @@ import com.google.spanner.admin.instance.v1.CreateInstanceMetadata;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
+import nl.topicus.jdbc.test.category.IntegrationTest;
 import nl.topicus.jdbc.test.ddl.MetaDataTester;
 import nl.topicus.jdbc.test.ddl.TableDDLTester;
 import nl.topicus.jdbc.test.dml.DMLTester;
 
+@Category(IntegrationTest.class)
 public class JdbcIntegrationTest
 {
 	private static final Logger log = Logger.getLogger(JdbcIntegrationTest.class.getName());
