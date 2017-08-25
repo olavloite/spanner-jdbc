@@ -76,7 +76,7 @@ class TransactionThread extends Thread
 								System.err.println("Transaction interrupted while waiting for statement");
 								stopped = true;
 								exception = e;
-								return TransactionStatus.FAIL;
+								throw e;
 							}
 						}
 
