@@ -20,9 +20,9 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-import nl.topicus.jdbc.CloudSpannerConnection;
-
 import com.google.cloud.spanner.DatabaseClient;
+
+import nl.topicus.jdbc.CloudSpannerConnection;
 
 /**
  * 
@@ -196,8 +196,10 @@ public abstract class AbstractCloudSpannerPreparedStatement extends CloudSpanner
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException
 	{
-		ResultSet rs = executeQuery();
-		return rs.getMetaData();
+		try (ResultSet rs = executeQuery())
+		{
+			return rs.getMetaData();
+		}
 	}
 
 	@Override
