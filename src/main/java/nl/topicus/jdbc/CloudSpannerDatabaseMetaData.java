@@ -12,9 +12,11 @@ import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 
 public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMetaData
 {
-	private final int JDBC_MAJOR_VERSION = 4;
+	private static final int JDBC_MAJOR_VERSION = 4;
 
-	private final int JDBC_MINOR_VERSION = 2;
+	private static final int JDBC_MINOR_VERSION = 2;
+
+	private static final String FROM_STATEMENT_WITHOUT_RESULTS = " FROM INFORMATION_SCHEMA.TABLES WHERE 1=2 ";
 
 	private CloudSpannerConnection connection;
 
@@ -736,8 +738,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "SELECT '' AS PROCEDURE_CAT, '' AS PROCEDURE_SCHEM, '' AS PROCEDURE_NAME, NULL AS RES1, NULL AS RES2, NULL AS RES3, "
-				+ "'' AS REMARKS, 0 AS PROCEDURE_TYPE, '' AS SPECIFIC_NAME "
-				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ "'' AS REMARKS, 0 AS PROCEDURE_TYPE, '' AS SPECIFIC_NAME " + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -751,7 +752,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS PRECISION, 0 AS LENGTH, 0 AS SCALE, 0 AS RADIX, "
 				+ "0 AS NULLABLE, '' AS REMARKS, '' AS COLUMN_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATATIME_SUB, "
 				+ "0 AS CHAR_OCTET_LENGTH, 0 AS ORDINAL_POSITION, '' AS IS_NULLABLE, '' AS SPECIFIC_NAME "
-				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -794,7 +795,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSchemas() throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CAT FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CAT " + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -803,7 +804,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getCatalogs() throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_CAT FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+		String sql = "SELECT '' AS TABLE_CAT " + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -821,44 +822,17 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
-				+ "CASE " + "	WHEN SPANNER_TYPE LIKE 'ARRAY%' THEN "
-				+ Types.ARRAY
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN "
-				+ Types.BOOLEAN
-				+ " "
-				+ "	WHEN SPANNER_TYPE LIKE 'BYTES%' THEN "
-				+ Types.BINARY
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'DATE' THEN "
-				+ Types.DATE
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'FLOAT64' THEN "
-				+ Types.DOUBLE
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'INT64' THEN "
-				+ Types.BIGINT
-				+ " "
-				+ "	WHEN SPANNER_TYPE LIKE 'STRING%' THEN "
-				+ Types.NVARCHAR
-				+ " "
-				+ "	WHEN SPANNER_TYPE LIKE 'STRUCT%' THEN "
-				+ Types.STRUCT
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN "
-				+ Types.TIMESTAMP
-				+ " "
-				+ "END AS DATA_TYPE, "
-				+ "SPANNER_TYPE AS TYPE_NAME, "
-				+ "CASE "
-				+ "WHEN strpos(spanner_type, '(')=0 then 0 "
+				+ "CASE " + "	WHEN SPANNER_TYPE LIKE 'ARRAY%' THEN " + Types.ARRAY + " "
+				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN " + Types.BOOLEAN + " " + "	WHEN SPANNER_TYPE LIKE 'BYTES%' THEN "
+				+ Types.BINARY + " " + "	WHEN SPANNER_TYPE = 'DATE' THEN " + Types.DATE + " "
+				+ "	WHEN SPANNER_TYPE = 'FLOAT64' THEN " + Types.DOUBLE + " " + "	WHEN SPANNER_TYPE = 'INT64' THEN "
+				+ Types.BIGINT + " " + "	WHEN SPANNER_TYPE LIKE 'STRING%' THEN " + Types.NVARCHAR + " "
+				+ "	WHEN SPANNER_TYPE LIKE 'STRUCT%' THEN " + Types.STRUCT + " "
+				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN " + Types.TIMESTAMP + " " + "END AS DATA_TYPE, "
+				+ "SPANNER_TYPE AS TYPE_NAME, " + "CASE " + "WHEN strpos(spanner_type, '(')=0 then 0 "
 				+ "ELSE cast(replace(substr(spanner_type, strpos(spanner_type, '(')+1, strpos(spanner_type, ')')-strpos(spanner_type, '(')-1), 'MAX', '0') as INT64) "
-				+ "END AS COLUMN_SIZE, "
-				+ "0 AS BUFFER_LENGTH, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, "
-				+ "CASE "
-				+ "	WHEN IS_NULLABLE = 'YES' THEN 1 "
-				+ "	WHEN IS_NULLABLE = 'NO' THEN 0 "
-				+ "	ELSE 2 "
+				+ "END AS COLUMN_SIZE, " + "0 AS BUFFER_LENGTH, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, " + "CASE "
+				+ "	WHEN IS_NULLABLE = 'YES' THEN 1 " + "	WHEN IS_NULLABLE = 'NO' THEN 0 " + "	ELSE 2 "
 				+ "END AS NULLABLE, NULL AS REMARKS, NULL AS COLUMN_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATETIME_SUB, 0 AS CHAR_OCTET_LENGTH, ORDINAL_POSITION, IS_NULLABLE, NULL AS SCOPE_CATALOG, "
 				+ "NULL AS SCOPE_SCHEMA, NULL AS SCOPE_TABLE, NULL AS SOURCE_DATA_TYPE, 'NO' AS IS_AUTOINCREMENT, 'NO' AS IS_GENERATEDCOLUMN "
 				+ "FROM information_schema.columns " + "WHERE 1=1 ";
@@ -883,7 +857,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS COLUMN_NAME, '' AS GRANTOR, '' AS GRANTEE, '' AS PRIVILEGE, 'NO' AS IS_GRANTABLE "
-				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -894,7 +868,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS GRANTOR, '' AS GRANTEE, '' AS PRIVILEGE, 'NO' AS IS_GRANTABLE "
-				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -905,7 +879,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "SELECT 0 AS SCOPE, '' AS COLUMN_NAME, 0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, "
-				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -915,7 +889,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException
 	{
 		String sql = "SELECT 0 AS SCOPE, '' AS COLUMN_NAME, 0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, "
-				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1137,8 +1111,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getSuperTypes(String catalog, String schemaPattern, String typeNamePattern) throws SQLException
 	{
 		String sql = "SELECT '' AS TYPE_CAT, '' AS TYPE_SCHEM, '' AS TYPE_NAME, "
-				+ "'' AS SUPERTYPE_CAT, '' AS SUPERTYPE_SCHEM, '' AS SUPERTYPE_NAME "
-				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ "'' AS SUPERTYPE_CAT, '' AS SUPERTYPE_SCHEM, '' AS SUPERTYPE_NAME " + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1148,7 +1121,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException
 	{
 		String sql = "SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS SUPERTABLE_NAME "
-				+ "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1162,7 +1135,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "'' AS ATTR_TYPE_NAME, 0 AS ATTR_SIZE, 0 AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, 0 AS NULLABLE, "
 				+ "'' AS REMARKS, '' AS ATTR_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATETIME_SUB, 0 AS CHAR_OCTET_LENGTH, "
 				+ "0 AS ORDINAL_POSITION, 'NO' AS IS_NULLABLE, '' AS SCOPE_CATALOG, '' AS SCOPE_SCHEMA, '' AS SCOPE_TABLE, "
-				+ "0 AS SOURCE_DATA_TYPE " + "FROM INFORMATION_SCHEMA.TABLES WHERE 1=2";
+				+ "0 AS SOURCE_DATA_TYPE " + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1231,9 +1204,8 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CATALOG " + "FROM information_schema.tables tbl "
-				+ "WHERE 1=2 ";
-		sql = sql + "ORDER BY TABLE_SCHEM ";
+		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CATALOG " + FROM_STATEMENT_WITHOUT_RESULTS;
+		sql = sql + " ORDER BY TABLE_SCHEM ";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1255,8 +1227,8 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getClientInfoProperties() throws SQLException
 	{
 		String sql = "SELECT '' AS NAME, 0 AS MAX_LEN, '' AS DEFAULT_VALUE, '' AS DESCRIPTION "
-				+ "FROM information_schema.tables tbl " + "WHERE 1=2 ";
-		sql = sql + "ORDER BY NAME ";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
+		sql = sql + " ORDER BY NAME ";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1266,8 +1238,8 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException
 	{
 		String sql = "SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS REMARKS, 0 AS FUNCTION_TYPE, '' AS SPECIFIC_NAME "
-				+ "FROM information_schema.tables tbl " + "WHERE 1=2 ";
-		sql = sql + "ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
+		sql = sql + " ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1278,8 +1250,8 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			String columnNamePattern) throws SQLException
 	{
 		String sql = "SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS COLUMN_NAME, 0 AS COLUMN_TYPE, 1111 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS PRECISION, 0 AS LENGTH, 0 AS SCALE, 0 AS RADIX, 0 AS NULLABLE, '' AS REMARKS, 0 AS CHAR_OCTET_LENGTH, 0 AS ORDINAL_POSITION, '' AS IS_NULLABLE, '' AS SPECIFIC_NAME "
-				+ "FROM information_schema.tables tbl " + "WHERE 1=2 ";
-		sql = sql + "ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
+		sql = sql + " ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1290,36 +1262,15 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			String columnNamePattern) throws SQLException
 	{
 		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
-				+ "CASE " + "	WHEN SPANNER_TYPE = 'ARRAY' THEN "
-				+ Types.ARRAY
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN "
-				+ Types.BOOLEAN
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'BYTES' THEN "
-				+ Types.BINARY
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'DATE' THEN "
-				+ Types.DATE
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'FLOAT64' THEN "
-				+ Types.DOUBLE
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'INT64' THEN "
-				+ Types.BIGINT
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'STRING' THEN "
-				+ Types.NVARCHAR
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'STRUCT' THEN "
-				+ Types.STRUCT
-				+ " "
-				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN "
-				+ Types.TIMESTAMP
-				+ " "
-				+ "END AS DATA_TYPE, "
+				+ "CASE " + "	WHEN SPANNER_TYPE = 'ARRAY' THEN " + Types.ARRAY + " "
+				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN " + Types.BOOLEAN + " " + "	WHEN SPANNER_TYPE = 'BYTES' THEN "
+				+ Types.BINARY + " " + "	WHEN SPANNER_TYPE = 'DATE' THEN " + Types.DATE + " "
+				+ "	WHEN SPANNER_TYPE = 'FLOAT64' THEN " + Types.DOUBLE + " " + "	WHEN SPANNER_TYPE = 'INT64' THEN "
+				+ Types.BIGINT + " " + "	WHEN SPANNER_TYPE = 'STRING' THEN " + Types.NVARCHAR + " "
+				+ "	WHEN SPANNER_TYPE = 'STRUCT' THEN " + Types.STRUCT + " "
+				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN " + Types.TIMESTAMP + " " + "END AS DATA_TYPE, "
 				+ "0 AS COLUMN_SIZE, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, 'USAGE_UNKNOWN' AS COLUMN_USAGE, NULL AS REMARKS, 0 AS CHAR_OCTET_LENGTH, IS_NULLABLE "
-				+ "FROM information_schema.columns " + "WHERE 1=2 ";
+				+ FROM_STATEMENT_WITHOUT_RESULTS;
 
 		if (catalog != null)
 			sql = sql + "AND UPPER(TABLE_CATALOG) like ? ";
