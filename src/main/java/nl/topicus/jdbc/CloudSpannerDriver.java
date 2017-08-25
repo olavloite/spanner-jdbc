@@ -78,7 +78,6 @@ public class CloudSpannerDriver implements Driver
 
 		String[] parts = url.split(":", 3);
 		String[] connectionParts = parts[2].split(";");
-		// String server = connectionParts[0];
 		String project = null;
 		String instance = null;
 		String database = null;
