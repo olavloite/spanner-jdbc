@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.AccessControlException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -130,40 +129,18 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	public static GoogleCredentials getCredentialsFromFile(String credentialsPath) throws IOException
 	{
-		// First try the environment variable
+		if (credentialsPath == null || credentialsPath.length() == 0)
+			throw new IllegalArgumentException("credentialsPath may not be null or empty");
 		GoogleCredentials credentials = null;
-		if (credentialsPath != null && credentialsPath.length() > 0)
+		File credentialsFile = new File(credentialsPath);
+		if (!credentialsFile.isFile())
 		{
-			InputStream credentialsStream = null;
-			try
-			{
-				File credentialsFile = new File(credentialsPath);
-				if (!credentialsFile.isFile())
-				{
-					// Path will be put in the message from the catch block
-					// below
-					throw new IOException("File does not exist.");
-				}
-				credentialsStream = new FileInputStream(credentialsFile);
-				credentials = GoogleCredentials.fromStream(credentialsStream,
-						CloudSpannerOAuthUtil.HTTP_TRANSPORT_FACTORY);
-			}
-			catch (IOException e)
-			{
-				throw new IOException(
-						String.format("Error reading credential file %s: %s", credentialsPath, e.getMessage()), e);
-			}
-			catch (AccessControlException expected)
-			{
-				// Exception querying file system is expected on App-Engine
-			}
-			finally
-			{
-				if (credentialsStream != null)
-				{
-					credentialsStream.close();
-				}
-			}
+			throw new IOException(
+					String.format("Error reading credential file %s: File does not exist", credentialsPath));
+		}
+		try (InputStream credentialsStream = new FileInputStream(credentialsFile))
+		{
+			credentials = GoogleCredentials.fromStream(credentialsStream, CloudSpannerOAuthUtil.HTTP_TRANSPORT_FACTORY);
 		}
 		return credentials;
 	}
