@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
@@ -124,7 +123,9 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private BigDecimal toBigDecimal(double d, int scale)
 	{
-		return new BigDecimal(d, new MathContext(scale));
+		BigDecimal res = BigDecimal.valueOf(d);
+		res.setScale(scale);
+		return res;
 	}
 
 	@Override
