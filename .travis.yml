@@ -2,3 +2,18 @@ language: java
 before_install:
 - openssl aes-256-cbc -K $encrypted_a65cce263ea6_key -iv $encrypted_a65cce263ea6_iv
   -in cloudspanner-key.json.enc -out cloudspanner-key.json -d
+
+install: true
+addons:
+  sonarcloud:
+    organization: "olavloite-github"
+    token:
+      secure: "AFOGcTIvN6D6J7Eho+W633WLVqXnbNb2MqU4JsKBRqxG26udQKeHaEz9pLiRGhde5fcuwm9GAnJLuJ5YfTmqWUEWvd+aI+fn0Alpj4P5Q5S+F+wi+GnYKH0GUw/QDLgcmSvC4SO68XwhXIHMNnSWfEEJ5NDwQHZzmonYAKlxTCWHneATt1vtMr3/6cz5KbbbLxK+oohj5sbldSh9jh+YuulVb+dCw+zaNntUZsbJOk/RNQiFgIfteXOfZeP1jlY+45VOAFHUT3g6hVmnScMkCtp6Ahx23VuC5fZXE5d8pM/UCn/MyFPrHsws+ygGdKDB/JjQUj5qdvoif254cDVK+u18wMQsPgQpjGDI1jggTXzse01/a1tLjN9M+eSRynbCqQA8iFD3D1JtKcvnAY06m2wDNq7s485NlGfQO9sr518sQH8KJbkCzgH4dPvEm+OLTEFx9+Ahzj7O+kgBkPMNEgE2Gk5ROMsUQUFPxF5iG7uzt6tYVrRvzh9cMvMRJBEV8o6otjsPZg5Y7T8NdS3izE4NQd7A/VsLB/ectmlLvYnvcTadNjZuTXTXMCwuJFA/1JHXkKo7SbNY21fq24CSpWx88U9S2WYyECqMtoctVUYXDRwshFgAfrs0Ix6RZxeyA/MYByWZWesrUzWTQhTN2SB+iuQp8nunNEmlaCA58h8="
+jdk:
+  - oraclejdk8
+script:
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'

@@ -11,7 +11,7 @@ public class JdbcTestStarter
 	 */
 	public static void main(String... args)
 	{
-		JdbcTester tester = new JdbcTester();
+		JdbcIntegrationTest tester = new JdbcIntegrationTest();
 		tester.performDatabaseTests();
 	}
 }

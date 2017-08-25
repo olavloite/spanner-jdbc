@@ -32,9 +32,9 @@ import nl.topicus.jdbc.test.ddl.MetaDataTester;
 import nl.topicus.jdbc.test.ddl.TableDDLTester;
 import nl.topicus.jdbc.test.dml.DMLTester;
 
-public class JdbcTester
+public class JdbcIntegrationTest
 {
-	private static final Logger log = Logger.getLogger(JdbcTester.class.getName());
+	private static final Logger log = Logger.getLogger(JdbcIntegrationTest.class.getName());
 
 	private static final boolean CREATE_INSTANCE = true;
 
@@ -50,7 +50,7 @@ public class JdbcTester
 
 	private final String credentialsPath;
 
-	public JdbcTester()
+	public JdbcIntegrationTest()
 	{
 		this.credentialsPath = "cloudspanner-key.json";
 		this.projectId = CloudSpannerConnection.getServiceAccountProjectId(credentialsPath);

@@ -21,8 +21,9 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 
-public class CloudSpannerPreparedStatementTester
+public class CloudSpannerPreparedStatementTest
 {
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -152,9 +153,9 @@ public class CloudSpannerPreparedStatementTester
 		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, null, null);
 		try
 		{
-			Method isDDLStatement = ps.getClass().getDeclaredMethod("isDDLStatement");
+			Method isDDLStatement = CloudSpannerStatement.class.getDeclaredMethod("isDDLStatement", String.class);
 			isDDLStatement.setAccessible(true);
-			res = (boolean) isDDLStatement.invoke(ps);
+			res = (boolean) isDDLStatement.invoke(ps, sql);
 		}
 		catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e)
 		{
