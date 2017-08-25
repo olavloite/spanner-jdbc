@@ -59,8 +59,6 @@
 			<artifactId>jsqlparser</artifactId>
 			<version>1.1</version>
 		</dependency>
-		<!-- <dependency> <groupId>com.github.jsqlparser</groupId> <artifactId>jsqlparser</artifactId> 
-			<version>0.9.7</version> </dependency> -->
 	</dependencies>
 
 	<distributionManagement>
