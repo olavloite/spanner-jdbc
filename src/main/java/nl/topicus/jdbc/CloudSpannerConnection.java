@@ -15,6 +15,10 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Arrays;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -162,6 +166,24 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			}
 		}
 		return credentials;
+	}
+
+	public static String getServiceAccountProjectId(String credentialsPath)
+	{
+		String project = null;
+		if (credentialsPath != null)
+		{
+			try (InputStream credentialsStream = new FileInputStream(credentialsPath))
+			{
+				JSONObject json = new JSONObject(new JSONTokener(credentialsStream));
+				project = json.getString("project_id");
+			}
+			catch (IOException | JSONException ex)
+			{
+				// ignore
+			}
+		}
+		return project;
 	}
 
 	Spanner getSpanner()

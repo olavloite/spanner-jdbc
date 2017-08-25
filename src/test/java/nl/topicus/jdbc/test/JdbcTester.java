@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.junit.Test;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.spanner.Database;
 import com.google.cloud.spanner.Instance;
@@ -48,10 +50,10 @@ public class JdbcTester
 
 	private final String credentialsPath;
 
-	public JdbcTester(String projectId, String credentialsPath)
+	public JdbcTester()
 	{
-		this.projectId = projectId;
-		this.credentialsPath = credentialsPath;
+		this.credentialsPath = "cloudspanner-key.json";
+		this.projectId = CloudSpannerConnection.getServiceAccountProjectId(credentialsPath);
 		GoogleCredentials credentials = null;
 		try
 		{
@@ -72,7 +74,8 @@ public class JdbcTester
 	/**
 	 * Run the different tests on the configured database.
 	 */
-	void performTests()
+	@Test
+	public void performDatabaseTests()
 	{
 		try
 		{
