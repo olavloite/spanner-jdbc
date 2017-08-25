@@ -118,7 +118,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 	}
 
-	public static GoogleCredentials getCredentialsFromOAuthToken(String oauthToken) throws IOException
+	public static GoogleCredentials getCredentialsFromOAuthToken(String oauthToken)
 	{
 		GoogleCredentials credentials = null;
 		if (oauthToken != null && oauthToken.length() > 0)
