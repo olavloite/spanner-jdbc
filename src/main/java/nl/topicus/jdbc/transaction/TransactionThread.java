@@ -22,6 +22,8 @@ class TransactionThread extends Thread
 		NOT_STARTED, RUNNING, SUCCESS, FAIL;
 	}
 
+	private final Object monitor = new Object();
+
 	private DatabaseClient dbClient;
 
 	private boolean stop;
@@ -51,7 +53,7 @@ class TransactionThread extends Thread
 	{
 		status = TransactionStatus.RUNNING;
 		TransactionRunner runner = dbClient.readWriteTransaction();
-		synchronized (this)
+		synchronized (monitor)
 		{
 			try
 			{
@@ -96,7 +98,7 @@ class TransactionThread extends Thread
 			}
 			finally
 			{
-				this.notifyAll();
+				monitor.notifyAll();
 			}
 		}
 	}
@@ -145,16 +147,18 @@ class TransactionThread extends Thread
 		stop = true;
 		// Add a null object in order to get the transaction thread to proceed
 		statements.add(Statement.of(commit ? "commit" : "rollback"));
-		synchronized (this)
+		synchronized (monitor)
 		{
 			while (!stopped || status == TransactionStatus.NOT_STARTED || status == TransactionStatus.RUNNING)
 			{
 				try
 				{
-					this.wait();
+					monitor.wait();
 				}
 				catch (InterruptedException e)
 				{
+					throw new SQLException((commit ? "Commit failed: " : "Rollback failed: ") + e.getLocalizedMessage(),
+							e);
 				}
 			}
 		}
