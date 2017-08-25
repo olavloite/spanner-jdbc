@@ -187,7 +187,15 @@ public class CloudSpannerDriver implements Driver
 	@Override
 	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException
 	{
-		DriverPropertyInfo[] res = new DriverPropertyInfo[0];
+		// TODO: parse url and supply default values + add descriptions
+		DriverPropertyInfo[] res = new DriverPropertyInfo[6];
+		res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), null);
+		res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), null);
+		res[2] = new DriverPropertyInfo(DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1), null);
+		res[3] = new DriverPropertyInfo(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1), null);
+		res[4] = new DriverPropertyInfo(
+				OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), null);
+		res[5] = new DriverPropertyInfo(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1), null);
 
 		return res;
 	}
