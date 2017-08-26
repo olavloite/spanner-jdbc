@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.test.integration.category;
+package nl.topicus.jdbc.test.category;
 
 /**
  * Marker interface for unit tests

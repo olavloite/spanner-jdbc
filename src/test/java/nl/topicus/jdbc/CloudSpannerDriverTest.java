@@ -16,7 +16,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import nl.topicus.jdbc.CloudSpannerDriver.ConnectionProperties;
-import nl.topicus.jdbc.test.integration.category.UnitTest;
+import nl.topicus.jdbc.test.category.UnitTest;
 
 @RunWith(Enclosed.class)
 @Category(UnitTest.class)
