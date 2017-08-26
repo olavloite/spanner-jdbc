@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +44,7 @@ public class JdbcIntegrationTest
 
 	private static final boolean CREATE_DATABASE = true;
 
-	private static final String INSTANCE_ID = "test-instance";
+	private final String instanceId;
 
 	private static final String DATABASE_ID = "test-database";
 
@@ -55,6 +56,9 @@ public class JdbcIntegrationTest
 
 	public JdbcIntegrationTest()
 	{
+		// generate a unique instance id for this test run
+		Random rnd = new Random();
+		this.instanceId = "test-instance-" + rnd.nextInt(1000000);
 		this.credentialsPath = "cloudspanner-key.json";
 		this.projectId = CloudSpannerConnection.getServiceAccountProjectId(credentialsPath);
 		GoogleCredentials credentials = null;
@@ -148,7 +152,7 @@ public class JdbcIntegrationTest
 		}
 		StringBuilder url = new StringBuilder("jdbc:cloudspanner://localhost");
 		url.append(";Project=").append(projectId);
-		url.append(";Instance=").append(INSTANCE_ID);
+		url.append(";Instance=").append(instanceId);
 		url.append(";Database=").append(DATABASE_ID);
 		url.append(";PvtKeyPath=").append(credentialsPath);
 		return DriverManager.getConnection(url.toString());
@@ -168,7 +172,7 @@ public class JdbcIntegrationTest
 				break;
 			}
 		}
-		Instance instance = instanceAdminClient.newInstanceBuilder(InstanceId.of(projectId, INSTANCE_ID))
+		Instance instance = instanceAdminClient.newInstanceBuilder(InstanceId.of(projectId, instanceId))
 				.setDisplayName("Test Instance").setInstanceConfigId(configId).setNodeCount(1).build();
 		Operation<Instance, CreateInstanceMetadata> createInstance = instanceAdminClient.createInstance(instance);
 		createInstance = createInstance.waitFor();
@@ -177,18 +181,18 @@ public class JdbcIntegrationTest
 	private void createDatabase()
 	{
 		Operation<Database, CreateDatabaseMetadata> createDatabase = spanner.getDatabaseAdminClient()
-				.createDatabase(INSTANCE_ID, DATABASE_ID, Arrays.asList());
+				.createDatabase(instanceId, DATABASE_ID, Arrays.asList());
 		createDatabase = createDatabase.waitFor();
 	}
 
 	private void cleanUpInstance()
 	{
-		spanner.getInstanceAdminClient().deleteInstance(INSTANCE_ID);
+		spanner.getInstanceAdminClient().deleteInstance(instanceId);
 	}
 
 	private void cleanUpDatabase()
 	{
-		spanner.getDatabaseAdminClient().dropDatabase(INSTANCE_ID, DATABASE_ID);
+		spanner.getDatabaseAdminClient().dropDatabase(instanceId, DATABASE_ID);
 	}
 
 }
