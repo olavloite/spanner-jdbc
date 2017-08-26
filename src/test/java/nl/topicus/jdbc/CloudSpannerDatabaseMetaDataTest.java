@@ -138,4 +138,106 @@ public class CloudSpannerDatabaseMetaDataTest
 		assertEquals(false, testSubject.supportsMixedCaseIdentifiers());
 	}
 
+	@Test
+	public void testStoresUpperCaseIdentifiers() throws SQLException
+	{
+		assertEquals(false, testSubject.storesUpperCaseIdentifiers());
+	}
+
+	@Test
+	public void testStoresLowerCaseIdentifiers() throws SQLException
+	{
+		assertEquals(false, testSubject.storesLowerCaseIdentifiers());
+	}
+
+	@Test
+	public void testStoresMixedCaseIdentifiers() throws SQLException
+	{
+		assertTrue(testSubject.storesMixedCaseIdentifiers());
+	}
+
+	@Test
+	public void testSupportsMixedCaseQuotedIdentifiers() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsMixedCaseQuotedIdentifiers());
+	}
+
+	@Test
+	public void testStoresUpperCaseQuotedIdentifiers() throws SQLException
+	{
+		assertEquals(false, testSubject.storesUpperCaseQuotedIdentifiers());
+	}
+
+	@Test
+	public void testStoresLowerCaseQuotedIdentifiers() throws SQLException
+	{
+		assertEquals(false, testSubject.storesLowerCaseQuotedIdentifiers());
+	}
+
+	@Test
+	public void testStoresMixedCaseQuotedIdentifiers() throws SQLException
+	{
+		assertTrue(testSubject.storesMixedCaseQuotedIdentifiers());
+	}
+
+	@Test
+	public void testGetIdentifierQuoteString() throws SQLException
+	{
+		assertEquals("`", testSubject.getIdentifierQuoteString());
+	}
+
+	@Test
+	public void testGetSQLKeywords() throws SQLException
+	{
+		assertEquals("INTERLEAVE, PARENT", testSubject.getSQLKeywords());
+	}
+
+	@Test
+	public void testGetNumericFunctions() throws SQLException
+	{
+		assertEquals("", testSubject.getNumericFunctions());
+	}
+
+	@Test
+	public void testGetStringFunctions() throws SQLException
+	{
+		assertEquals("", testSubject.getStringFunctions());
+	}
+
+	@Test
+	public void testGetSystemFunctions() throws SQLException
+	{
+		assertEquals("", testSubject.getSystemFunctions());
+	}
+
+	@Test
+	public void testGetTimeDateFunctions() throws SQLException
+	{
+		assertEquals("", testSubject.getTimeDateFunctions());
+	}
+
+	@Test
+	public void testGetSearchStringEscape() throws SQLException
+	{
+		assertEquals("\\", testSubject.getSearchStringEscape());
+	}
+
+	@Test
+	public void testGetExtraNameCharacters() throws SQLException
+	{
+		assertEquals("", testSubject.getExtraNameCharacters());
+	}
+
+	@Test
+	public void testSupportsAlterTableWithAddColumn() throws SQLException
+	{
+		assertTrue(testSubject.supportsAlterTableWithAddColumn());
+	}
+
+	@Test
+	public void testSupportsAlterTableWithDropColumn() throws SQLException
+	{
+		assertTrue(testSubject.supportsAlterTableWithDropColumn());
+	}
+
 }
