@@ -266,7 +266,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsTableCorrelationNames() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override

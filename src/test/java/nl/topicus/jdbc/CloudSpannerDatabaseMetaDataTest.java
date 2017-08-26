@@ -240,4 +240,58 @@ public class CloudSpannerDatabaseMetaDataTest
 		assertTrue(testSubject.supportsAlterTableWithDropColumn());
 	}
 
+	@Test
+	public void testSupportsColumnAliasing() throws SQLException
+	{
+		assertTrue(testSubject.supportsColumnAliasing());
+	}
+
+	@Test
+	public void testNullPlusNonNullIsNull() throws SQLException
+	{
+		assertTrue(testSubject.nullPlusNonNullIsNull());
+	}
+
+	@Test
+	public void testSupportsConvert() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsConvert());
+	}
+
+	@Test
+	public void testSupportsConvert(int fromType, int toType) throws SQLException
+	{
+		assertEquals(false, testSubject.supportsConvert(fromType, toType));
+	}
+
+	@Test
+	public void testSupportsTableCorrelationNames() throws SQLException
+	{
+		assertTrue(testSubject.supportsTableCorrelationNames());
+	}
+
+	@Test
+	public void testSupportsDifferentTableCorrelationNames() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsDifferentTableCorrelationNames());
+	}
+
+	@Test
+	public void testSupportsExpressionsInOrderBy() throws SQLException
+	{
+		assertTrue(testSubject.supportsExpressionsInOrderBy());
+	}
+
+	@Test
+	public void testSupportsOrderByUnrelated() throws SQLException
+	{
+		assertTrue(testSubject.supportsOrderByUnrelated());
+	}
+
+	@Test
+	public void testSupportsGroupBy() throws SQLException
+	{
+		assertTrue(testSubject.supportsGroupBy());
+	}
+
 }
