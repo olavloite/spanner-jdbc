@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.test.statement;
+package nl.topicus.jdbc.statement;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,7 +23,7 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
-import nl.topicus.jdbc.test.category.UnitTest;
+import nl.topicus.jdbc.test.integration.category.UnitTest;
 
 @Category(UnitTest.class)
 public class CloudSpannerPreparedStatementTest

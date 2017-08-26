@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.test;
+package nl.topicus.jdbc.test.integration;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -29,10 +29,10 @@ import com.google.spanner.admin.instance.v1.CreateInstanceMetadata;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
-import nl.topicus.jdbc.test.category.IntegrationTest;
-import nl.topicus.jdbc.test.ddl.MetaDataTester;
-import nl.topicus.jdbc.test.ddl.TableDDLTester;
-import nl.topicus.jdbc.test.dml.DMLTester;
+import nl.topicus.jdbc.test.integration.category.IntegrationTest;
+import nl.topicus.jdbc.test.integration.ddl.MetaDataTester;
+import nl.topicus.jdbc.test.integration.ddl.TableDDLTester;
+import nl.topicus.jdbc.test.integration.dml.DMLTester;
 
 @Category(IntegrationTest.class)
 public class JdbcIntegrationTest

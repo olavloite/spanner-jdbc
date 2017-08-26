@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.test.dml;
+package nl.topicus.jdbc.test.integration.dml;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 import javax.xml.bind.DatatypeConverter;
 
-import nl.topicus.jdbc.test.TestUtil;
+import nl.topicus.jdbc.test.integration.TestUtil;
 
 /**
  * Class for testing INSERT, UPDATE, DELETE statements

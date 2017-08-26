@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.test;
+package nl.topicus.jdbc.test.integration;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

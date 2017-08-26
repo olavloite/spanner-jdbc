@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.test.ddl;
+package nl.topicus.jdbc.test.integration.ddl;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
-import nl.topicus.jdbc.test.TestUtil;
+import nl.topicus.jdbc.test.integration.TestUtil;
 
 /**
  * Class for testing Table DDL statements, such as CREATE TABLE, ALTER TABLE,

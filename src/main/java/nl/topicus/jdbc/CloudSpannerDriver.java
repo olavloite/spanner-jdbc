@@ -32,21 +32,98 @@ public class CloudSpannerDriver implements Driver
 			java.sql.DriverManager.println("Registering driver failed: " + e.getMessage());
 		}
 	}
+
 	static final int MAJOR_VERSION = 1;
 
 	static final int MINOR_VERSION = 0;
 
-	private static final String PROJECT_URL_PART = "Project=";
+	static final class ConnectionProperties
+	{
+		private static final String PROJECT_URL_PART = "Project=";
 
-	private static final String INSTANCE_URL_PART = "Instance=";
+		private static final String INSTANCE_URL_PART = "Instance=";
 
-	private static final String DATABASE_URL_PART = "Database=";
+		private static final String DATABASE_URL_PART = "Database=";
 
-	private static final String KEY_FILE_URL_PART = "PvtKeyPath=";
+		private static final String KEY_FILE_URL_PART = "PvtKeyPath=";
 
-	private static final String OAUTH_ACCESS_TOKEN_URL_PART = "OAuthAccessToken=";
+		private static final String OAUTH_ACCESS_TOKEN_URL_PART = "OAuthAccessToken=";
 
-	private static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
+		private static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
+
+		String project = null;
+		String instance = null;
+		String database = null;
+		String keyFile = null;
+		String oauthToken = null;
+		String productName = null;
+
+		static ConnectionProperties parse(String url) throws SQLException
+		{
+			ConnectionProperties res = new ConnectionProperties();
+			if (url != null)
+			{
+				String[] parts = url.split(":", 3);
+				String[] connectionParts = parts[2].split(";");
+				// Get connection properties from connection string
+				for (int i = 1; i < connectionParts.length; i++)
+				{
+					String conPart = connectionParts[i].replace(" ", "");
+					if (conPart.startsWith(PROJECT_URL_PART))
+						res.project = conPart.substring(PROJECT_URL_PART.length());
+					else if (conPart.startsWith(INSTANCE_URL_PART))
+						res.instance = conPart.substring(INSTANCE_URL_PART.length());
+					else if (conPart.startsWith(DATABASE_URL_PART))
+						res.database = conPart.substring(DATABASE_URL_PART.length());
+					else if (conPart.startsWith(KEY_FILE_URL_PART))
+						res.keyFile = conPart.substring(KEY_FILE_URL_PART.length());
+					else if (conPart.startsWith(OAUTH_ACCESS_TOKEN_URL_PART))
+						res.oauthToken = conPart.substring(OAUTH_ACCESS_TOKEN_URL_PART.length());
+					else if (conPart.startsWith(SIMULATE_PRODUCT_NAME))
+						res.productName = conPart.substring(SIMULATE_PRODUCT_NAME.length());
+					else
+						throw new SQLException("Unknown URL parameter " + conPart);
+				}
+			}
+			return res;
+		}
+
+		void setAdditionalConnectionProperties(Properties info)
+		{
+			if (info != null)
+			{
+				project = info.getProperty(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
+				instance = info.getProperty(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
+				database = info.getProperty(DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1), database);
+				keyFile = info.getProperty(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1), keyFile);
+				oauthToken = info.getProperty(
+						OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), oauthToken);
+				productName = info.getProperty(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
+						productName);
+			}
+		}
+
+		DriverPropertyInfo[] getPropertyInfo()
+		{
+			DriverPropertyInfo[] res = new DriverPropertyInfo[6];
+			res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
+			res[0].description = "Google Cloud Project id";
+			res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
+			res[1].description = "Google Cloud Spanner Instance id";
+			res[2] = new DriverPropertyInfo(DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1), database);
+			res[2].description = "Google Cloud Spanner Database name";
+			res[3] = new DriverPropertyInfo(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1), keyFile);
+			res[3].description = "Path to json key file to be used for authentication";
+			res[4] = new DriverPropertyInfo(
+					OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), oauthToken);
+			res[4].description = "OAuth access token to be used for authentication (optional, only to be used when no key file is specified)";
+			res[5] = new DriverPropertyInfo(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
+					productName);
+			res[5].description = "Use this property to make the driver return a different database product name than Google Cloud Spanner, for example if you are using a framework like Spring that use this property to determine how to a generate data model for Spring Batch";
+
+			return res;
+		}
+	}
 
 	/**
 	 * Keep track of all connections that are opened, so that we know which
@@ -75,48 +152,14 @@ public class CloudSpannerDriver implements Driver
 		if (!acceptsURL(url))
 			return null;
 		checkAndSetLogging();
-
-		String[] parts = url.split(":", 3);
-		String[] connectionParts = parts[2].split(";");
-		String project = null;
-		String instance = null;
-		String database = null;
-		String keyFile = null;
-		String oauthToken = null;
-		String productName = null;
-
-		// Get connection properties from connection string
-		for (int i = 1; i < connectionParts.length; i++)
-		{
-			String conPart = connectionParts[i].replace(" ", "");
-			if (conPart.startsWith(PROJECT_URL_PART))
-				project = conPart.substring(PROJECT_URL_PART.length());
-			else if (conPart.startsWith(INSTANCE_URL_PART))
-				instance = conPart.substring(INSTANCE_URL_PART.length());
-			else if (conPart.startsWith(DATABASE_URL_PART))
-				database = conPart.substring(DATABASE_URL_PART.length());
-			else if (conPart.startsWith(KEY_FILE_URL_PART))
-				keyFile = conPart.substring(KEY_FILE_URL_PART.length());
-			else if (conPart.startsWith(OAUTH_ACCESS_TOKEN_URL_PART))
-				oauthToken = conPart.substring(OAUTH_ACCESS_TOKEN_URL_PART.length());
-			else if (conPart.startsWith(SIMULATE_PRODUCT_NAME))
-				productName = conPart.substring(SIMULATE_PRODUCT_NAME.length());
-			else
-				throw new SQLException("Unknown URL parameter " + conPart);
-		}
+		// Parse URL
+		ConnectionProperties properties = ConnectionProperties.parse(url);
 		// Get connection properties from properties
-		project = info.getProperty(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
-		instance = info.getProperty(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
-		database = info.getProperty(DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1), database);
-		keyFile = info.getProperty(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1), keyFile);
-		oauthToken = info.getProperty(
-				OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), oauthToken);
-		productName = info.getProperty(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
-				productName);
+		properties.setAdditionalConnectionProperties(info);
 
-		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, project, instance, database, keyFile,
-				oauthToken);
-		connection.setSimulateProductName(productName);
+		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, properties.project,
+				properties.instance, properties.database, properties.keyFile, properties.oauthToken);
+		connection.setSimulateProductName(properties.productName);
 		registerConnection(connection);
 
 		return connection;
@@ -187,17 +230,12 @@ public class CloudSpannerDriver implements Driver
 	@Override
 	public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException
 	{
-		// TODO: parse url and supply default values + add descriptions
-		DriverPropertyInfo[] res = new DriverPropertyInfo[6];
-		res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), null);
-		res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), null);
-		res[2] = new DriverPropertyInfo(DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1), null);
-		res[3] = new DriverPropertyInfo(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1), null);
-		res[4] = new DriverPropertyInfo(
-				OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), null);
-		res[5] = new DriverPropertyInfo(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1), null);
+		if (!acceptsURL(url))
+			return new DriverPropertyInfo[0];
+		ConnectionProperties properties = ConnectionProperties.parse(url);
+		properties.setAdditionalConnectionProperties(info);
 
-		return res;
+		return properties.getPropertyInfo();
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.test.ddl;
+package nl.topicus.jdbc.test.integration.ddl;
 
 import static org.junit.Assert.assertEquals;
 
