@@ -1,13 +1,19 @@
 package nl.topicus.jdbc.statement;
 
 import java.math.BigDecimal;
+import java.sql.Array;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Timestamp;
-
-import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
+import java.util.Arrays;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.ValueBinder;
+import com.google.common.primitives.Booleans;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Longs;
+
+import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVisitorAdapter<R>
 {
@@ -73,10 +79,68 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		{
 			binder.to(ByteArray.copyFrom((byte[]) value));
 		}
+		else if (Array.class.isAssignableFrom(value.getClass()))
+		{
+			try
+			{
+				setValue(((Array) value).getArray());
+			}
+			catch (SQLException e)
+			{
+				throw new IllegalArgumentException(
+						"Unsupported parameter type: " + value.getClass().getName() + " - " + value.toString());
+			}
+		}
+
+		// Arrays
+		else if (Boolean[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toBoolArray(Booleans.toArray(Arrays.asList((Boolean[]) value)));
+		}
+		else if (Byte[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toInt64Array(Longs.toArray(Arrays.asList((Byte[]) value)));
+		}
+		else if (Integer[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toInt64Array(Longs.toArray(Arrays.asList((Integer[]) value)));
+		}
+		else if (Long[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toInt64Array(Longs.toArray(Arrays.asList((Long[]) value)));
+		}
+		else if (Float[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toFloat64Array(Doubles.toArray(Arrays.asList((Float[]) value)));
+		}
+		else if (Double[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toFloat64Array(Doubles.toArray(Arrays.asList((Double[]) value)));
+		}
+		else if (BigDecimal[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toFloat64Array(Doubles.toArray(Arrays.asList((BigDecimal[]) value)));
+		}
+		else if (Date[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toDateArray(CloudSpannerConversionUtil.toCloudSpannerDates((Date[]) value));
+		}
+		else if (Timestamp[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toTimestampArray(CloudSpannerConversionUtil.toCloudSpannerTimestamps((Timestamp[]) value));
+		}
+		else if (String[].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toStringArray(Arrays.asList((String[]) value));
+		}
+		else if (byte[][].class.isAssignableFrom(value.getClass()))
+		{
+			binder.toBytesArray(CloudSpannerConversionUtil.toCloudSpannerBytes((byte[][]) value));
+		}
 		else
 		{
-			throw new IllegalArgumentException("Unsupported parameter type: " + value.getClass().getName() + " - "
-					+ value.toString());
+			throw new IllegalArgumentException(
+					"Unsupported parameter type: " + value.getClass().getName() + " - " + value.toString());
 		}
 	}
 

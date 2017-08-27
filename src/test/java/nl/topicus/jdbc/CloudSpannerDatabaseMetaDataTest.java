@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -259,9 +260,9 @@ public class CloudSpannerDatabaseMetaDataTest
 	}
 
 	@Test
-	public void testSupportsConvert(int fromType, int toType) throws SQLException
+	public void testSupportsConvertWithParameters() throws SQLException
 	{
-		assertEquals(false, testSubject.supportsConvert(fromType, toType));
+		assertEquals(false, testSubject.supportsConvert(Types.BOOLEAN, Types.BIT));
 	}
 
 	@Test

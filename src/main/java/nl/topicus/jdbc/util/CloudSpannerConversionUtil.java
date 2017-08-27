@@ -2,7 +2,11 @@ package nl.topicus.jdbc.util;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import com.google.cloud.ByteArray;
 
 public class CloudSpannerConversionUtil
 {
@@ -21,6 +25,14 @@ public class CloudSpannerConversionUtil
 		return res;
 	}
 
+	public static List<com.google.cloud.Date> toCloudSpannerDates(Date[] dates)
+	{
+		List<com.google.cloud.Date> res = new ArrayList<>(dates.length);
+		for (int index = 0; index < dates.length; index++)
+			res.add(toCloudSpannerDate(dates[index]));
+		return res;
+	}
+
 	public static Timestamp toSqlTimestamp(com.google.cloud.Timestamp ts)
 	{
 		Timestamp res = ts.toSqlTimestamp();
@@ -34,6 +46,22 @@ public class CloudSpannerConversionUtil
 		int rest = (int) (milliseconds % 1000l);
 		int nanos = (int) TimeUnit.MILLISECONDS.toNanos(rest);
 		com.google.cloud.Timestamp res = com.google.cloud.Timestamp.ofTimeSecondsAndNanos(seconds, nanos);
+		return res;
+	}
+
+	public static List<com.google.cloud.Timestamp> toCloudSpannerTimestamps(Timestamp[] timestamps)
+	{
+		List<com.google.cloud.Timestamp> res = new ArrayList<>(timestamps.length);
+		for (int index = 0; index < timestamps.length; index++)
+			res.add(toCloudSpannerTimestamp(timestamps[index]));
+		return res;
+	}
+
+	public static List<ByteArray> toCloudSpannerBytes(byte[][] bytes)
+	{
+		List<ByteArray> res = new ArrayList<>(bytes.length);
+		for (int index = 0; index < bytes.length; index++)
+			res.add(ByteArray.copyFrom(bytes[index]));
 		return res;
 	}
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -365,6 +366,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 				return true;
 		}
 		return false;
+	}
+
+	@Override
+	public Array createArrayOf(String typeName, Object[] elements) throws SQLException
+	{
+		return CloudSpannerArray.createArray(typeName, elements);
 	}
 
 }

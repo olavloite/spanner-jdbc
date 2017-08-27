@@ -1,6 +1,5 @@
 package nl.topicus.jdbc;
 
-import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
@@ -169,12 +168,6 @@ public abstract class AbstractCloudSpannerConnection implements Connection
 	public Properties getClientInfo() throws SQLException
 	{
 		return new Properties();
-	}
-
-	@Override
-	public Array createArrayOf(String typeName, Object[] elements) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
 	}
 
 	@Override
