@@ -260,6 +260,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
 		}
+		catch (IllegalArgumentException e)
+		{
+			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
+		}
 	}
 
 	/**
