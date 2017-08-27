@@ -7,6 +7,7 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.sql.Array;
 import java.sql.Date;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -15,9 +16,13 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.List;
 
 import com.google.cloud.spanner.Type;
+import com.google.cloud.spanner.Type.Code;
 
+import nl.topicus.jdbc.CloudSpannerArray;
+import nl.topicus.jdbc.CloudSpannerDataType;
 import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
@@ -410,7 +415,32 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			return getString(columnIndex);
 		if (type == Type.timestamp())
 			return getTimestamp(columnIndex);
+		if (type.getCode() == Code.ARRAY)
+			return getArray(columnIndex);
 		throw new SQLException("Unknown type: " + type.toString());
+	}
+
+	@Override
+	public Array getArray(String columnLabel) throws SQLException
+	{
+		Type type = resultSet.getColumnType(columnLabel);
+		if (type.getCode() != Code.ARRAY)
+			throw new SQLException("Column with label " + columnLabel + " does not contain an array");
+		return getArray(resultSet.getColumnIndex(columnLabel) + 1);
+	}
+
+	@Override
+	public Array getArray(int columnIndex) throws SQLException
+	{
+		if (isNull(columnIndex))
+			return null;
+		Type type = resultSet.getColumnType(columnIndex - 1);
+		if (type.getCode() != Code.ARRAY)
+			throw new SQLException("Column with index " + columnIndex + " does not contain an array");
+		CloudSpannerDataType dataType = CloudSpannerDataType.getType(type.getArrayElementType().getCode());
+		List<? extends Object> elements = dataType.getArrayElements(resultSet, columnIndex - 1);
+
+		return CloudSpannerArray.createArray(dataType, elements);
 	}
 
 	@Override

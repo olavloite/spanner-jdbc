@@ -7,6 +7,7 @@ import java.sql.Types;
 import java.sql.Wrapper;
 
 import com.google.cloud.spanner.Type;
+import com.google.cloud.spanner.Type.Code;
 
 public class AbstractCloudSpannerWrapper implements Wrapper
 {
@@ -27,6 +28,8 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 			return Types.NVARCHAR;
 		if (type.equals(Type.timestamp()))
 			return Types.TIMESTAMP;
+		if (type.getCode() == Code.ARRAY)
+			return Types.ARRAY;
 		return Types.OTHER;
 	}
 
@@ -46,6 +49,8 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 			return Type.string().getCode().name();
 		if (sqlType == Types.TIMESTAMP)
 			return Type.timestamp().getCode().name();
+		if (sqlType == Types.ARRAY)
+			return Code.ARRAY.name();
 
 		return "Other";
 	}
@@ -66,6 +71,8 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 			return String.class.getName();
 		if (sqlType == Types.TIMESTAMP)
 			return Timestamp.class.getName();
+		if (sqlType == Types.ARRAY)
+			return Object.class.getName();
 
 		return null;
 	}

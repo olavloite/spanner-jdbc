@@ -33,6 +33,14 @@ public class CloudSpannerConversionUtil
 		return res;
 	}
 
+	public static List<Date> toJavaDates(List<com.google.cloud.Date> dates)
+	{
+		List<Date> res = new ArrayList<>(dates.size());
+		for (com.google.cloud.Date date : dates)
+			res.add(CloudSpannerConversionUtil.toSqlDate(date));
+		return res;
+	}
+
 	public static Timestamp toSqlTimestamp(com.google.cloud.Timestamp ts)
 	{
 		Timestamp res = ts.toSqlTimestamp();
@@ -57,11 +65,27 @@ public class CloudSpannerConversionUtil
 		return res;
 	}
 
+	public static List<Timestamp> toJavaTimestamps(List<com.google.cloud.Timestamp> timestamps)
+	{
+		List<Timestamp> res = new ArrayList<>(timestamps.size());
+		for (com.google.cloud.Timestamp timestamp : timestamps)
+			res.add(CloudSpannerConversionUtil.toSqlTimestamp(timestamp));
+		return res;
+	}
+
 	public static List<ByteArray> toCloudSpannerBytes(byte[][] bytes)
 	{
 		List<ByteArray> res = new ArrayList<>(bytes.length);
 		for (int index = 0; index < bytes.length; index++)
 			res.add(ByteArray.copyFrom(bytes[index]));
+		return res;
+	}
+
+	public static List<byte[]> toJavaByteArrays(List<ByteArray> bytes)
+	{
+		List<byte[]> res = new ArrayList<>(bytes.size());
+		for (ByteArray ba : bytes)
+			res.add(ba.toByteArray());
 		return res;
 	}
 

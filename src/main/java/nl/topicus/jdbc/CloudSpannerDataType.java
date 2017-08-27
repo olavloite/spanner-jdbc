@@ -7,7 +7,14 @@ import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import com.google.cloud.spanner.ResultSet;
+import com.google.cloud.spanner.Type;
+import com.google.cloud.spanner.Type.Code;
+
+import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 public enum CloudSpannerDataType
 {
@@ -24,6 +31,24 @@ public enum CloudSpannerDataType
 		{
 			return Boolean.class;
 		}
+
+		@Override
+		public Code getCode()
+		{
+			return Code.BOOL;
+		}
+
+		@Override
+		public List<Boolean> getArrayElements(ResultSet rs, int columnIndex)
+		{
+			return rs.getBooleanList(columnIndex);
+		}
+
+		@Override
+		public Type getGoogleType()
+		{
+			return Type.bool();
+		}
 	},
 	BYTES
 	{
@@ -38,6 +63,24 @@ public enum CloudSpannerDataType
 		{
 			return byte[].class;
 		}
+
+		@Override
+		public Code getCode()
+		{
+			return Code.BYTES;
+		}
+
+		@Override
+		public List<byte[]> getArrayElements(ResultSet rs, int columnIndex)
+		{
+			return CloudSpannerConversionUtil.toJavaByteArrays(rs.getBytesList(columnIndex));
+		}
+
+		@Override
+		public Type getGoogleType()
+		{
+			return Type.bytes();
+		}
 	},
 	DATE
 	{
@@ -51,6 +94,24 @@ public enum CloudSpannerDataType
 		public Class<?> getJavaClass()
 		{
 			return Date.class;
+		}
+
+		@Override
+		public Code getCode()
+		{
+			return Code.DATE;
+		}
+
+		@Override
+		public List<Date> getArrayElements(ResultSet rs, int columnIndex)
+		{
+			return CloudSpannerConversionUtil.toJavaDates(rs.getDateList(columnIndex));
+		}
+
+		@Override
+		public Type getGoogleType()
+		{
+			return Type.date();
 		}
 	},
 	FLOAT64
@@ -74,6 +135,24 @@ public enum CloudSpannerDataType
 		{
 			return classes;
 		}
+
+		@Override
+		public Code getCode()
+		{
+			return Code.FLOAT64;
+		}
+
+		@Override
+		public List<Double> getArrayElements(ResultSet rs, int columnIndex)
+		{
+			return rs.getDoubleList(columnIndex);
+		}
+
+		@Override
+		public Type getGoogleType()
+		{
+			return Type.float64();
+		}
 	},
 	INT64
 	{
@@ -96,6 +175,24 @@ public enum CloudSpannerDataType
 		{
 			return classes;
 		}
+
+		@Override
+		public Code getCode()
+		{
+			return Code.INT64;
+		}
+
+		@Override
+		public List<Long> getArrayElements(ResultSet rs, int columnIndex)
+		{
+			return rs.getLongList(columnIndex);
+		}
+
+		@Override
+		public Type getGoogleType()
+		{
+			return Type.int64();
+		}
 	},
 	STRING
 	{
@@ -109,6 +206,24 @@ public enum CloudSpannerDataType
 		public Class<?> getJavaClass()
 		{
 			return String.class;
+		}
+
+		@Override
+		public Code getCode()
+		{
+			return Code.STRING;
+		}
+
+		@Override
+		public List<String> getArrayElements(ResultSet rs, int columnIndex)
+		{
+			return rs.getStringList(columnIndex);
+		}
+
+		@Override
+		public Type getGoogleType()
+		{
+			return Type.string();
 		}
 	},
 	TIMESTAMP
@@ -124,9 +239,42 @@ public enum CloudSpannerDataType
 		{
 			return Timestamp.class;
 		}
+
+		@Override
+		public Code getCode()
+		{
+			return Code.TIMESTAMP;
+		}
+
+		@Override
+		public List<Timestamp> getArrayElements(ResultSet rs, int columnIndex)
+		{
+			return CloudSpannerConversionUtil.toJavaTimestamps(rs.getTimestampList(columnIndex));
+		}
+
+		@Override
+		public Type getGoogleType()
+		{
+			return Type.timestamp();
+		}
 	};
 
 	public abstract int getSqlType();
+
+	public abstract Code getCode();
+
+	public abstract Type getGoogleType();
+
+	/**
+	 * 
+	 * @param rs
+	 *            the result set to look up the elements
+	 * @param columnIndex
+	 *            zero based column index
+	 * @return The corresponding array elements of the type in the given result
+	 *         set
+	 */
+	public abstract List<? extends Object> getArrayElements(ResultSet rs, int columnIndex);
 
 	public String getTypeName()
 	{
@@ -142,6 +290,21 @@ public enum CloudSpannerDataType
 
 	public static CloudSpannerDataType getType(Class<?> clazz)
 	{
+		for (CloudSpannerDataType type : CloudSpannerDataType.values())
+		{
+			if (type.getSupportedJavaClasses().contains(clazz))
+				return type;
+		}
+		return null;
+	}
+
+	public static CloudSpannerDataType getType(Code code)
+	{
+		for (CloudSpannerDataType type : CloudSpannerDataType.values())
+		{
+			if (type.getCode() == code)
+				return type;
+		}
 		return null;
 	}
 

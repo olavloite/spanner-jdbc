@@ -402,12 +402,6 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 	}
 
 	@Override
-	public Array getArray(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public Object getObject(String columnLabel, Map<String, Class<?>> map) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
@@ -427,12 +421,6 @@ abstract class AbstractCloudSpannerResultSet implements ResultSet
 
 	@Override
 	public Clob getClob(String columnLabel) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Array getArray(String columnLabel) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
 	}

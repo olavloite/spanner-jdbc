@@ -4,7 +4,9 @@ import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 public class CloudSpannerArray implements Array
 {
@@ -24,6 +26,12 @@ public class CloudSpannerArray implements Array
 		throw new SQLException("Data type " + typeName + " is unknown");
 	}
 
+	public static CloudSpannerArray createArray(CloudSpannerDataType type, List<? extends Object> elements)
+			throws SQLException
+	{
+		return new CloudSpannerArray(type, elements);
+	}
+
 	private CloudSpannerArray(CloudSpannerDataType type, Object[] elements) throws SQLException
 	{
 		this.type = type;
@@ -39,6 +47,13 @@ public class CloudSpannerArray implements Array
 							+ type.getJavaClass().getName(),
 					e);
 		}
+	}
+
+	private CloudSpannerArray(CloudSpannerDataType type, List<? extends Object> elements) throws SQLException
+	{
+		this.type = type;
+		this.data = java.lang.reflect.Array.newInstance(type.getJavaClass(), elements.size());
+		this.data = elements.toArray((Object[]) data);
 	}
 
 	@Override
@@ -109,7 +124,18 @@ public class CloudSpannerArray implements Array
 	@Override
 	public void free() throws SQLException
 	{
-		this.data = java.lang.reflect.Array.newInstance(type.getJavaClass(), 10);
+		this.data = null;
+	}
+
+	@Override
+	public String toString()
+	{
+		StringJoiner joiner = new StringJoiner(",", "{", "}");
+		for (Object o : (Object[]) data)
+		{
+			joiner.add(o.toString());
+		}
+		return joiner.toString();
 	}
 
 }

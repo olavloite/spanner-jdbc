@@ -4,9 +4,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
-
 import com.google.cloud.spanner.ResultSet;
+
+import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 
 public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper implements ResultSetMetaData
 {
@@ -142,6 +142,26 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	public String getColumnClassName(int column) throws SQLException
 	{
 		return getClassName(getColumnType(column));
+	}
+
+	@Override
+	public String toString()
+	{
+		StringBuilder res = new StringBuilder();
+		try
+		{
+			for (int col = 1; col <= getColumnCount(); col++)
+			{
+				res.append("Col ").append(col).append(": ");
+				res.append(getColumnName(col)).append(" ").append(getColumnTypeName(col));
+				res.append("\n");
+			}
+		}
+		catch (SQLException e)
+		{
+			return "An error occurred while generating string: " + e.getMessage();
+		}
+		return res.toString();
 	}
 
 }
