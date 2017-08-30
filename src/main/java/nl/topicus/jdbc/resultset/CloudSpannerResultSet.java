@@ -408,9 +408,9 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		if (type == Type.date())
 			return getDate(columnIndex);
 		if (type == Type.float64())
-			return getFloat(columnIndex);
+			return getDouble(columnIndex);
 		if (type == Type.int64())
-			return getInt(columnIndex);
+			return getLong(columnIndex);
 		if (type == Type.string())
 			return getString(columnIndex);
 		if (type == Type.timestamp())
