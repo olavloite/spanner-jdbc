@@ -4,6 +4,7 @@ import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -49,7 +50,7 @@ public class CloudSpannerArray implements Array
 		}
 	}
 
-	private CloudSpannerArray(CloudSpannerDataType type, List<? extends Object> elements) throws SQLException
+	private CloudSpannerArray(CloudSpannerDataType type, List<? extends Object> elements)
 	{
 		this.type = type;
 		this.data = java.lang.reflect.Array.newInstance(type.getJavaClass(), elements.size());
@@ -136,6 +137,15 @@ public class CloudSpannerArray implements Array
 			joiner.add(o.toString());
 		}
 		return joiner.toString();
+	}
+
+	@Override
+	public boolean equals(Object other)
+	{
+		if (!(other instanceof CloudSpannerArray))
+			return false;
+		CloudSpannerArray array = (CloudSpannerArray) other;
+		return this.type == array.type && Arrays.deepEquals((Object[]) this.data, (Object[]) array.data);
 	}
 
 }
