@@ -148,4 +148,10 @@ public class CloudSpannerArray implements Array
 		return this.type == array.type && Arrays.deepEquals((Object[]) this.data, (Object[]) array.data);
 	}
 
+	@Override
+	public int hashCode()
+	{
+		return this.type.hashCode() ^ Arrays.deepHashCode((Object[]) data);
+	}
+
 }
