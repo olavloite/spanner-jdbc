@@ -52,6 +52,8 @@ public class TableDDLTester
 
 		log.info("Starting CreateQuotedTableTest");
 		runCreateTableTest("TEST_QUOTED", "CreateQuotedTableTest.sql");
+		log.info("Starting CreateTableWithArray");
+		runCreateTableTest("TEST_WITH_ARRAY", "CreateTableWithArray.sql");
 
 		log.info("Finished CreateTableTests");
 	}
