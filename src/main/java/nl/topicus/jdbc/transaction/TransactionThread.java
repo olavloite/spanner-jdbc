@@ -112,6 +112,7 @@ class TransactionThread extends Thread
 		}
 		catch (InterruptedException e)
 		{
+			Thread.currentThread().interrupt();
 			throw new RuntimeException("Query execution interrupted", e);
 		}
 	}
@@ -157,6 +158,7 @@ class TransactionThread extends Thread
 				}
 				catch (InterruptedException e)
 				{
+					Thread.currentThread().interrupt();
 					throw new SQLException((commit ? "Commit failed: " : "Rollback failed: ") + e.getLocalizedMessage(),
 							e);
 				}
