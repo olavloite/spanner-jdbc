@@ -5,6 +5,8 @@ import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
 
+import org.mockito.Mockito;
+
 import nl.topicus.jdbc.CloudSpannerDriver.ConnectionProperties;
 
 public class MockCloudSpannerConnection
@@ -16,6 +18,12 @@ public class MockCloudSpannerConnection
 		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
 		when(connection.getUrl()).thenReturn(url);
 		when(connection.getProductName()).thenReturn(properties.productName);
+		return connection;
+	}
+
+	public static AbstractCloudSpannerConnection createAbstractConnection()
+	{
+		AbstractCloudSpannerConnection connection = Mockito.spy(AbstractCloudSpannerConnection.class);
 		return connection;
 	}
 
