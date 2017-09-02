@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -293,6 +294,12 @@ public class CloudSpannerDatabaseMetaDataTest
 	public void testSupportsGroupBy() throws SQLException
 	{
 		assertTrue(testSubject.supportsGroupBy());
+	}
+
+	public void testUnwrap() throws SQLException
+	{
+		assertTrue(testSubject.isWrapperFor(DatabaseMetaData.class));
+		assertEquals(testSubject, testSubject.unwrap(DatabaseMetaData.class));
 	}
 
 }
