@@ -11,6 +11,8 @@ import java.util.StringJoiner;
 
 public class CloudSpannerArray implements Array
 {
+	private static final String FREE_EXCEPTION = "free() has been called, array is no longer available";
+
 	private final CloudSpannerDataType type;
 
 	private Object data;
@@ -57,41 +59,55 @@ public class CloudSpannerArray implements Array
 		this.data = elements.toArray((Object[]) data);
 	}
 
+	private void checkFree() throws SQLException
+	{
+		if (data == null)
+		{
+			throw new SQLException(FREE_EXCEPTION);
+		}
+	}
+
 	@Override
 	public String getBaseTypeName() throws SQLException
 	{
+		checkFree();
 		return type.getTypeName();
 	}
 
 	@Override
 	public int getBaseType() throws SQLException
 	{
+		checkFree();
 		return type.getSqlType();
 	}
 
 	@Override
 	public Object getArray() throws SQLException
 	{
+		checkFree();
 		return data;
 	}
 
 	@Override
 	public Object getArray(Map<String, Class<?>> map) throws SQLException
 	{
+		checkFree();
 		return data;
 	}
 
 	@Override
 	public Object getArray(long index, int count) throws SQLException
 	{
+		checkFree();
 		return getArray(index, count, null);
 	}
 
 	@Override
 	public Object getArray(long index, int count, Map<String, Class<?>> map) throws SQLException
 	{
+		checkFree();
 		Object res = java.lang.reflect.Array.newInstance(type.getJavaClass(), count);
-		System.arraycopy(data, (int) index, res, 0, count);
+		System.arraycopy(data, (int) index - 1, res, 0, count);
 
 		return res;
 	}
@@ -132,9 +148,12 @@ public class CloudSpannerArray implements Array
 	public String toString()
 	{
 		StringJoiner joiner = new StringJoiner(",", "{", "}");
-		for (Object o : (Object[]) data)
+		if (data != null)
 		{
-			joiner.add(o.toString());
+			for (Object o : (Object[]) data)
+			{
+				joiner.add(o.toString());
+			}
 		}
 		return joiner.toString();
 	}
