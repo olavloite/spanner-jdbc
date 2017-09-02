@@ -9,7 +9,7 @@ import java.sql.Wrapper;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
 
-public class AbstractCloudSpannerWrapper implements Wrapper
+public abstract class AbstractCloudSpannerWrapper implements Wrapper
 {
 
 	public static int extractColumnType(Type type)
@@ -78,15 +78,19 @@ public class AbstractCloudSpannerWrapper implements Wrapper
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException
+	public boolean isWrapperFor(Class<?> iface) throws SQLException
 	{
-		return null;
+		return iface.isAssignableFrom(getClass());
 	}
 
 	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException
+	public <T> T unwrap(Class<T> iface) throws SQLException
 	{
-		return false;
+		if (isWrapperFor(getClass()))
+		{
+			return iface.cast(this);
+		}
+		throw new SQLException("Cannot unwrap to " + iface.getName());
 	}
 
 }
