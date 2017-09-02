@@ -17,25 +17,15 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
+
 /**
  * 
  * @author loite
  *
  */
-public abstract class AbstractCloudSpannerConnection implements Connection
+public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpannerWrapper implements Connection
 {
-
-	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException
-	{
-		return null;
-	}
-
-	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException
-	{
-		return false;
-	}
 
 	@Override
 	public void setCatalog(String catalog) throws SQLException
