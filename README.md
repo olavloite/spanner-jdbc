@@ -13,13 +13,13 @@ This driver supports a number of unsupported features of the official JDBC drive
 
 The driver ofcourse also supports normal SELECT-statements, including parameters.
 
-Releases are available on Maven Central. Current release is version 0.12.
+Releases are available on Maven Central. Current release is version 0.13.
 
 <div class="highlight highlight-text-xml"><pre>
 &lt;<span class="pl-ent">dependency</span>&gt;
  	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.12&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.13&lt;/<span class="pl-ent">version</span>&gt;
 &lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
