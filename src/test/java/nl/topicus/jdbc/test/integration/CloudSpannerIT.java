@@ -36,9 +36,9 @@ import nl.topicus.jdbc.test.integration.ddl.TableDDLTester;
 import nl.topicus.jdbc.test.integration.dml.DMLTester;
 
 @Category(IntegrationTest.class)
-public class JdbcIntegrationTest
+public class CloudSpannerIT
 {
-	private static final Logger log = Logger.getLogger(JdbcIntegrationTest.class.getName());
+	private static final Logger log = Logger.getLogger(CloudSpannerIT.class.getName());
 
 	private static final boolean CREATE_INSTANCE = true;
 
@@ -54,7 +54,7 @@ public class JdbcIntegrationTest
 
 	private final String credentialsPath;
 
-	public JdbcIntegrationTest()
+	public CloudSpannerIT()
 	{
 		// generate a unique instance id for this test run
 		Random rnd = new Random();
