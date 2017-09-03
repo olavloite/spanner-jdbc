@@ -113,14 +113,9 @@
 						<version>2.20</version>
 					</dependency>
 				</dependencies>
-				<!-- 
-				<configuration>
-					<includes>
-						<include>**/*.class</include>
-					</includes>
-					<excludedGroups>nl.topicus.jdbc.test.category.IntegrationTest</excludedGroups>
-				</configuration>
-				 -->
+				<!-- <configuration> <includes> <include>**/*.class</include> </includes> 
+					<excludedGroups>nl.topicus.jdbc.test.category.IntegrationTest</excludedGroups> 
+					</configuration> -->
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -135,33 +130,53 @@
 				</dependencies>
 				<executions>
 					<execution>
+						<id>default-integration-test</id>
 						<goals>
 							<goal>integration-test</goal>
 						</goals>
 					</execution>
 				</executions>
-				<!-- 
-				<configuration>
-					<groups>nl.topicus.jdbc.test.category.IntegrationTest</groups>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-						</goals>
-						<configuration>
-							<includes>
-								<include>**/*.class</include>
-							</includes>
-						</configuration>
-					</execution>
-				</executions>
-				 -->
+				<!-- <configuration> <groups>nl.topicus.jdbc.test.category.IntegrationTest</groups> 
+					</configuration> <executions> <execution> <goals> <goal>integration-test</goal> 
+					</goals> <configuration> <includes> <include>**/*.class</include> </includes> 
+					</configuration> </execution> </executions> -->
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.7.9</version>
+				<executions>
+					<execution>
+						<id>default-prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>default-prepare-agent-integration</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>default-report</id>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>default-report-integration</id>
+						<goals>
+							<goal>report-integration</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>default-check</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
