@@ -19,9 +19,9 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Map;
 
-import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
+import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 
-abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerWrapper implements ResultSet
+abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher implements ResultSet
 {
 
 	@Override
@@ -40,31 +40,6 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerWrapper
 	public boolean relative(int rows) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public void setFetchDirection(int direction) throws SQLException
-	{
-		if (direction != ResultSet.FETCH_FORWARD)
-			throw new SQLFeatureNotSupportedException("Only FETCH_FORWARD is supported");
-	}
-
-	@Override
-	public int getFetchDirection() throws SQLException
-	{
-		return ResultSet.FETCH_FORWARD;
-	}
-
-	@Override
-	public void setFetchSize(int rows) throws SQLException
-	{
-		// silently ignore
-	}
-
-	@Override
-	public int getFetchSize() throws SQLException
-	{
-		return 1;
 	}
 
 	@Override

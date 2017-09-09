@@ -12,15 +12,15 @@ import com.google.cloud.spanner.ReadContext;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
+import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 import nl.topicus.jdbc.CloudSpannerConnection;
-import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 
 /**
  * 
  * @author loite
  *
  */
-abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerWrapper implements Statement
+abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher implements Statement
 {
 	private DatabaseClient dbClient;
 
@@ -184,33 +184,6 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerWrapper
 	public void setCursorName(String name) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public void setFetchDirection(int direction) throws SQLException
-	{
-		if (!(direction == ResultSet.FETCH_FORWARD || direction == ResultSet.FETCH_REVERSE
-				|| direction == ResultSet.FETCH_UNKNOWN))
-			throw new SQLException("Unknown direction: " + direction);
-		// silently ignore
-	}
-
-	@Override
-	public int getFetchDirection() throws SQLException
-	{
-		return ResultSet.FETCH_FORWARD;
-	}
-
-	@Override
-	public void setFetchSize(int rows) throws SQLException
-	{
-		// silently ignore
-	}
-
-	@Override
-	public int getFetchSize() throws SQLException
-	{
-		return 0;
 	}
 
 	@Override
