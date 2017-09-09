@@ -28,62 +28,75 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	@Override
 	protected void setValue(Object value)
 	{
+		R res = setSingleValue(value);
+		if (res == null)
+			res = setArrayValue(value);
+
+		if (res == null)
+		{
+			throw new IllegalArgumentException(
+					"Unsupported parameter type: " + value.getClass().getName() + " - " + value.toString());
+		}
+	}
+
+	private R setSingleValue(Object value)
+	{
 		if (value == null)
 		{
 			// Set to null, type does not matter
-			binder.to((Boolean) null);
+			return binder.to((Boolean) null);
 		}
 		else if (Boolean.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to((Boolean) value);
+			return binder.to((Boolean) value);
 		}
 		else if (Byte.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to(((Byte) value).longValue());
+			return binder.to(((Byte) value).longValue());
 		}
 		else if (Integer.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to(((Integer) value).longValue());
+			return binder.to(((Integer) value).longValue());
 		}
 		else if (Long.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to(((Long) value).longValue());
+			return binder.to(((Long) value).longValue());
 		}
 		else if (Float.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to(((Float) value).doubleValue());
+			return binder.to(((Float) value).doubleValue());
 		}
 		else if (Double.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to(((Double) value).doubleValue());
+			return binder.to(((Double) value).doubleValue());
 		}
 		else if (BigDecimal.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to(((BigDecimal) value).doubleValue());
+			return binder.to(((BigDecimal) value).doubleValue());
 		}
 		else if (Date.class.isAssignableFrom(value.getClass()))
 		{
 			Date dateValue = (Date) value;
-			binder.to(CloudSpannerConversionUtil.toCloudSpannerDate(dateValue));
+			return binder.to(CloudSpannerConversionUtil.toCloudSpannerDate(dateValue));
 		}
 		else if (Timestamp.class.isAssignableFrom(value.getClass()))
 		{
 			Timestamp timeValue = (Timestamp) value;
-			binder.to(CloudSpannerConversionUtil.toCloudSpannerTimestamp(timeValue));
+			return binder.to(CloudSpannerConversionUtil.toCloudSpannerTimestamp(timeValue));
 		}
 		else if (String.class.isAssignableFrom(value.getClass()))
 		{
-			binder.to((String) value);
+			return binder.to((String) value);
 		}
 		else if (byte[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.to(ByteArray.copyFrom((byte[]) value));
+			return binder.to(ByteArray.copyFrom((byte[]) value));
 		}
 		else if (Array.class.isAssignableFrom(value.getClass()))
 		{
 			try
 			{
-				setValue(((Array) value).getArray());
+				return setArrayValue(((Array) value).getArray());
 			}
 			catch (SQLException e)
 			{
@@ -91,57 +104,56 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 						"Unsupported parameter type: " + value.getClass().getName() + " - " + value.toString());
 			}
 		}
+		return null;
+	}
 
-		// Arrays
-		else if (Boolean[].class.isAssignableFrom(value.getClass()))
+	private R setArrayValue(Object value)
+	{
+		if (Boolean[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toBoolArray(Booleans.toArray(Arrays.asList((Boolean[]) value)));
+			return binder.toBoolArray(Booleans.toArray(Arrays.asList((Boolean[]) value)));
 		}
 		else if (Byte[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toInt64Array(Longs.toArray(Arrays.asList((Byte[]) value)));
+			return binder.toInt64Array(Longs.toArray(Arrays.asList((Byte[]) value)));
 		}
 		else if (Integer[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toInt64Array(Longs.toArray(Arrays.asList((Integer[]) value)));
+			return binder.toInt64Array(Longs.toArray(Arrays.asList((Integer[]) value)));
 		}
 		else if (Long[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toInt64Array(Longs.toArray(Arrays.asList((Long[]) value)));
+			return binder.toInt64Array(Longs.toArray(Arrays.asList((Long[]) value)));
 		}
 		else if (Float[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toFloat64Array(Doubles.toArray(Arrays.asList((Float[]) value)));
+			return binder.toFloat64Array(Doubles.toArray(Arrays.asList((Float[]) value)));
 		}
 		else if (Double[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toFloat64Array(Doubles.toArray(Arrays.asList((Double[]) value)));
+			return binder.toFloat64Array(Doubles.toArray(Arrays.asList((Double[]) value)));
 		}
 		else if (BigDecimal[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toFloat64Array(Doubles.toArray(Arrays.asList((BigDecimal[]) value)));
+			return binder.toFloat64Array(Doubles.toArray(Arrays.asList((BigDecimal[]) value)));
 		}
 		else if (Date[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toDateArray(CloudSpannerConversionUtil.toCloudSpannerDates((Date[]) value));
+			return binder.toDateArray(CloudSpannerConversionUtil.toCloudSpannerDates((Date[]) value));
 		}
 		else if (Timestamp[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toTimestampArray(CloudSpannerConversionUtil.toCloudSpannerTimestamps((Timestamp[]) value));
+			return binder.toTimestampArray(CloudSpannerConversionUtil.toCloudSpannerTimestamps((Timestamp[]) value));
 		}
 		else if (String[].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toStringArray(Arrays.asList((String[]) value));
+			return binder.toStringArray(Arrays.asList((String[]) value));
 		}
 		else if (byte[][].class.isAssignableFrom(value.getClass()))
 		{
-			binder.toBytesArray(CloudSpannerConversionUtil.toCloudSpannerBytes((byte[][]) value));
+			return binder.toBytesArray(CloudSpannerConversionUtil.toCloudSpannerBytes((byte[][]) value));
 		}
-		else
-		{
-			throw new IllegalArgumentException(
-					"Unsupported parameter type: " + value.getClass().getName() + " - " + value.toString());
-		}
+		return null;
 	}
 
 }
