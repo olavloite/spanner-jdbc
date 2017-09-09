@@ -259,9 +259,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	 * @param sql
 	 *            The sql to format
 	 * @return The formatted DDL statement.
-	 * @throws SQLException
 	 */
-	private String formatDDLStatement(String sql) throws SQLException
+	private String formatDDLStatement(String sql)
 	{
 		String res = sql.trim().toUpperCase();
 		String[] parts = res.split("\\s+");
