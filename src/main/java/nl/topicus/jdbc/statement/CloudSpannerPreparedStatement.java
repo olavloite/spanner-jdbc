@@ -272,7 +272,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				int primaryKeyIndex = res.indexOf(", PRIMARY KEY (");
 				if (primaryKeyIndex > -1)
 				{
-					int endPrimaryKeyIndex = res.indexOf(")", primaryKeyIndex);
+					int endPrimaryKeyIndex = res.indexOf(')', primaryKeyIndex);
 					String primaryKeySpec = res.substring(primaryKeyIndex + 2, endPrimaryKeyIndex + 1);
 					res = res.replace(", " + primaryKeySpec, "");
 					res = res + " " + primaryKeySpec;
