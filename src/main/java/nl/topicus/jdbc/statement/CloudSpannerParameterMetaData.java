@@ -23,28 +23,6 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 	public int getParameterCount() throws SQLException
 	{
 		return statement.getParameterStore().getHighestIndex();
-
-		// if (parameterCount == -1)
-		// {
-		// parameterCount = 0;
-		// boolean inString = false;
-		// StringBuilder res = new StringBuilder(sql);
-		// int i = 0;
-		// while (i < res.length())
-		// {
-		// char c = res.charAt(i);
-		// if (c == '\'')
-		// {
-		// inString = !inString;
-		// }
-		// else if (c == '?' && !inString)
-		// {
-		// parameterCount++;
-		// }
-		// i++;
-		// }
-		// }
-		// return parameterCount;
 	}
 
 	@Override
