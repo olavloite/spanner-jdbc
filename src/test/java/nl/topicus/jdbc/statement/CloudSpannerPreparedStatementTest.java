@@ -9,7 +9,9 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.spanner.Key;
@@ -23,6 +25,7 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import nl.topicus.jdbc.test.category.UnitTest;
 
+@RunWith(Enclosed.class)
 @Category(UnitTest.class)
 public class CloudSpannerPreparedStatementTest
 {
