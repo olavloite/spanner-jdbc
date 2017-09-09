@@ -21,8 +21,6 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
-import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
-import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @Category(UnitTest.class)
@@ -62,12 +60,124 @@ public class CloudSpannerPreparedStatementTest
 		getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
 	}
 
-	@Test()
-	public void testDeleteStatementWithInvalidWhereClause() throws SQLException
+	public static class DeleteStatementsWithInvalidWhereClauses
 	{
-		thrown.expect(SQLException.class);
-		thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
-		getMutation("DELETE FROM FOO WHERE ID<2");
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
+		public DeleteStatementsWithInvalidWhereClauses()
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
+		}
+
+		@Test()
+		public void testDeleteStatementWithNullValue() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID IS NULL");
+		}
+
+		@Test()
+		public void testDeleteStatementWithFunction() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE TO_STRING(ID)=1");
+		}
+
+		@Test()
+		public void testDeleteStatementWithNamedParameter() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=:NAMED_PARAMETER");
+		}
+
+		@Test()
+		public void testDeleteStatementWithAddition() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=1+2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithDivision() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=1/2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithMultiplication() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=1*2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithSubtraction() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=1-2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithOr() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=1 OR ID=2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithBetween() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID BETWEEN 1 AND 10");
+		}
+
+		@Test()
+		public void testDeleteStatementWithLargerThan() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID>2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithLargerOrEquals() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID>=2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithLessThan() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID<2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithLessOrEquals() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID<=2");
+		}
+
+		@Test()
+		public void testDeleteStatementWithLike() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID LIKE 'TEST'");
+		}
+
+		@Test()
+		public void testDeleteStatementWithNotEquals() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID!=1");
+		}
+
+		@Test()
+		public void testDeleteStatementWithSubSelect() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=(SELECT 1 FROM BAR)");
+		}
+
+		@Test()
+		public void testDeleteStatementWithCaseStatement() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=CASE WHEN FOO=1 THEN 1 WHEN FOO=2 THEN 2 ELSE 3 END");
+		}
+
+		@Test()
+		public void testDeleteStatementWithExists() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE EXISTS (SELECT ID FROM FOO WHERE ID=1)");
+		}
 	}
 
 	@Test
@@ -175,7 +285,7 @@ public class CloudSpannerPreparedStatementTest
 		return res;
 	}
 
-	private Mutation getMutation(String sql) throws SQLException
+	private static Mutation getMutation(String sql) throws SQLException
 	{
 		Mutation mutation = null;
 		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, null, null);
