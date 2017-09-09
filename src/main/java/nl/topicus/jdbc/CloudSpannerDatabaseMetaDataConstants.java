@@ -88,4 +88,8 @@ public class CloudSpannerDatabaseMetaDataConstants
 
 			+ "FROM INFORMATION_SCHEMA.COLUMNS " + WHERE_1_EQUALS_1;
 
+	private CloudSpannerDatabaseMetaDataConstants()
+	{
+	}
+
 }
