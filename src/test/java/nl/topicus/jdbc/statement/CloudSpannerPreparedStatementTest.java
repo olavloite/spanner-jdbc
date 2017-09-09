@@ -178,6 +178,54 @@ public class CloudSpannerPreparedStatementTest
 		{
 			getMutation("DELETE FROM FOO WHERE EXISTS (SELECT ID FROM FOO WHERE ID=1)");
 		}
+
+		@Test()
+		public void testDeleteStatementWithAll() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=ALL (SELECT ID FROM FOO WHERE ID=1)");
+		}
+
+		@Test()
+		public void testDeleteStatementWithAny() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=ANY (SELECT ID FROM FOO WHERE ID=1)");
+		}
+
+		@Test()
+		public void testDeleteStatementWithConcat() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID='FOO' || 'BAR'");
+		}
+
+		@Test()
+		public void testDeleteStatementWithBitwiseAnd() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=(1 & 2)");
+		}
+
+		@Test()
+		public void testDeleteStatementWithBitwiseOr() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=(1 | 2)");
+		}
+
+		@Test()
+		public void testDeleteStatementWithBitwiseXOr() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=(1 ^ 2)");
+		}
+
+		@Test()
+		public void testDeleteStatementWithCast() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE CAST(ID AS STRING)='FOO'");
+		}
+
+		@Test()
+		public void testDeleteStatementWithModulo() throws SQLException
+		{
+			getMutation("DELETE FROM FOO WHERE ID=(1 % 2)");
+		}
 	}
 
 	@Test
