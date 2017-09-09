@@ -6,20 +6,21 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
-import nl.topicus.jdbc.CloudSpannerConnection;
-
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.ReadContext;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
+import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
+
 /**
  * 
  * @author loite
  *
  */
-abstract class AbstractCloudSpannerStatement implements Statement
+abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerWrapper implements Statement
 {
 	private DatabaseClient dbClient;
 
@@ -99,18 +100,6 @@ abstract class AbstractCloudSpannerStatement implements Statement
 			connection.getTransaction().buffer(mutation);
 		}
 		return 1;
-	}
-
-	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException
-	{
-		return null;
-	}
-
-	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException
-	{
-		return false;
 	}
 
 	@Override
@@ -200,7 +189,8 @@ abstract class AbstractCloudSpannerStatement implements Statement
 	@Override
 	public void setFetchDirection(int direction) throws SQLException
 	{
-		if (!(direction == ResultSet.FETCH_FORWARD || direction == ResultSet.FETCH_REVERSE || direction == ResultSet.FETCH_UNKNOWN))
+		if (!(direction == ResultSet.FETCH_FORWARD || direction == ResultSet.FETCH_REVERSE
+				|| direction == ResultSet.FETCH_UNKNOWN))
 			throw new SQLException("Unknown direction: " + direction);
 		// silently ignore
 	}
