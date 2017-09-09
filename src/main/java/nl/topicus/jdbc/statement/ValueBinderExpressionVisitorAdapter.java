@@ -29,7 +29,7 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	protected void setValue(Object value)
 	{
 		R res = setSingleValue(value);
-		if (res == null)
+		if (res == null && value != null)
 			res = setArrayValue(value);
 
 		if (res == null)
