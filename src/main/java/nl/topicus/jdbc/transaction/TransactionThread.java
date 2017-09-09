@@ -75,7 +75,6 @@ class TransactionThread extends Thread
 							}
 							catch (InterruptedException e)
 							{
-								System.err.println("Transaction interrupted while waiting for statement");
 								stopped = true;
 								exception = e;
 								throw e;
