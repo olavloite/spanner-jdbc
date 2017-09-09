@@ -17,7 +17,7 @@ import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
 class TransactionThread extends Thread
 {
-	private static enum TransactionStatus
+	private enum TransactionStatus
 	{
 		NOT_STARTED, RUNNING, SUCCESS, FAIL;
 	}
