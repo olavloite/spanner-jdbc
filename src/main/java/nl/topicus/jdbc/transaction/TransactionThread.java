@@ -17,6 +17,16 @@ import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
 class TransactionThread extends Thread
 {
+	public static class QueryException extends RuntimeException
+	{
+		private static final long serialVersionUID = 1L;
+
+		private QueryException(String message, Throwable cause)
+		{
+			super(message, cause);
+		}
+	}
+
 	private enum TransactionStatus
 	{
 		NOT_STARTED, RUNNING, SUCCESS, FAIL;
@@ -112,7 +122,7 @@ class TransactionThread extends Thread
 		catch (InterruptedException e)
 		{
 			Thread.currentThread().interrupt();
-			throw new RuntimeException("Query execution interrupted", e);
+			throw new QueryException("Query execution interrupted", e);
 		}
 	}
 
