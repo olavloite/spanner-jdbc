@@ -48,6 +48,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private static final String INVALID_WHERE_CLAUSE_UPDATE_MESSAGE = "The UPDATE statement does not contain a valid WHERE clause. UPDATE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form 'ID=value' or 'ID1=value1 AND ID2=value2'";
 
+	private static final String PARSE_ERROR = "Error while parsing sql statement ";
+
 	private String sql;
 
 	private List<Mutation> batchMutations = new ArrayList<>();
@@ -74,7 +76,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
+			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
 		if (statement instanceof Select)
 		{
@@ -258,11 +260,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
+			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
 		catch (IllegalArgumentException e)
 		{
-			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
+			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
 	}
 
@@ -440,7 +442,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			}
 			catch (JSQLParserException e)
 			{
-				throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
+				throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 			}
 		}
 		if (!ddl && statement instanceof Select)
@@ -483,7 +485,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
+			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
 		return new CloudSpannerParameterMetaData(this);
 	}
