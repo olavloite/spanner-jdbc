@@ -296,10 +296,220 @@ public class CloudSpannerDatabaseMetaDataTest
 		assertTrue(testSubject.supportsGroupBy());
 	}
 
+	@Test
 	public void testUnwrap() throws SQLException
 	{
 		assertTrue(testSubject.isWrapperFor(DatabaseMetaData.class));
 		assertEquals(testSubject, testSubject.unwrap(DatabaseMetaData.class));
 	}
 
+	@Test
+	public void testSupportsGroupByUnrelated() throws SQLException
+	{
+		assertTrue(testSubject.supportsGroupByUnrelated());
+	}
+
+	@Test
+	public void testSupportsGroupByBeyondSelect() throws SQLException
+	{
+		assertTrue(testSubject.supportsGroupByBeyondSelect());
+	}
+
+	@Test
+	public void testSupportsLikeEscapeClause() throws SQLException
+	{
+		assertTrue(testSubject.supportsLikeEscapeClause());
+	}
+
+	@Test
+	public void testSupportsMultipleResultSets() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsMultipleResultSets());
+	}
+
+	@Test
+	public void testSupportsMultipleTransactions() throws SQLException
+	{
+		assertTrue(testSubject.supportsMultipleTransactions());
+	}
+
+	@Test
+	public void testSupportsNonNullableColumns() throws SQLException
+	{
+		assertTrue(testSubject.supportsNonNullableColumns());
+	}
+
+	@Test
+	public void testSupportsMinimumSQLGrammar() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsMinimumSQLGrammar());
+	}
+
+	@Test
+	public void testSupportsCoreSQLGrammar() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsCoreSQLGrammar());
+	}
+
+	@Test
+	public void testSupportsExtendedSQLGrammar() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsExtendedSQLGrammar());
+	}
+
+	@Test
+	public void testSupportsANSI92EntryLevelSQL() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsANSI92EntryLevelSQL());
+	}
+
+	@Test
+	public void testSupportsANSI92IntermediateSQL() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsANSI92IntermediateSQL());
+	}
+
+	@Test
+	public void testSupportsANSI92FullSQL() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsANSI92FullSQL());
+	}
+
+	@Test
+	public void testSupportsIntegrityEnhancementFacility() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsIntegrityEnhancementFacility());
+	}
+
+	@Test
+	public void testSupportsOuterJoins() throws SQLException
+	{
+		assertTrue(testSubject.supportsOuterJoins());
+	}
+
+	@Test
+	public void testSupportsFullOuterJoins() throws SQLException
+	{
+		assertTrue(testSubject.supportsFullOuterJoins());
+	}
+
+	@Test
+	public void testSupportsLimitedOuterJoins() throws SQLException
+	{
+		assertTrue(testSubject.supportsLimitedOuterJoins());
+	}
+
+	@Test
+	public void testGetSchemaTerm() throws SQLException
+	{
+		assertNull(testSubject.getSchemaTerm());
+	}
+
+	@Test
+	public void testGetProcedureTerm() throws SQLException
+	{
+		assertNull(testSubject.getProcedureTerm());
+	}
+
+	@Test
+	public void testGetCatalogTerm() throws SQLException
+	{
+		assertNull(testSubject.getCatalogTerm());
+	}
+
+	@Test
+	public void testIsCatalogAtStart() throws SQLException
+	{
+		assertEquals(false, testSubject.isCatalogAtStart());
+	}
+
+	@Test
+	public void testGetCatalogSeparator() throws SQLException
+	{
+		assertNull(testSubject.getCatalogSeparator());
+	}
+
+	@Test
+	public void testSupportsSchemasInDataManipulation() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsSchemasInDataManipulation());
+	}
+
+	@Test
+	public void testSupportsSchemasInProcedureCalls() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsSchemasInProcedureCalls());
+	}
+
+	@Test
+	public void testSupportsSchemasInTableDefinitions() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsSchemasInTableDefinitions());
+	}
+
+	@Test
+	public void testSupportsSchemasInIndexDefinitions() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsSchemasInIndexDefinitions());
+	}
+
+	@Test
+	public void testSupportsSchemasInPrivilegeDefinitions() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsSchemasInPrivilegeDefinitions());
+	}
+
+	@Test
+	public void testSupportsCatalogsInDataManipulation() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsSchemasInProcedureCalls());
+	}
+
+	@Test
+	public void testSupportsCatalogsInProcedureCalls() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsCatalogsInProcedureCalls());
+	}
+
+	@Test
+	public void testSupportsCatalogsInTableDefinitions() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsCatalogsInTableDefinitions());
+	}
+
+	@Test
+	public void testSupportsCatalogsInIndexDefinitions() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsCatalogsInIndexDefinitions());
+	}
+
+	@Test
+	public void testSupportsCatalogsInPrivilegeDefinitions() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsCatalogsInPrivilegeDefinitions());
+	}
+
+	@Test
+	public void testSupportsPositionedDelete() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsPositionedDelete());
+	}
+
+	@Test
+	public void testSupportsPositionedUpdate() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsPositionedUpdate());
+	}
+
+	@Test
+	public void testSupportsSelectForUpdate() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsSelectForUpdate());
+	}
+
+	@Test
+	public void testSupportsStoredProcedures() throws SQLException
+	{
+		assertEquals(false, testSubject.supportsStoredProcedures());
+	}
 }
