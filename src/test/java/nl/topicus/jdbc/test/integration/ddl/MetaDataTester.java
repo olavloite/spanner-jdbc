@@ -183,6 +183,9 @@ public class MetaDataTester
 		try (ResultSet rs = metadata.getTypeInfo())
 		{
 		}
+		try (ResultSet rs = metadata.getUDTs(null, null, null, null))
+		{
+		}
 		for (String table : TABLES)
 		{
 			try (ResultSet rs = metadata.getExportedKeys("", "", table))

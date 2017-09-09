@@ -1080,7 +1080,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types)
 			throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = CloudSpannerDatabaseMetaDataConstants.GET_UDTS;
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override
