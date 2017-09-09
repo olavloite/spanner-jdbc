@@ -10,6 +10,7 @@ import com.google.cloud.spanner.ReadContext;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.parser.TokenMgrError;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
@@ -59,7 +60,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 			{
 				statement = CCJSqlParserUtil.parse(sql);
 			}
-			catch (JSQLParserException e)
+			catch (JSQLParserException | TokenMgrError e)
 			{
 				throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
 			}

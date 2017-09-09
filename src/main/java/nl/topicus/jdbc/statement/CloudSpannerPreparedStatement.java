@@ -22,6 +22,7 @@ import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.parser.TokenMgrError;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -72,7 +73,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			statement = CCJSqlParserUtil.parse(sql);
 		}
-		catch (JSQLParserException e)
+		catch (JSQLParserException | TokenMgrError e)
 		{
 			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
@@ -245,11 +246,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 						"Unrecognized or unsupported SQL-statment: Expected one of INSERT, UPDATE or DELETE. Please note that batching of prepared statements is not supported for SELECT-statements.");
 			}
 		}
-		catch (JSQLParserException e)
-		{
-			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
-		}
-		catch (IllegalArgumentException e)
+		catch (JSQLParserException | IllegalArgumentException | TokenMgrError e)
 		{
 			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
@@ -427,7 +424,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				statement = CCJSqlParserUtil.parse(sql);
 			}
-			catch (JSQLParserException e)
+			catch (JSQLParserException | TokenMgrError e)
 			{
 				throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 			}
@@ -470,7 +467,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				createSelectBuilder(statement);
 			}
 		}
-		catch (JSQLParserException e)
+		catch (JSQLParserException | TokenMgrError e)
 		{
 			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
