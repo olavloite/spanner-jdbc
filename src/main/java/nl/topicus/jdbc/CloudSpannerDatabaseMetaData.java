@@ -976,7 +976,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getTypeInfo() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		String sql = CloudSpannerDatabaseMetaDataConstants.GET_TYPE_INFO;
+		CloudSpannerPreparedStatement statement = prepareStatement(sql);
+		return statement.executeQuery();
 	}
 
 	@Override

@@ -180,6 +180,9 @@ public class MetaDataTester
 		try (ResultSet rs = metadata.getTableTypes())
 		{
 		}
+		try (ResultSet rs = metadata.getTypeInfo())
+		{
+		}
 		for (String table : TABLES)
 		{
 			try (ResultSet rs = metadata.getExportedKeys("", "", table))
