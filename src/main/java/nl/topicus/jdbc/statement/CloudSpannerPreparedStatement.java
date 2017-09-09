@@ -357,7 +357,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				@Override
 				protected void visitExpression(Column col, Expression expression)
 				{
-					expression.accept(new KeyBuilderExpressionVisitorAdapter<>(getParameterStore(), keyBuilder));
+					expression.accept(new KeyBuilderExpressionVisitorAdapter(getParameterStore(), keyBuilder));
 				}
 
 			};

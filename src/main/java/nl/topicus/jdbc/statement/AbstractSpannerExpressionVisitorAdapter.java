@@ -16,7 +16,7 @@ import net.sf.jsqlparser.expression.TimeValue;
 import net.sf.jsqlparser.expression.TimestampValue;
 import net.sf.jsqlparser.schema.Column;
 
-abstract class AbstractSpannerExpressionVisitorAdapter<R> extends ExpressionVisitorAdapter
+abstract class AbstractSpannerExpressionVisitorAdapter extends ExpressionVisitorAdapter
 {
 	private ParameterStore parameterStore;
 

@@ -15,7 +15,7 @@ import com.google.common.primitives.Longs;
 
 import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
-class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVisitorAdapter<R>
+class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVisitorAdapter
 {
 	private ValueBinder<R> binder;
 
