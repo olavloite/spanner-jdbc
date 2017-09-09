@@ -18,10 +18,6 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 
 	private static final String FROM_STATEMENT_WITHOUT_RESULTS = " FROM INFORMATION_SCHEMA.TABLES WHERE 1=2 ";
 
-	private static final String WHERE_1_EQUALS_1 = " WHERE 1=1 ";
-
-	private static final String FROM_TABLES_T = " FROM INFORMATION_SCHEMA.TABLES AS T ";
-
 	private CloudSpannerConnection connection;
 
 	CloudSpannerDatabaseMetaData(CloudSpannerConnection connection)
@@ -783,7 +779,8 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = "select CASE WHEN TABLE_CATALOG='' THEN NULL ELSE TABLE_CATALOG END AS TABLE_CAT, CASE WHEN TABLE_SCHEMA='' THEN NULL ELSE TABLE_SCHEMA END AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION "
-				+ FROM_TABLES_T + WHERE_1_EQUALS_1;
+				+ CloudSpannerDatabaseMetaDataConstants.FROM_TABLES_T
+				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
 		if (catalog != null)
 			sql = sql + "AND UPPER(T.TABLE_CATALOG) like ? ";
 		if (schemaPattern != null)
@@ -825,21 +822,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
 			throws SQLException
 	{
-		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
-				+ "CASE " + "	WHEN SPANNER_TYPE LIKE 'ARRAY%' THEN " + Types.ARRAY + " "
-				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN " + Types.BOOLEAN + " " + "	WHEN SPANNER_TYPE LIKE 'BYTES%' THEN "
-				+ Types.BINARY + " " + "	WHEN SPANNER_TYPE = 'DATE' THEN " + Types.DATE + " "
-				+ "	WHEN SPANNER_TYPE = 'FLOAT64' THEN " + Types.DOUBLE + " " + "	WHEN SPANNER_TYPE = 'INT64' THEN "
-				+ Types.BIGINT + " " + "	WHEN SPANNER_TYPE LIKE 'STRING%' THEN " + Types.NVARCHAR + " "
-				+ "	WHEN SPANNER_TYPE LIKE 'STRUCT%' THEN " + Types.STRUCT + " "
-				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN " + Types.TIMESTAMP + " " + "END AS DATA_TYPE, "
-				+ "SPANNER_TYPE AS TYPE_NAME, " + "CASE " + "WHEN strpos(spanner_type, '(')=0 then 0 "
-				+ "ELSE cast(replace(substr(spanner_type, strpos(spanner_type, '(')+1, strpos(spanner_type, ')')-strpos(spanner_type, '(')-1), 'MAX', '0') as INT64) "
-				+ "END AS COLUMN_SIZE, " + "0 AS BUFFER_LENGTH, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, " + "CASE "
-				+ "	WHEN IS_NULLABLE = 'YES' THEN 1 " + "	WHEN IS_NULLABLE = 'NO' THEN 0 " + "	ELSE 2 "
-				+ "END AS NULLABLE, NULL AS REMARKS, NULL AS COLUMN_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATETIME_SUB, 0 AS CHAR_OCTET_LENGTH, ORDINAL_POSITION, IS_NULLABLE, NULL AS SCOPE_CATALOG, "
-				+ "NULL AS SCOPE_SCHEMA, NULL AS SCOPE_TABLE, NULL AS SOURCE_DATA_TYPE, 'NO' AS IS_AUTOINCREMENT, 'NO' AS IS_GENERATEDCOLUMN "
-				+ "FROM information_schema.columns " + WHERE_1_EQUALS_1;
+		String sql = CloudSpannerDatabaseMetaDataConstants.GET_COLUMNS;
 
 		if (catalog != null)
 			sql = sql + "AND UPPER(TABLE_CATALOG) like ? ";
@@ -951,7 +934,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "FROM INFORMATION_SCHEMA.TABLES PARENT "
 				+ "INNER JOIN INFORMATION_SCHEMA.TABLES CHILD ON CHILD.PARENT_TABLE_NAME=PARENT.TABLE_NAME "
 				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS PARENT_INDEX_COLUMNS ON PARENT_INDEX_COLUMNS.TABLE_NAME=PARENT.TABLE_NAME AND PARENT_INDEX_COLUMNS.INDEX_NAME='PRIMARY_KEY' "
-				+ WHERE_1_EQUALS_1;
+				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
 
 		if (catalog != null)
 			sql = sql + "AND UPPER(PARENT.TABLE_CATALOG) like ? ";
@@ -988,7 +971,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		String sql = "select idx.TABLE_CATALOG AS TABLE_CAT, idx.TABLE_SCHEMA AS TABLE_SCHEM, idx.TABLE_NAME, CASE WHEN IS_UNIQUE THEN FALSE ELSE TRUE END AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, idx.INDEX_NAME, 3 AS TYPE, ORDINAL_POSITION, COLUMN_NAME, SUBSTR(COLUMN_ORDERING, 0, 1) AS ASC_OR_DESC, -1 AS CARDINALITY, -1 AS PAGES, NULL AS FILTER_CONDITION "
 				+ "FROM information_schema.indexes idx "
 				+ "INNER JOIN information_schema.index_columns col on idx.table_catalog=col.table_catalog and idx.table_schema=col.table_schema and idx.table_name=col.table_name and idx.index_name=col.index_name "
-				+ WHERE_1_EQUALS_1;
+				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
 
 		if (catalog != null)
 			sql = sql + "AND UPPER(idx.TABLE_CATALOG) like ? ";
