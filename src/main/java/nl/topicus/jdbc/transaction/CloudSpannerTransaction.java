@@ -2,8 +2,6 @@ package nl.topicus.jdbc.transaction;
 
 import java.sql.SQLException;
 
-import nl.topicus.jdbc.CloudSpannerConnection;
-
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeySet;
@@ -16,6 +14,8 @@ import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TransactionContext;
 
+import nl.topicus.jdbc.CloudSpannerConnection;
+
 /**
  * An abstraction of transactions on Google Cloud Spanner JDBC connections.
  * 
@@ -24,6 +24,16 @@ import com.google.cloud.spanner.TransactionContext;
  */
 public class CloudSpannerTransaction implements TransactionContext
 {
+	public static class CouldNotStartTransactionException extends RuntimeException
+	{
+		private static final long serialVersionUID = 1L;
+
+		private CouldNotStartTransactionException(String message, SQLException cause)
+		{
+			super(message, cause);
+		}
+	}
+
 	private TransactionThread transactionThread;
 
 	private ReadOnlyTransaction readOnlyTransaction;
@@ -112,7 +122,7 @@ public class CloudSpannerTransaction implements TransactionContext
 			}
 			catch (SQLException e)
 			{
-				throw new RuntimeException(e);
+				throw new CouldNotStartTransactionException("Failed to start new transaction", e);
 			}
 		}
 	}
