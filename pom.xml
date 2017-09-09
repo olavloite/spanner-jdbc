@@ -112,9 +112,6 @@
 						<version>2.20</version>
 					</dependency>
 				</dependencies>
-				<!-- <configuration> <includes> <include>**/*.class</include> </includes> 
-					<excludedGroups>nl.topicus.jdbc.test.category.IntegrationTest</excludedGroups> 
-					</configuration> -->
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -135,10 +132,6 @@
 						</goals>
 					</execution>
 				</executions>
-				<!-- <configuration> <groups>nl.topicus.jdbc.test.category.IntegrationTest</groups> 
-					</configuration> <executions> <execution> <goals> <goal>integration-test</goal> 
-					</goals> <configuration> <includes> <include>**/*.class</include> </includes> 
-					</configuration> </execution> </executions> -->
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
