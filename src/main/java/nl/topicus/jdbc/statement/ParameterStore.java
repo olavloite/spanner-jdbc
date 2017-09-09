@@ -135,17 +135,17 @@ public class ParameterStore
 	{
 		if (table != null && !"".equals(table))
 		{
-			try (ResultSet columns = connection.getMetaData().getColumns(null, null, table, null))
+			try (ResultSet rsCols = connection.getMetaData().getColumns(null, null, table, null))
 			{
-				while (columns.next())
+				while (rsCols.next())
 				{
-					String col = columns.getString("COLUMN_NAME");
+					String col = rsCols.getString("COLUMN_NAME");
 					int arrayIndex = getParameterArrayIndex(col);
 					if (arrayIndex > -1)
 					{
-						scalesOrLengths[arrayIndex] = columns.getInt("COLUMN_SIZE");
-						types[arrayIndex] = columns.getInt("DATA_TYPE");
-						nullable[arrayIndex] = columns.getInt("NULLABLE");
+						scalesOrLengths[arrayIndex] = rsCols.getInt("COLUMN_SIZE");
+						types[arrayIndex] = rsCols.getInt("DATA_TYPE");
+						nullable[arrayIndex] = rsCols.getInt("NULLABLE");
 					}
 				}
 			}
