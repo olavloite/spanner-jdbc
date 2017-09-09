@@ -153,8 +153,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private Time toTime(com.google.cloud.Timestamp ts)
 	{
-		Time res = new Time(ts.getSeconds());
-		return res;
+		return new Time(ts.getSeconds());
 	}
 
 	@Override
