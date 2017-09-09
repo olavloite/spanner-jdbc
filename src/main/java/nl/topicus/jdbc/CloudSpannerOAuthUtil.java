@@ -20,4 +20,8 @@ public class CloudSpannerOAuthUtil
 		}
 	}
 
+	private CloudSpannerOAuthUtil()
+	{
+	}
+
 }
