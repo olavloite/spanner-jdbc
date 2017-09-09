@@ -24,11 +24,11 @@ import nl.topicus.jdbc.CloudSpannerConnection;
  */
 public class CloudSpannerTransaction implements TransactionContext
 {
-	public static class CouldNotStartTransactionException extends RuntimeException
+	public static class TransactionException extends RuntimeException
 	{
 		private static final long serialVersionUID = 1L;
 
-		private CouldNotStartTransactionException(String message, SQLException cause)
+		private TransactionException(String message, SQLException cause)
 		{
 			super(message, cause);
 		}
@@ -122,7 +122,7 @@ public class CloudSpannerTransaction implements TransactionContext
 			}
 			catch (SQLException e)
 			{
-				throw new CouldNotStartTransactionException("Failed to start new transaction", e);
+				throw new TransactionException("Failed to start new transaction", e);
 			}
 		}
 	}
@@ -191,6 +191,14 @@ public class CloudSpannerTransaction implements TransactionContext
 	@Override
 	public void close()
 	{
+		try
+		{
+			rollback();
+		}
+		catch (SQLException e)
+		{
+			throw new TransactionException("Failed to rollback transaction", e);
+		}
 	}
 
 }
