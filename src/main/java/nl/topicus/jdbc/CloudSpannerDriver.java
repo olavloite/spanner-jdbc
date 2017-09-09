@@ -146,7 +146,6 @@ public class CloudSpannerDriver implements Driver
 	{
 		if (!acceptsURL(url))
 			return null;
-		// checkAndSetLogging();
 		// Parse URL
 		ConnectionProperties properties = ConnectionProperties.parse(url);
 		// Get connection properties from properties
