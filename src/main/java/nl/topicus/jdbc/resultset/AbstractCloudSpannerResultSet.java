@@ -19,20 +19,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Map;
 
-abstract class AbstractCloudSpannerResultSet implements ResultSet
+import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
+
+abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerWrapper implements ResultSet
 {
-
-	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException
-	{
-		return null;
-	}
-
-	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException
-	{
-		return false;
-	}
 
 	@Override
 	public String getCursorName() throws SQLException
