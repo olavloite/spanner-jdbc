@@ -29,10 +29,8 @@ import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
-import net.sf.jsqlparser.statement.select.SelectVisitor;
-import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import net.sf.jsqlparser.statement.select.WithItem;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
@@ -125,19 +123,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private void setSelectParameters(SelectBody body, com.google.cloud.spanner.Statement.Builder builder)
 	{
-		body.accept(new SelectVisitor()
+		body.accept(new SelectVisitorAdapter()
 		{
-
-			@Override
-			public void visit(WithItem withItem)
-			{
-			}
-
-			@Override
-			public void visit(SetOperationList setOpList)
-			{
-			}
-
 			@Override
 			public void visit(PlainSelect plainSelect)
 			{
