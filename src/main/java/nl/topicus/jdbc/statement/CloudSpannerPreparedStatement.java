@@ -399,11 +399,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private static String unquoteIdentifier(String identifier)
 	{
+		String res = identifier;
 		if (identifier == null)
 			return identifier;
 		if (identifier.charAt(0) == '`' && identifier.charAt(identifier.length() - 1) == '`')
-			identifier = identifier.substring(1, identifier.length() - 1);
-		return identifier;
+			res = identifier.substring(1, identifier.length() - 1);
+		return res;
 	}
 
 	private int executeDDL(String ddl) throws SQLException
