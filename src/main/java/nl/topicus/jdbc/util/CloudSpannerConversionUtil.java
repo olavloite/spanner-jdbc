@@ -10,6 +10,10 @@ import com.google.cloud.ByteArray;
 
 public class CloudSpannerConversionUtil
 {
+	private CloudSpannerConversionUtil()
+	{
+	}
+
 	public static Date toSqlDate(com.google.cloud.Date date)
 	{
 		@SuppressWarnings("deprecation")
