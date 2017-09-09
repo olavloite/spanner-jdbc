@@ -34,8 +34,8 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 
 		if (res == null)
 		{
-			throw new IllegalArgumentException(
-					"Unsupported parameter type: " + value.getClass().getName() + " - " + value.toString());
+			throw new IllegalArgumentException("Unsupported parameter type: " + value == null ? "null"
+					: (value.getClass().getName() + " - " + value.toString()));
 		}
 	}
 
