@@ -30,7 +30,6 @@ public class CloudSpannerArray implements Array
 	}
 
 	public static CloudSpannerArray createArray(CloudSpannerDataType type, List<? extends Object> elements)
-			throws SQLException
 	{
 		return new CloudSpannerArray(type, elements);
 	}
