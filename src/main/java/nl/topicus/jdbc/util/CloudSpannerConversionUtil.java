@@ -45,12 +45,6 @@ public class CloudSpannerConversionUtil
 		return res;
 	}
 
-	public static Timestamp toSqlTimestamp(com.google.cloud.Timestamp ts)
-	{
-		Timestamp res = ts.toSqlTimestamp();
-		return res;
-	}
-
 	public static com.google.cloud.Timestamp toCloudSpannerTimestamp(Timestamp ts)
 	{
 		long milliseconds = ts.getTime();
@@ -73,7 +67,7 @@ public class CloudSpannerConversionUtil
 	{
 		List<Timestamp> res = new ArrayList<>(timestamps.size());
 		for (com.google.cloud.Timestamp timestamp : timestamps)
-			res.add(CloudSpannerConversionUtil.toSqlTimestamp(timestamp));
+			res.add(timestamp.toSqlTimestamp());
 		return res;
 	}
 

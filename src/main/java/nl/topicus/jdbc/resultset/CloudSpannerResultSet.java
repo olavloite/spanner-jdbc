@@ -18,9 +18,6 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
 
-import org.threeten.bp.LocalDateTime;
-import org.threeten.bp.ZoneOffset;
-
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
 
@@ -154,13 +151,14 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		return isNull(columnIndex) ? null : CloudSpannerConversionUtil.toSqlDate(resultSet.getDate(columnIndex - 1));
 	}
 
+	@SuppressWarnings("deprecation")
 	private Time toTime(com.google.cloud.Timestamp ts)
 	{
-		LocalDateTime ldt = LocalDateTime.ofEpochSecond(ts.getSeconds(), ts.getNanos(), ZoneOffset.UTC);
-		Calendar cal = Calendar.getInstance();
-		cal.clear();
-		cal.set(1970, 0, 1, ldt.getHour(), ldt.getMinute(), ldt.getSecond());
-		return new Time(cal.getTimeInMillis());
+		Timestamp sqlTs = ts.toSqlTimestamp();
+		sqlTs.setYear(1970 - 1900);
+		sqlTs.setMonth(0);
+		sqlTs.setDate(1);
+		return new Time(sqlTs.getTime());
 	}
 
 	@Override
@@ -172,8 +170,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public Timestamp getTimestamp(int columnIndex) throws SQLException
 	{
-		return isNull(columnIndex) ? null
-				: CloudSpannerConversionUtil.toSqlTimestamp(resultSet.getTimestamp(columnIndex - 1));
+		return isNull(columnIndex) ? null : resultSet.getTimestamp(columnIndex - 1).toSqlTimestamp();
 	}
 
 	@Override
@@ -227,8 +224,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public Timestamp getTimestamp(String columnLabel) throws SQLException
 	{
-		return isNull(columnLabel) ? null
-				: CloudSpannerConversionUtil.toSqlTimestamp(resultSet.getTimestamp(columnLabel));
+		return isNull(columnLabel) ? null : resultSet.getTimestamp(columnLabel).toSqlTimestamp();
 	}
 
 	@Override
@@ -321,15 +317,13 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException
 	{
-		return isNull(columnIndex) ? null
-				: CloudSpannerConversionUtil.toSqlTimestamp(resultSet.getTimestamp(columnIndex - 1));
+		return isNull(columnIndex) ? null : resultSet.getTimestamp(columnIndex - 1).toSqlTimestamp();
 	}
 
 	@Override
 	public Timestamp getTimestamp(String columnLabel, Calendar cal) throws SQLException
 	{
-		return isNull(columnLabel) ? null
-				: CloudSpannerConversionUtil.toSqlTimestamp(resultSet.getTimestamp(columnLabel));
+		return isNull(columnLabel) ? null : resultSet.getTimestamp(columnLabel).toSqlTimestamp();
 	}
 
 	@Override
