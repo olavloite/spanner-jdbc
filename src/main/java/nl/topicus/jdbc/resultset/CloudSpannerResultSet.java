@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.sql.Date;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
@@ -228,7 +227,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	}
 
 	@Override
-	public ResultSetMetaData getMetaData() throws SQLException
+	public CloudSpannerResultSetMetaData getMetaData() throws SQLException
 	{
 		ensureOpen();
 		if (beforeFirst)
