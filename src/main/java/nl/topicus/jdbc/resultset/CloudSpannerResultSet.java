@@ -18,6 +18,9 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
 
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.ZoneOffset;
+
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
 
@@ -153,7 +156,11 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private Time toTime(com.google.cloud.Timestamp ts)
 	{
-		return new Time(ts.getSeconds());
+		LocalDateTime ldt = LocalDateTime.ofEpochSecond(ts.getSeconds(), ts.getNanos(), ZoneOffset.UTC);
+		Calendar cal = Calendar.getInstance();
+		cal.clear();
+		cal.set(1970, 0, 1, ldt.getHour(), ldt.getMinute(), ldt.getSecond());
+		return new Time(cal.getTimeInMillis());
 	}
 
 	@Override
