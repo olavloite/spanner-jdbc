@@ -29,38 +29,42 @@ import nl.topicus.jdbc.test.category.UnitTest;
 @Category(UnitTest.class)
 public class CloudSpannerPreparedStatementTest
 {
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
 
-	@Test
-	public void testDeleteStatementWithoutWhereClause() throws SQLException
+	public static class DeleteStatementTests
 	{
-		Mutation deleteMutation = getMutation("DELETE FROM FOO");
-		Assert.assertNotNull(deleteMutation);
-		Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
-		Assert.assertTrue(deleteMutation.getKeySet().isAll());
-		Assert.assertNotNull(deleteMutation);
-		Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
-		Assert.assertTrue(deleteMutation.getKeySet().isAll());
-	}
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
 
-	@Test
-	public void testDeleteStatementWithWhereClause() throws SQLException
-	{
-		Mutation deleteMutation = getMutation("DELETE FROM FOO WHERE ID=1");
-		Assert.assertNotNull(deleteMutation);
-		Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
-		List<Key> keys = Lists.newArrayList(deleteMutation.getKeySet().getKeys());
-		Assert.assertEquals(1, keys.size());
-		Assert.assertEquals(1l, keys.get(0).getParts().iterator().next());
-	}
+		@Test
+		public void testDeleteStatementWithoutWhereClause() throws SQLException
+		{
+			Mutation deleteMutation = getMutation("DELETE FROM FOO");
+			Assert.assertNotNull(deleteMutation);
+			Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
+			Assert.assertTrue(deleteMutation.getKeySet().isAll());
+			Assert.assertNotNull(deleteMutation);
+			Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
+			Assert.assertTrue(deleteMutation.getKeySet().isAll());
+		}
 
-	@Test
-	public void testDeleteStatementWithInWhereClauses() throws SQLException
-	{
-		thrown.expect(SQLException.class);
-		thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
-		getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
+		@Test
+		public void testDeleteStatementWithWhereClause() throws SQLException
+		{
+			Mutation deleteMutation = getMutation("DELETE FROM FOO WHERE ID=1");
+			Assert.assertNotNull(deleteMutation);
+			Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
+			List<Key> keys = Lists.newArrayList(deleteMutation.getKeySet().getKeys());
+			Assert.assertEquals(1, keys.size());
+			Assert.assertEquals(1l, keys.get(0).getParts().iterator().next());
+		}
+
+		@Test
+		public void testDeleteStatementWithInWhereClauses() throws SQLException
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
+			getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
+		}
 	}
 
 	public static class DeleteStatementsWithInvalidWhereClauses
@@ -231,57 +235,71 @@ public class CloudSpannerPreparedStatementTest
 		}
 	}
 
-	@Test
-	public void testUpdateStatementWithoutWhereClause() throws SQLException
+	public static class UpdateStatementTests
 	{
-		thrown.expect(SQLException.class);
-		thrown.expectMessage("The UPDATE statement does not contain a valid WHERE clause.");
-		getMutation("UPDATE FOO SET COL1=1, COL2=2");
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
+		@Test
+		public void testUpdateStatementWithoutWhereClause() throws SQLException
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("The UPDATE statement does not contain a valid WHERE clause.");
+			getMutation("UPDATE FOO SET COL1=1, COL2=2");
+		}
+
+		@Test
+		public void testUpdateStatementWithWhereClause() throws SQLException
+		{
+			Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID=1");
+			Assert.assertNotNull(updateMutation);
+			Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
+			Assert.assertEquals("FOO", updateMutation.getTable());
+			List<String> columns = Lists.newArrayList(updateMutation.getColumns());
+			Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID" }, columns.toArray());
+			Assert.assertArrayEquals(new String[] { "1", "2", "1" }, getValues(updateMutation.getValues()));
+		}
+
+		@Test
+		public void testUpdateStatementWithMultipleWhereClauses() throws SQLException
+		{
+			Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID1=1 AND ID2=1");
+			Assert.assertNotNull(updateMutation);
+			Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
+			Assert.assertEquals("FOO", updateMutation.getTable());
+			List<String> columns = Lists.newArrayList(updateMutation.getColumns());
+			Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID1", "ID2" }, columns.toArray());
+			Assert.assertArrayEquals(new String[] { "1", "2", "1", "1" }, getValues(updateMutation.getValues()));
+		}
 	}
 
-	@Test
-	public void testUpdateStatementWithWhereClause() throws SQLException
+	public static class DDLStatementTests
 	{
-		Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID=1");
-		Assert.assertNotNull(updateMutation);
-		Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
-		Assert.assertEquals("FOO", updateMutation.getTable());
-		List<String> columns = Lists.newArrayList(updateMutation.getColumns());
-		Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID" }, columns.toArray());
-		Assert.assertArrayEquals(new String[] { "1", "2", "1" }, getValues(updateMutation.getValues()));
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
+		@Test
+		public void testCreateTableStatement() throws SQLException
+		{
+			CloudSpannerPreparedStatementTest
+					.testCreateTableStatement("CREATE TABLE FOO (ID INT64, NAME STRING(100)) PRIMARY KEY (ID)");
+		}
+
+		/**
+		 * TODO: quote the identifier in primary key clause when this is fixed
+		 * in the underlying SQL Parser
+		 * 
+		 * @throws SQLException
+		 */
+		@Test
+		public void testQuotedCreateTableStatement() throws SQLException
+		{
+			CloudSpannerPreparedStatementTest
+					.testCreateTableStatement("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
+		}
 	}
 
-	@Test
-	public void testUpdateStatementWithMultipleWhereClauses() throws SQLException
-	{
-		Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID1=1 AND ID2=1");
-		Assert.assertNotNull(updateMutation);
-		Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
-		Assert.assertEquals("FOO", updateMutation.getTable());
-		List<String> columns = Lists.newArrayList(updateMutation.getColumns());
-		Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID1", "ID2" }, columns.toArray());
-		Assert.assertArrayEquals(new String[] { "1", "2", "1", "1" }, getValues(updateMutation.getValues()));
-	}
-
-	@Test
-	public void testCreateTableStatement() throws SQLException
-	{
-		testCreateTableStatement("CREATE TABLE FOO (ID INT64, NAME STRING(100)) PRIMARY KEY (ID)");
-	}
-
-	/**
-	 * TODO: quote the identifier in primary key clause when this is fixed in
-	 * the underlying SQL Parser
-	 * 
-	 * @throws SQLException
-	 */
-	@Test
-	public void testQuotedCreateTableStatement() throws SQLException
-	{
-		testCreateTableStatement("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
-	}
-
-	private void testCreateTableStatement(String sql) throws SQLException
+	private static void testCreateTableStatement(String sql) throws SQLException
 	{
 		boolean isDDL = isDDLStatement(sql);
 		Assert.assertTrue(isDDL);
@@ -298,7 +316,7 @@ public class CloudSpannerPreparedStatementTest
 		Assert.assertEquals(CreateTable.class, statement.getClass());
 	}
 
-	private String[] getValues(Iterable<Value> values)
+	private static String[] getValues(Iterable<Value> values)
 	{
 		List<Value> valueList = Lists.newArrayList(values);
 		String[] res = new String[valueList.size()];
@@ -311,7 +329,7 @@ public class CloudSpannerPreparedStatementTest
 		return res;
 	}
 
-	private boolean isDDLStatement(String sql) throws SQLException
+	private static boolean isDDLStatement(String sql) throws SQLException
 	{
 		boolean res = false;
 		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, null, null);

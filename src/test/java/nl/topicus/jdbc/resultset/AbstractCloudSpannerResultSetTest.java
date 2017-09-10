@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -27,18 +28,22 @@ import nl.topicus.jdbc.test.category.UnitTest;
 @Category(UnitTest.class)
 public class AbstractCloudSpannerResultSetTest
 {
-	private CloudSpannerResultSet subject = new CloudSpannerResultSet(null);
 
-	@Test
-	public void testGetType() throws SQLException
+	public static class SupportedMethodsTest
 	{
-		assertEquals(ResultSet.TYPE_FORWARD_ONLY, subject.getType());
-	}
+		private CloudSpannerResultSet subject = new CloudSpannerResultSet(null);
 
-	@Test
-	public void testGetConcurrency() throws SQLException
-	{
-		assertEquals(ResultSet.CONCUR_READ_ONLY, subject.getConcurrency());
+		@Test
+		public void testGetType() throws SQLException
+		{
+			assertEquals(ResultSet.TYPE_FORWARD_ONLY, subject.getType());
+		}
+
+		@Test
+		public void testGetConcurrency() throws SQLException
+		{
+			assertEquals(ResultSet.CONCUR_READ_ONLY, subject.getConcurrency());
+		}
 	}
 
 	public static class UnsupportedMethodsTest
@@ -68,7 +73,7 @@ public class AbstractCloudSpannerResultSetTest
 			Method[] methods = AbstractCloudSpannerResultSet.class.getDeclaredMethods();
 			for (Method method : methods)
 			{
-				if (!SUPPORTED_METHODS.contains(method))
+				if (!SUPPORTED_METHODS.contains(method) && Modifier.isPublic(method.getModifiers()))
 				{
 					try
 					{
