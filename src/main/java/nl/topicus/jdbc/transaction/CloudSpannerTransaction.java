@@ -188,17 +188,12 @@ public class CloudSpannerTransaction implements TransactionContext
 		return null;
 	}
 
+	/**
+	 * Close method is needed for the interface, but does not do anything
+	 */
 	@Override
 	public void close()
 	{
-		try
-		{
-			rollback();
-		}
-		catch (SQLException e)
-		{
-			throw new TransactionException("Failed to rollback transaction", e);
-		}
 	}
 
 }
