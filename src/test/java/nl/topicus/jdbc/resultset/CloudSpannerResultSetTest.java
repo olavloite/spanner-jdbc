@@ -392,7 +392,7 @@ public class CloudSpannerResultSetTest
 		assertNotNull(subject.getBigDecimal(DOUBLE_COL_NOT_NULL, 2));
 		assertEquals(BigDecimal.valueOf(1.12d), subject.getBigDecimal(DOUBLE_COL_NOT_NULL, 2));
 		assertEquals(false, subject.wasNull());
-		assertNull(subject.getBigDecimal(DOUBLE_COL_NULL));
+		assertNull(subject.getBigDecimal(DOUBLE_COL_NULL, 2));
 		assertTrue(subject.wasNull());
 	}
 
@@ -467,13 +467,16 @@ public class CloudSpannerResultSetTest
 		assertNull(subject.getBigDecimal(DOUBLE_COLINDEX_NULL));
 		assertTrue(subject.wasNull());
 	}
-	//
-	// @Test
-	// public BigDecimal getBigDecimal(String columnLabel) throws SQLException
-	// {
-	// return isNull(columnLabel) ? null :
-	// toBigDecimal(resultSet.getDouble(columnLabel), 34);
-	// }
+
+	@Test
+	public void testGetBigDecimalLabel() throws SQLException
+	{
+		assertNotNull(subject.getBigDecimal(DOUBLE_COL_NOT_NULL));
+		assertEquals(BigDecimal.valueOf(1.123456789d), subject.getBigDecimal(DOUBLE_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getBigDecimal(DOUBLE_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
 	//
 	// @Test
 	// public Statement getStatement() throws SQLException
