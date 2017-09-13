@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
@@ -125,10 +126,15 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		return isNull(columnIndex) ? 0 : resultSet.getDouble(columnIndex - 1);
 	}
 
+	private BigDecimal toBigDecimal(double d)
+	{
+		return BigDecimal.valueOf(d);
+	}
+
 	private BigDecimal toBigDecimal(double d, int scale)
 	{
 		BigDecimal res = BigDecimal.valueOf(d);
-		res.setScale(scale);
+		res = res.setScale(scale, RoundingMode.HALF_UP);
 		return res;
 	}
 
@@ -273,13 +279,13 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex) throws SQLException
 	{
-		return isNull(columnIndex) ? null : toBigDecimal(resultSet.getDouble(columnIndex - 1), 34);
+		return isNull(columnIndex) ? null : toBigDecimal(resultSet.getDouble(columnIndex - 1));
 	}
 
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel) throws SQLException
 	{
-		return isNull(columnLabel) ? null : toBigDecimal(resultSet.getDouble(columnLabel), 34);
+		return isNull(columnLabel) ? null : toBigDecimal(resultSet.getDouble(columnLabel));
 	}
 
 	@Override
