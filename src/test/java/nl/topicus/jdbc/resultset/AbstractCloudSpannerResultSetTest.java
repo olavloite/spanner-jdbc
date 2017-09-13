@@ -19,9 +19,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 import com.google.common.base.Defaults;
 
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @RunWith(Enclosed.class)
@@ -31,7 +33,8 @@ public class AbstractCloudSpannerResultSetTest
 
 	public static class SupportedMethodsTest
 	{
-		private CloudSpannerResultSet subject = new CloudSpannerResultSet(null);
+		private CloudSpannerResultSet subject = new CloudSpannerResultSet(Mockito.mock(CloudSpannerStatement.class),
+				null);
 
 		@Test
 		public void testGetType() throws SQLException
@@ -51,7 +54,8 @@ public class AbstractCloudSpannerResultSetTest
 		@Rule
 		public ExpectedException thrown = ExpectedException.none();
 
-		private CloudSpannerResultSet subject = new CloudSpannerResultSet(null);
+		private CloudSpannerResultSet subject = new CloudSpannerResultSet(Mockito.mock(CloudSpannerStatement.class),
+				null);
 
 		private static final Set<Method> SUPPORTED_METHODS = new HashSet<>();
 		static

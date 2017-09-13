@@ -22,6 +22,7 @@ import com.google.cloud.Date;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.ResultSet;
 
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @Category(UnitTest.class)
@@ -190,7 +191,7 @@ public class CloudSpannerResultSetTest
 
 	public CloudSpannerResultSetTest() throws SQLException
 	{
-		subject = new CloudSpannerResultSet(getMockResultSet());
+		subject = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet());
 		subject.next();
 	}
 
@@ -210,7 +211,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testNext() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
+				getMockResultSet()))
 		{
 			assertTrue(rs.isBeforeFirst());
 			assertEquals(false, rs.isAfterLast());
@@ -228,7 +230,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testClose() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
+				getMockResultSet()))
 		{
 			assertEquals(false, rs.isClosed());
 			rs.next();
@@ -477,13 +480,12 @@ public class CloudSpannerResultSetTest
 		assertNull(subject.getBigDecimal(DOUBLE_COL_NULL));
 		assertTrue(subject.wasNull());
 	}
-	//
-	// @Test
-	// public Statement getStatement() throws SQLException
-	// {
-	// ensureOpen();
-	// return statement;
-	// }
+
+	@Test
+	public void testGetStatement() throws SQLException
+	{
+		subject.getStatement();
+	}
 	//
 	// @Test
 	// public Date getDate(int columnIndex, Calendar cal) throws SQLException

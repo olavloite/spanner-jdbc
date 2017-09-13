@@ -83,7 +83,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			try (ReadContext context = getReadContext())
 			{
 				com.google.cloud.spanner.ResultSet rs = context.executeQuery(builder.build());
-				return new CloudSpannerResultSet(rs);
+				return new CloudSpannerResultSet(this, rs);
 			}
 		}
 		throw new SQLException("SQL statement not suitable for executeQuery. Expected SELECT-statement.");

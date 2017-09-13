@@ -23,6 +23,7 @@ import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
 
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @Category(UnitTest.class)
@@ -83,7 +84,8 @@ public class CloudSpannerDataTypeTest
 				.thenReturn(Arrays.asList(com.google.cloud.Timestamp.now(), com.google.cloud.Timestamp.now()));
 		when(googleResultSet.next()).thenReturn(true);
 
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(googleResultSet))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(Mockito.mock(CloudSpannerStatement.class),
+				googleResultSet))
 		{
 			rs.next();
 			for (CloudSpannerDataType type : CloudSpannerDataType.values())

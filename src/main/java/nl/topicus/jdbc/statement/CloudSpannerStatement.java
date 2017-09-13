@@ -38,7 +38,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		try (ReadContext context = getReadContext())
 		{
 			com.google.cloud.spanner.ResultSet rs = context.executeQuery(com.google.cloud.spanner.Statement.of(sql));
-			return new CloudSpannerResultSet(rs);
+			return new CloudSpannerResultSet(this, rs);
 		}
 	}
 

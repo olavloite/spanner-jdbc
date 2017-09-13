@@ -43,8 +43,9 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private Statement statement;
 
-	public CloudSpannerResultSet(com.google.cloud.spanner.ResultSet resultSet)
+	public CloudSpannerResultSet(Statement statement, com.google.cloud.spanner.ResultSet resultSet)
 	{
+		this.statement = statement;
 		this.resultSet = resultSet;
 	}
 
