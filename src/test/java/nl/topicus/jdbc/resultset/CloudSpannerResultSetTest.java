@@ -116,11 +116,11 @@ public class CloudSpannerResultSetTest
 
 		when(res.getDouble(DOUBLE_COL_NULL)).thenReturn(0d);
 		when(res.isNull(DOUBLE_COL_NULL)).thenReturn(true);
-		when(res.getDouble(DOUBLE_COL_NOT_NULL)).thenReturn(1d);
+		when(res.getDouble(DOUBLE_COL_NOT_NULL)).thenReturn(1.123456789d);
 		when(res.isNull(DOUBLE_COL_NOT_NULL)).thenReturn(false);
 		when(res.getDouble(DOUBLE_COLINDEX_NULL - 1)).thenReturn(0d);
 		when(res.isNull(DOUBLE_COLINDEX_NULL - 1)).thenReturn(true);
-		when(res.getDouble(DOUBLE_COLINDEX_NOTNULL - 1)).thenReturn(2d);
+		when(res.getDouble(DOUBLE_COLINDEX_NOTNULL - 1)).thenReturn(2.123456789d);
 		when(res.isNull(DOUBLE_COLINDEX_NOTNULL - 1)).thenReturn(false);
 
 		when(res.getString(BYTES_COL_NULL)).thenReturn(null);
@@ -282,17 +282,17 @@ public class CloudSpannerResultSetTest
 	public void testGetDoubleIndex() throws SQLException
 	{
 		assertNotNull(subject.getDouble(DOUBLE_COLINDEX_NOTNULL));
-		assertEquals(2d, subject.getDouble(DOUBLE_COLINDEX_NOTNULL), 0d);
+		assertEquals(2.123456789d, subject.getDouble(DOUBLE_COLINDEX_NOTNULL), 0d);
 		assertEquals(false, subject.wasNull());
 		assertEquals(0d, subject.getDouble(DOUBLE_COLINDEX_NULL), 0d);
 		assertTrue(subject.wasNull());
 	}
 
 	@Test
-	public void testGetBigDecimalIndex() throws SQLException
+	public void testGetBigDecimalIndexAndScale() throws SQLException
 	{
-		assertNotNull(subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL));
-		assertEquals(BigDecimal.valueOf(2d), subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL));
+		assertNotNull(subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL, 2));
+		assertEquals(BigDecimal.valueOf(2.12d), subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL, 2));
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getBigDecimal(DOUBLE_COLINDEX_NULL));
 		assertTrue(subject.wasNull());
@@ -380,17 +380,17 @@ public class CloudSpannerResultSetTest
 	public void testGetDoubleLabel() throws SQLException
 	{
 		assertNotNull(subject.getDouble(DOUBLE_COL_NOT_NULL));
-		assertEquals(1d, subject.getDouble(DOUBLE_COL_NOT_NULL), 0d);
+		assertEquals(1.123456789d, subject.getDouble(DOUBLE_COL_NOT_NULL), 0d);
 		assertEquals(false, subject.wasNull());
 		assertEquals(0d, subject.getDouble(DOUBLE_COL_NULL), 0d);
 		assertTrue(subject.wasNull());
 	}
 
 	@Test
-	public void testGetBigDecimalLabel() throws SQLException
+	public void testGetBigDecimalLabelAndScale() throws SQLException
 	{
-		assertNotNull(subject.getBigDecimal(DOUBLE_COL_NOT_NULL));
-		assertEquals(BigDecimal.valueOf(1d), subject.getBigDecimal(DOUBLE_COL_NOT_NULL));
+		assertNotNull(subject.getBigDecimal(DOUBLE_COL_NOT_NULL, 2));
+		assertEquals(BigDecimal.valueOf(1.12d), subject.getBigDecimal(DOUBLE_COL_NOT_NULL, 2));
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getBigDecimal(DOUBLE_COL_NULL));
 		assertTrue(subject.wasNull());
@@ -457,29 +457,16 @@ public class CloudSpannerResultSetTest
 	{
 		assertEquals(2, subject.findColumn(STRING_COL_NOT_NULL));
 	}
-	//
-	// private boolean isNull(int columnIndex) throws SQLException
-	// {
-	// ensureOpenAndInValidPosition();
-	// boolean res = resultSet.isNull(columnIndex - 1);
-	// wasNull = res;
-	// return res;
-	// }
-	//
-	// private boolean isNull(String columnName) throws SQLException
-	// {
-	// ensureOpenAndInValidPosition();
-	// boolean res = resultSet.isNull(columnName);
-	// wasNull = res;
-	// return res;
-	// }
-	//
-	// @Test
-	// public BigDecimal getBigDecimal(int columnIndex) throws SQLException
-	// {
-	// return isNull(columnIndex) ? null :
-	// toBigDecimal(resultSet.getDouble(columnIndex - 1), 34);
-	// }
+
+	@Test
+	public void testGetBigDecimalIndex() throws SQLException
+	{
+		assertNotNull(subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL));
+		assertEquals(BigDecimal.valueOf(2.123456789d), subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getBigDecimal(DOUBLE_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
 	//
 	// @Test
 	// public BigDecimal getBigDecimal(String columnLabel) throws SQLException
