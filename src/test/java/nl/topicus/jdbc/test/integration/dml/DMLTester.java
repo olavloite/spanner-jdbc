@@ -185,9 +185,10 @@ public class DMLTester
 		executeStatements("DeleteFromTest.sql");
 		verifyTableContents("SELECT COUNT(*) FROM TEST", 1L);
 		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 2L);
+		executeStatements("DeleteFromTestChild.sql");
+		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 0L);
 		executeStatements("DeleteFromTest2.sql");
 		verifyTableContents("SELECT COUNT(*) FROM TEST", 0L);
-		verifyTableContents("SELECT COUNT(*) FROM TESTCHILD", 0L);
 		log.info("Finished delete tests");
 	}
 
