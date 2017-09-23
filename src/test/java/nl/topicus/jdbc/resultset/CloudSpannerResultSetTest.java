@@ -343,7 +343,7 @@ public class CloudSpannerResultSetTest
 		cal.clear();
 		cal.set(2017, 8, 11, 8, 15, 59);
 
-		assertNotNull(subject.getTime(TIMESTAMP_COLINDEX_NOTNULL));
+		assertNotNull(subject.getTimestamp(TIMESTAMP_COLINDEX_NOTNULL));
 		assertEquals(new java.sql.Timestamp(cal.getTimeInMillis()), subject.getTimestamp(TIMESTAMP_COLINDEX_NOTNULL));
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getTimestamp(TIMESTAMP_COLINDEX_NULL));
@@ -484,46 +484,90 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testGetStatement() throws SQLException
 	{
-		subject.getStatement();
+		assertNotNull(subject.getStatement());
 	}
-	//
-	// @Test
-	// public Date getDate(int columnIndex, Calendar cal) throws SQLException
-	// {
-	// return isNull(columnIndex) ? null :
-	// CloudSpannerConversionUtil.toSqlDate(resultSet.getDate(columnIndex - 1));
-	// }
-	//
-	// @Test
-	// public Date getDate(String columnLabel, Calendar cal) throws SQLException
-	// {
-	// return isNull(columnLabel) ? null :
-	// CloudSpannerConversionUtil.toSqlDate(resultSet.getDate(columnLabel));
-	// }
-	//
-	// @Test
-	// public Time getTime(int columnIndex, Calendar cal) throws SQLException
-	// {
-	// return isNull(columnIndex) ? null :
-	// toTime(resultSet.getTimestamp(columnIndex - 1));
-	// }
-	//
-	// @Test
-	// public Time getTime(String columnLabel, Calendar cal) throws SQLException
-	// {
-	// return isNull(columnLabel) ? null :
-	// toTime(resultSet.getTimestamp(columnLabel));
-	// }
-	//
-	// @Test
-	// public Timestamp getTimestamp(int columnIndex, Calendar cal) throws
-	// SQLException
-	// {
-	// return isNull(columnIndex) ? null
-	// :
-	// CloudSpannerConversionUtil.toSqlTimestamp(resultSet.getTimestamp(columnIndex
-	// - 1));
-	// }
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetDateIndexCalendar() throws SQLException
+	{
+		Calendar cal = Calendar.getInstance();
+		assertNotNull(subject.getDate(DATE_COLINDEX_NOTNULL, cal));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 11), subject.getDate(DATE_COLINDEX_NOTNULL, cal));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getDate(DATE_COLINDEX_NULL, cal));
+		assertTrue(subject.wasNull());
+
+		Calendar calGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		Calendar expected = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		expected.set(2017, 8, 11, 0, 0, 0);
+		expected.clear(Calendar.MILLISECOND);
+		assertEquals(new java.sql.Date(expected.getTimeInMillis()), subject.getDate(DATE_COLINDEX_NOTNULL, calGMT));
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetDateLabelCalendar() throws SQLException
+	{
+		Calendar cal = Calendar.getInstance();
+		assertNotNull(subject.getDate(DATE_COL_NOT_NULL, cal));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getDate(DATE_COL_NOT_NULL, cal));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getDate(DATE_COL_NULL, cal));
+		assertTrue(subject.wasNull());
+
+		Calendar calGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		Calendar expected = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		expected.set(2017, 8, 10, 0, 0, 0);
+		expected.clear(Calendar.MILLISECOND);
+		assertEquals(new java.sql.Date(expected.getTimeInMillis()), subject.getDate(DATE_COL_NOT_NULL, calGMT));
+	}
+
+	@Test
+	public void testGetTimeIndexCalendar() throws SQLException
+	{
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		Calendar expected = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		expected.clear();
+		expected.set(1970, 0, 1, 14, 6, 15);
+
+		assertNotNull(subject.getTime(TIME_COLINDEX_NOTNULL, cal));
+		assertEquals(new Time(expected.getTimeInMillis()), subject.getTime(TIME_COLINDEX_NOTNULL, cal));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getTime(TIME_COLINDEX_NULL, cal));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetTimeLabelCalendar() throws SQLException
+	{
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		Calendar expected = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		expected.clear();
+		expected.set(1970, 0, 1, 14, 6, 15);
+
+		assertNotNull(subject.getTime(TIME_COL_NOT_NULL, cal));
+		assertEquals(new Time(expected.getTimeInMillis()), subject.getTime(TIME_COL_NOT_NULL, cal));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getTime(TIME_COL_NULL, cal));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetTimestampIndexCalendar() throws SQLException
+	{
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		Calendar expected = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		expected.clear();
+		expected.set(2017, 8, 11, 8, 15, 59);
+
+		assertNotNull(subject.getTimestamp(TIMESTAMP_COLINDEX_NOTNULL, cal));
+		assertEquals(new java.sql.Timestamp(expected.getTimeInMillis()),
+				subject.getTimestamp(TIMESTAMP_COLINDEX_NOTNULL, cal));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getTimestamp(TIMESTAMP_COLINDEX_NULL, cal));
+		assertTrue(subject.wasNull());
+	}
 	//
 	// @Test
 	// public Timestamp getTimestamp(String columnLabel, Calendar cal) throws

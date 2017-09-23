@@ -1,0 +1,53 @@
+package nl.topicus.jdbc.statement;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.google.cloud.spanner.Key;
+
+import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
+
+public class DeleteKeyBuilder
+{
+	private final TableKeyMetaData table;
+
+	private Map<String, Object> keyValues = new HashMap<>();
+
+	private String currentColumn = null;
+
+	public DeleteKeyBuilder(TableKeyMetaData table)
+	{
+		this.table = table;
+	}
+
+	public void set(String column)
+	{
+		currentColumn = column.toUpperCase();
+	}
+
+	public void to(Object value)
+	{
+		if (currentColumn == null)
+			throw new IllegalArgumentException("No column set");
+		keyValues.put(currentColumn, value);
+		currentColumn = null;
+	}
+
+	public Key.Builder getKeyBuilder() throws SQLException
+	{
+		Key.Builder builder = Key.newBuilder();
+		for (String key : table.getKeyColumns())
+		{
+			Object value = keyValues.get(key);
+			if (value == null)
+			{
+				throw new SQLException("No value supplied for key column " + key
+						+ ". All key columns must be specified in the WHERE-clause of a DELETE-statement.");
+			}
+			builder.appendObject(value);
+		}
+		return builder;
+	}
+
+}

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
@@ -341,13 +340,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		else
 		{
 			// Delete one
-			Key.Builder keyBuilder = Key.newBuilder();
+			DeleteKeyBuilder keyBuilder = new DeleteKeyBuilder(getConnection().getTable(table));
 			visitDeleteWhereClause(where, keyBuilder);
-			return Mutation.delete(table, keyBuilder.build());
+			return Mutation.delete(table, keyBuilder.getKeyBuilder().build());
 		}
 	}
 
-	private void visitDeleteWhereClause(Expression where, Key.Builder keyBuilder) throws SQLException
+	private void visitDeleteWhereClause(Expression where, DeleteKeyBuilder keyBuilder) throws SQLException
 	{
 		if (where != null)
 		{
@@ -357,6 +356,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				@Override
 				protected void visitExpression(Column col, Expression expression)
 				{
+					String columnName = unquoteIdentifier(col.getFullyQualifiedName());
+					keyBuilder.set(columnName);
 					expression.accept(new KeyBuilderExpressionVisitorAdapter(getParameterStore(), keyBuilder));
 				}
 

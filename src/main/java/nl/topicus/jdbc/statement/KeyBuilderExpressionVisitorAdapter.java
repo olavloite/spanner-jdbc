@@ -1,12 +1,10 @@
 package nl.topicus.jdbc.statement;
 
-import com.google.cloud.spanner.Key;
-
 class KeyBuilderExpressionVisitorAdapter extends AbstractSpannerExpressionVisitorAdapter
 {
-	private Key.Builder keyBuilder;
+	private DeleteKeyBuilder keyBuilder;
 
-	KeyBuilderExpressionVisitorAdapter(ParameterStore parameterStore, Key.Builder keyBuilder)
+	KeyBuilderExpressionVisitorAdapter(ParameterStore parameterStore, DeleteKeyBuilder keyBuilder)
 	{
 		super(parameterStore);
 		this.keyBuilder = keyBuilder;
@@ -15,7 +13,7 @@ class KeyBuilderExpressionVisitorAdapter extends AbstractSpannerExpressionVisito
 	@Override
 	protected void setValue(Object value)
 	{
-		keyBuilder.appendObject(value);
+		keyBuilder.to(value);
 	}
 
 }

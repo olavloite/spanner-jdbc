@@ -3,6 +3,7 @@ package nl.topicus.jdbc.statement;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
@@ -12,6 +13,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.spanner.Key;
@@ -23,6 +25,10 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
+import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
+import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
+import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @RunWith(Enclosed.class)
@@ -65,6 +71,15 @@ public class CloudSpannerPreparedStatementTest
 			thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
 			getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
 		}
+
+		@Test()
+		public void testDeleteStatementWithoutIdInWhere() throws SQLException
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("No value supplied for key column ID");
+			getMutation("DELETE FROM FOO WHERE BAR=1");
+		}
+
 	}
 
 	public static class DeleteStatementsWithInvalidWhereClauses
@@ -357,7 +372,17 @@ public class CloudSpannerPreparedStatementTest
 	private static Mutation getMutation(String sql) throws SQLException
 	{
 		Mutation mutation = null;
-		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, null, null);
+		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
+		CloudSpannerDatabaseMetaData metadata = Mockito.mock(CloudSpannerDatabaseMetaData.class);
+		CloudSpannerResultSet resultSet = Mockito.mock(CloudSpannerResultSet.class);
+		TableKeyMetaData table = Mockito.mock(TableKeyMetaData.class);
+		Mockito.when(connection.getMetaData()).thenReturn(metadata);
+		Mockito.when(metadata.getPrimaryKeys(null, null, "FOO")).thenReturn(resultSet);
+		Mockito.when(resultSet.next()).thenReturn(true, false);
+		Mockito.when(resultSet.getString("COLUMN_NAME")).thenReturn("ID");
+		Mockito.when(connection.getTable("FOO")).thenReturn(table);
+		Mockito.when(table.getKeyColumns()).thenReturn(Arrays.asList("ID"));
+		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, connection, null);
 		try
 		{
 			Method createMutation = ps.getClass().getDeclaredMethod("createMutation");

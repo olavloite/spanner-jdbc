@@ -33,6 +33,7 @@ import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
 import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
+import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
@@ -70,6 +71,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private String database;
 
 	private CloudSpannerTransaction transaction;
+
+	private MetaDataStore metaDataStore;
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
 			String credentialsPath, String oauthToken) throws SQLException
@@ -111,6 +114,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			dbClient = spanner.getDatabaseClient(DatabaseId.of(options.getProjectId(), instanceId, database));
 			adminClient = spanner.getDatabaseAdminClient();
 			transaction = new CloudSpannerTransaction(dbClient, this);
+			metaDataStore = new MetaDataStore(this);
 		}
 		catch (Exception e)
 		{
@@ -372,6 +376,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public Array createArrayOf(String typeName, Object[] elements) throws SQLException
 	{
 		return CloudSpannerArray.createArray(typeName, elements);
+	}
+
+	public TableKeyMetaData getTable(String name) throws SQLException
+	{
+		return metaDataStore.getTable(name);
 	}
 
 }

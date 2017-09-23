@@ -1,8 +1,10 @@
 package nl.topicus.jdbc.util;
 
 import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -16,9 +18,14 @@ public class CloudSpannerConversionUtil
 
 	public static Date toSqlDate(com.google.cloud.Date date)
 	{
-		@SuppressWarnings("deprecation")
-		Date res = new Date(date.getYear() - 1900, date.getMonth() - 1, date.getDayOfMonth());
-		return res;
+		return toSqlDate(date, Calendar.getInstance());
+	}
+
+	public static Date toSqlDate(com.google.cloud.Date date, Calendar cal)
+	{
+		cal.set(date.getYear(), date.getMonth() - 1, date.getDayOfMonth(), 0, 0, 0);
+		cal.clear(Calendar.MILLISECOND);
+		return new Date(cal.getTimeInMillis());
 	}
 
 	public static com.google.cloud.Date toCloudSpannerDate(Date date)
@@ -61,6 +68,20 @@ public class CloudSpannerConversionUtil
 		for (int index = 0; index < timestamps.length; index++)
 			res.add(toCloudSpannerTimestamp(timestamps[index]));
 		return res;
+	}
+
+	public static Time toSqlTime(com.google.cloud.Timestamp ts)
+	{
+		return toSqlTime(ts, Calendar.getInstance());
+	}
+
+	public static Time toSqlTime(com.google.cloud.Timestamp ts, Calendar cal)
+	{
+		cal.set(1970, 0, 1, 0, 0, 0);
+		cal.clear(Calendar.MILLISECOND);
+		cal.setTimeInMillis(
+				ts.getSeconds() * 1000 + TimeUnit.MILLISECONDS.convert(ts.getNanos(), TimeUnit.NANOSECONDS));
+		return new Time(cal.getTimeInMillis());
 	}
 
 	public static List<Timestamp> toJavaTimestamps(List<com.google.cloud.Timestamp> timestamps)
