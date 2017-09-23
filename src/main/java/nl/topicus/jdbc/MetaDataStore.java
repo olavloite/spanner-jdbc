@@ -49,13 +49,19 @@ public class MetaDataStore
 			TableKeyMetaData other = (TableKeyMetaData) o;
 			return Objects.equals(this.name, other.name);
 		}
+
+		@Override
+		public int hashCode()
+		{
+			return name.hashCode();
+		}
 	}
 
 	private final Connection connection;
 
 	private final Map<String, TableKeyMetaData> tables = new HashMap<>();
 
-	MetaDataStore(Connection connection) throws SQLException
+	MetaDataStore(Connection connection)
 	{
 		this.connection = connection;
 	}
