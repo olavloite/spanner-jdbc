@@ -92,4 +92,9 @@ public abstract class CloudSpannerDatabaseMetaDataConstants
 
 			+ "FROM INFORMATION_SCHEMA.COLUMNS " + WHERE_1_EQUALS_1;
 
+	// Prevent instantiation
+	private CloudSpannerDatabaseMetaDataConstants()
+	{
+	}
+
 }
