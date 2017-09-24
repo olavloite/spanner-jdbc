@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -16,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import com.google.api.client.util.Lists;
+import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.Op;
@@ -285,6 +288,49 @@ public class CloudSpannerPreparedStatementTest
 			List<String> columns = Lists.newArrayList(updateMutation.getColumns());
 			Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID1", "ID2" }, columns.toArray());
 			Assert.assertArrayEquals(new String[] { "1", "2", "1", "1" }, getValues(updateMutation.getValues()));
+		}
+	}
+
+	public static class InsertStatementTests
+	{
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
+		@Test
+		public void testInsertStatement() throws SQLException
+		{
+			assertInsertOnDuplicateKey(getMutation("INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa)"),
+					Mutation.Op.INSERT);
+		}
+
+		@Test
+		public void testInsertOnDuplicateKeyStatementWithDiffentUpdateValues() throws SQLException
+		{
+			assertInsertOnDuplicateKey(
+					getMutation(
+							"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='three', COL3=0xbb"),
+					Mutation.Op.INSERT_OR_UPDATE);
+		}
+
+		@Test
+		public void testInsertOnDuplicateKeyStatementWithEqualUpdateValues() throws SQLException
+		{
+			assertInsertOnDuplicateKey(
+					getMutation(
+							"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='two', COL3=0xaa"),
+					Mutation.Op.INSERT_OR_UPDATE);
+		}
+
+		private void assertInsertOnDuplicateKey(Mutation mutation, Mutation.Op operation)
+		{
+			Assert.assertNotNull(mutation);
+			Assert.assertEquals(operation, mutation.getOperation());
+			Assert.assertEquals("FOO", mutation.getTable());
+			List<String> columns = Lists.newArrayList(mutation.getColumns());
+			Assert.assertArrayEquals(new String[] { "COL1", "COL2", "COL3" }, columns.toArray());
+			Assert.assertArrayEquals(
+					new String[] { "1", "two", ByteArray.copyFrom(DatatypeConverter.parseHexBinary("aa")).toString() },
+					getValues(mutation.getValues()));
 		}
 	}
 

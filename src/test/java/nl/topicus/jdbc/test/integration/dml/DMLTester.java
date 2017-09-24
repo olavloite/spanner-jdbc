@@ -66,11 +66,15 @@ public class DMLTester
 	{
 		runInsertTests();
 		runInsertArrayTests();
-		log.info("Verifying table contents");
+		log.info("Verifying table contents after insert");
 		verifyTableContentsAfterInsert();
 
+		runInsertOrUpdateTests();
+		log.info("Verifying table contents after insert-or-update");
+		verifyTableContentsAfterInsertOrUpdate();
+
 		runUpdateTests();
-		log.info("Verifying table contents");
+		log.info("Verifying table contents after update");
 		verifyTableContentsAfterUpdate();
 
 		runDeleteTests();
@@ -83,6 +87,13 @@ public class DMLTester
 		executeStatements("InsertIntoTest.sql");
 		executeStatements("InsertIntoTestChild.sql");
 		log.info("Finished insert tests");
+	}
+
+	private void runInsertOrUpdateTests() throws IOException, URISyntaxException, SQLException
+	{
+		log.info("Starting insert-or-update tests");
+		executeStatements("InsertOrUpdateIntoTest.sql");
+		log.info("Finished insert-or-update tests");
 	}
 
 	@SuppressWarnings("deprecation")
@@ -150,6 +161,11 @@ public class DMLTester
 						new Timestamp[] { new Timestamp(2017 - 1900, 2, 18, 7, 0, 0, 0),
 								new Timestamp(2017 - 1900, 2, 18, 7, 0, 0, 0),
 								new Timestamp(2017 - 1900, 2, 18, 7, 0, 0, 0) }));
+	}
+
+	private void verifyTableContentsAfterInsertOrUpdate() throws SQLException
+	{
+		verifyTableContents("SELECT DESCRIPTION FROM TEST WHERE ID=2", "Description 3");
 	}
 
 	private void runUpdateTests() throws IOException, URISyntaxException, SQLException
