@@ -292,7 +292,26 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		List<Expression> expressions = ((ExpressionList) items).getExpressions();
 		String table = unquoteIdentifier(insert.getTable().getFullyQualifiedName());
 		getParameterStore().setTable(table);
-		WriteBuilder builder = Mutation.newInsertBuilder(table);
+		WriteBuilder builder;
+		if (insert.isUseDuplicate())
+		{
+			/**
+			 * Do an insert-or-update. BUT: Cloud Spanner does not support
+			 * supplying different values for the insert and update statements,
+			 * meaning that only the values specified in the INSERT part of the
+			 * statement will be considered. Anything specified in the 'ON
+			 * DUPLICATE KEY UPDATE ...' statement will be ignored.
+			 */
+			builder = Mutation.newInsertOrUpdateBuilder(table);
+		}
+		else
+		{
+			/**
+			 * Just do an insert and throw an error if a row with the specified
+			 * key alread exists.
+			 */
+			builder = Mutation.newInsertBuilder(table);
+		}
 		int index = 0;
 		for (Column col : insert.getColumns())
 		{
