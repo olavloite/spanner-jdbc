@@ -10,6 +10,8 @@ public abstract class CloudSpannerDatabaseMetaDataConstants
 
 	private static final String UNION_ALL = "UNION ALL\n";
 
+	private static final String CASE = "CASE \n";
+
 	public static final String GET_TYPE_INFO = "SELECT 'BOOL' AS TYPE_NAME, 16 AS DATA_TYPE, 1 AS PRECISION, NULL AS LITERAL_PREFIX, NULL AS LITERAL_SUFFIX, NULL AS CREATE_PARAMS, 1 AS TYPE_NULLABLE, FALSE AS CASE_SENSITIVE, 2 AS SEARCHABLE, TRUE AS UNSIGNED_ATTRIBUTE, FALSE AS FIXED_PREC_SCALE, FALSE AS AUTO_INCREMENT, 'BOOL' AS LOCAL_TYPE_NAME, 1 AS MINIMUM_SCALE, 1 AS MAXIMUM_SCALE, NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB, NULL AS NUM_PREC_RADIX\n"
 
 			+ UNION_ALL
@@ -42,7 +44,7 @@ public abstract class CloudSpannerDatabaseMetaDataConstants
 
 	public static final String GET_COLUMNS = "SELECT TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, \n"
 
-			+ "CASE \n"
+			+ CASE
 
 			+ "	WHEN SPANNER_TYPE LIKE 'ARRAY%' THEN " + Types.ARRAY + " \n"
 
@@ -66,7 +68,7 @@ public abstract class CloudSpannerDatabaseMetaDataConstants
 
 			+ "SPANNER_TYPE AS TYPE_NAME, \n"
 
-			+ "CASE \n"
+			+ CASE
 
 			+ "WHEN strpos(spanner_type, '(')=0 then 0 \n"
 
@@ -76,7 +78,7 @@ public abstract class CloudSpannerDatabaseMetaDataConstants
 
 			+ "0 AS BUFFER_LENGTH, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, \n"
 
-			+ "CASE \n"
+			+ CASE
 
 			+ "	WHEN IS_NULLABLE = 'YES' THEN 1 \n"
 
