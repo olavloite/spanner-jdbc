@@ -35,7 +35,7 @@ There is also a 'thick-jar'-version available for use with third-party tools suc
 This driver does allow DML operations, although also limited because of the underlying limitations of Google Cloud Spanner. All data manipulation operations are limited to operations that operate on one record. This means that:
 * Inserts can only insert one row at a time
 * Updates and deletes must include a where-clause specifying the primary key (and nothing else). E.g. 'WHERE ID=?'.
-* As of version 0.15 the driver also supports bulk INSERT-statements. These statements can also be used to perform bulk UPDATE opersions. Please note that the underlying limitations of Google Cloud Spanner transactions still apply: https://cloud.google.com/spanner/quotas. This means a maximum of 20,000 mutations and 100MB of data in one transaction.
+* As of version 0.15 the driver also supports bulk INSERT-statements. These statements can also be used to perform bulk UPDATE operations by adding an 'ON DUPLICATE KEY UPDATE'-clause to the INSERT-statement. Please note that the underlying limitations of Google Cloud Spanner transactions still apply: https://cloud.google.com/spanner/quotas. This means a maximum of 20,000 mutations and 100MB of data in one transaction.
 
 Example of bulk INSERT:  
 INSERT INTO TABLE1  
