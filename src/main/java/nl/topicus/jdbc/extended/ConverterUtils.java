@@ -166,31 +166,6 @@ public class ConverterUtils
 		return tableSpec;
 	}
 
-	public int getSourceRecordCount(Connection source, String tableSpec) throws SQLException
-	{
-		try (ResultSet count = source.createStatement().executeQuery("SELECT COUNT(*) FROM " + tableSpec))
-		{
-			if (count.next())
-				return count.getInt(1);
-		}
-		return 0;
-	}
-
-	public long getDestinationRecordCount(Connection destination, String table) throws SQLException
-	{
-		String sql = "select count(*) from " + table;
-		try (ResultSet rs = destination.createStatement().executeQuery(sql))
-		{
-			if (rs.next())
-				return rs.getLong(1);
-		}
-		finally
-		{
-			destination.commit();
-		}
-		return 0;
-	}
-
 	public static <T> List<List<T>> partition(final List<T> list, final int size)
 	{
 		if (list == null)
