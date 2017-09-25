@@ -71,7 +71,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		Statement statement;
 		try
 		{
-			statement = CCJSqlParserUtil.parse(sql);
+			statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 		}
 		catch (JSQLParserException | TokenMgrError e)
 		{
@@ -228,7 +228,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				throw new SQLException("Cannot create mutation for DDL statement. Expected INSERT, UPDATE or DELETE");
 			}
-			Statement statement = CCJSqlParserUtil.parse(sql);
+			Statement statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			if (statement instanceof Insert)
 			{
 				Insert insertStatement = (Insert) statement;
@@ -447,7 +447,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			try
 			{
-				statement = CCJSqlParserUtil.parse(sql);
+				statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			}
 			catch (JSQLParserException | TokenMgrError e)
 			{
@@ -478,7 +478,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				throw new SQLException("Cannot get parameter meta data for DDL statement");
 			}
-			Statement statement = CCJSqlParserUtil.parse(sql);
+			Statement statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			if (statement instanceof Insert || statement instanceof Update || statement instanceof Delete)
 			{
 				// Create mutation, but don't do anything with it. This

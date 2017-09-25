@@ -64,7 +64,7 @@ public class InsertWorker extends AbstractTablePartWorker
 			sql = sql + "(" + parameterNames + ")";
 			if (onDuplicateKeyUpdate)
 			{
-				sql = sql + " ON DUPLICATE KEY UPDATE FOO=BAR";
+				sql = sql + " ON DUPLICATE KEY UPDATE";
 			}
 			try (PreparedStatement statement = destination == null ? connection.prepareStatement(sql)
 					: destination.prepareStatement(sql))

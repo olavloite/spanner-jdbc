@@ -106,9 +106,14 @@ public class CloudSpannerDriverTest
 		{
 			Driver driver = getDriver();
 			DriverPropertyInfo[] properties = driver.getPropertyInfo("jdbc:cloudspanner://localhost", null);
-			assertEquals(6, properties.length);
+			assertEquals(7, properties.length);
 			for (DriverPropertyInfo property : properties)
-				assertNull(property.value);
+			{
+				if (property.name.equals("ExtendedModeRecordCountThreshold"))
+					assertEquals("-1", property.value);
+				else
+					assertNull(property.value);
+			}
 		}
 
 		@Test
@@ -118,7 +123,7 @@ public class CloudSpannerDriverTest
 			DriverPropertyInfo[] properties = driver.getPropertyInfo(
 					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL",
 					null);
-			assertEquals(6, properties.length);
+			assertEquals(7, properties.length);
 			assertEquals("adroit-hall-xxx", properties[0].value);
 			assertEquals("test-instance", properties[1].value);
 			assertEquals("testdb", properties[2].value);

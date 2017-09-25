@@ -52,6 +52,19 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		this.dbClient = dbClient;
 	}
 
+	protected String sanitizeSQL(String sql)
+	{
+		// Add a pseudo update to the end if no columns have been specified in
+		// an 'on duplicate key update'-statement
+		String formatted = sql.trim().toUpperCase();
+		formatted = formatted.replaceAll("\n", " ").replaceAll("\t", " ").replaceAll("  ", " ");
+		if (formatted.startsWith("INSERT") && formatted.endsWith("ON DUPLICATE KEY UPDATE"))
+		{
+			sql = sql + " FOO=BAR";
+		}
+		return sql;
+	}
+
 	protected DatabaseClient getDbClient()
 	{
 		return dbClient;

@@ -58,7 +58,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		{
 			try
 			{
-				statement = CCJSqlParserUtil.parse(sql);
+				statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			}
 			catch (JSQLParserException | TokenMgrError e)
 			{

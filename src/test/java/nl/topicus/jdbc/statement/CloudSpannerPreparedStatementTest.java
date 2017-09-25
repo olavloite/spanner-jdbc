@@ -417,7 +417,7 @@ public class CloudSpannerPreparedStatementTest
 
 	private static Mutation getMutation(String sql) throws SQLException
 	{
-		Mutation mutation = null;
+		Mutations mutations = null;
 		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
 		CloudSpannerDatabaseMetaData metadata = Mockito.mock(CloudSpannerDatabaseMetaData.class);
 		CloudSpannerResultSet resultSet = Mockito.mock(CloudSpannerResultSet.class);
@@ -431,9 +431,9 @@ public class CloudSpannerPreparedStatementTest
 		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, connection, null);
 		try
 		{
-			Method createMutation = ps.getClass().getDeclaredMethod("createMutation");
-			createMutation.setAccessible(true);
-			mutation = (Mutation) createMutation.invoke(ps);
+			Method createMutations = ps.getClass().getDeclaredMethod("createMutations");
+			createMutations.setAccessible(true);
+			mutations = (Mutations) createMutations.invoke(ps);
 		}
 		catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e)
 		{
@@ -447,7 +447,7 @@ public class CloudSpannerPreparedStatementTest
 			}
 			throw new RuntimeException(e);
 		}
-		return mutation;
+		return mutations.getMutations().get(0);
 	}
 
 }
