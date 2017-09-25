@@ -47,10 +47,12 @@ WHERE SOMECOL1>? AND SOMECOL3 LIKE ?
 Example of bulk UPDATE:  
 INSERT INTO TABLE1  
 (COL1, COL2, COL3)  
-SELECT SOMECOL1, SOMECOL2, SOMECOL3  
+SELECT COL1, COL2+COL4, COL3*2  
 FROM TABLE1  
-WHERE SOMECOL1>? AND SOMECOL3 LIKE ?  
+WHERE COL4=?  
 ON DUPLICATE KEY UPDATE  
+
+The above UPDATE example is equal to: UPDATE TABLE1 SET COL2=COL2+COL4 AND COL3=COL3*2 WHERE COL4=? (assuming that COL1 is the primary key of the table).
 
 The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 
