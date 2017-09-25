@@ -1,8 +1,5 @@
 package nl.topicus.jdbc.extended;
 
-import java.util.List;
-import java.util.concurrent.Future;
-
 public class ConversionResult
 {
 	private final long recordCount;
@@ -14,26 +11,6 @@ public class ConversionResult
 	private final long endTime;
 
 	private final Exception exception;
-
-	public static ConversionResult collect(List<Future<ConversionResult>> results, long startTime, long endTime,
-			Exception exception)
-	{
-		long recordCount = 0;
-		long byteCount = 0;
-		try
-		{
-			for (Future<ConversionResult> result : results)
-			{
-				recordCount += result.get().recordCount;
-				byteCount += result.get().byteCount;
-			}
-		}
-		catch (Exception e)
-		{
-			// ignore
-		}
-		return new ConversionResult(recordCount, byteCount, startTime, endTime, exception);
-	}
 
 	ConversionResult(long recordCount, long byteCount, long startTime, long endTime)
 	{
