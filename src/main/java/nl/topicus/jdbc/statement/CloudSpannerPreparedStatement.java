@@ -506,7 +506,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new SQLException("Insert statement must contain a select statement");
 		}
-		return new InsertWorker(getConnection(), select, insert, getConnection().getExtendedModeRecordCountThreshold(),
+		return new InsertWorker(getConnection(), select, insert, getConnection().isAllowExtendedMode(),
 				insert.isUseDuplicate());
 	}
 

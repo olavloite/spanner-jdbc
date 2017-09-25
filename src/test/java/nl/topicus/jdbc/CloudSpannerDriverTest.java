@@ -109,8 +109,8 @@ public class CloudSpannerDriverTest
 			assertEquals(7, properties.length);
 			for (DriverPropertyInfo property : properties)
 			{
-				if (property.name.equals("ExtendedModeRecordCountThreshold"))
-					assertEquals("-1", property.value);
+				if (property.name.equals("AllowExtendedMode"))
+					assertEquals("false", property.value);
 				else
 					assertNull(property.value);
 			}

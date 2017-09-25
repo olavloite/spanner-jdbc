@@ -21,10 +21,10 @@ public class InsertWorker extends AbstractTablePartWorker
 
 	private final boolean onDuplicateKeyUpdate;
 
-	public InsertWorker(CloudSpannerConnection connection, Select select, Insert insert,
-			long extendedRecordCountThreshold, boolean onDuplicateKeyUpdate)
+	public InsertWorker(CloudSpannerConnection connection, Select select, Insert insert, boolean allowExtendedMode,
+			boolean onDuplicateKeyUpdate)
 	{
-		super(connection, select, extendedRecordCountThreshold);
+		super(connection, select, allowExtendedMode);
 		this.insert = insert;
 		this.onDuplicateKeyUpdate = onDuplicateKeyUpdate;
 	}
@@ -32,7 +32,20 @@ public class InsertWorker extends AbstractTablePartWorker
 	@Override
 	protected void run() throws SQLException
 	{
-		boolean isExtendedMode = isExtendedMode();
+		ConverterUtils converterUtils = new ConverterUtils();
+		List<String> columnNamesList;
+		if (insert.getColumns() == null)
+		{
+			columnNamesList = converterUtils.getColumnNames(connection, null, null, insert.getTable().getName());
+		}
+		else
+		{
+			columnNamesList = insert.getColumns().stream().map(x -> x.getColumnName()).collect(Collectors.toList());
+		}
+		long batchSize = converterUtils.calculateActualBatchSize(columnNamesList.size(), connection, null, null,
+				insert.getTable().getName());
+		boolean isExtendedMode = isExtendedMode(batchSize);
+
 		boolean wasAutocommit = connection.getAutoCommit();
 		if (!isExtendedMode && wasAutocommit)
 		{
@@ -45,15 +58,6 @@ public class InsertWorker extends AbstractTablePartWorker
 			{
 				destination.setAutoCommit(false);
 			}
-			ConverterUtils converterUtils = new ConverterUtils();
-			List<String> columnNamesList;
-			if (insert.getColumns() == null)
-				columnNamesList = converterUtils.getColumnNames(destination == null ? connection : destination, null,
-						null, insert.getTable().getName());
-			else
-				columnNamesList = insert.getColumns().stream().map(x -> x.getColumnName()).collect(Collectors.toList());
-			int batchSize = converterUtils.calculateActualBatchSize(columnNamesList.size(),
-					destination == null ? connection : destination, null, null, insert.getTable().getName());
 
 			String columnNames = String.join(", ", columnNamesList);
 			String[] params = new String[columnNamesList.size()];

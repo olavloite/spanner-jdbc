@@ -46,7 +46,7 @@ public class CloudSpannerDriver implements Driver
 
 		private static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
 
-		private static final String EXTENDED_MODE_RECORD_COUNT_THRESHOLD = "ExtendedModeRecordCountThreshold=";
+		private static final String ALLOW_EXTENDED_MODE = "AllowExtendedMode=";
 
 		String project = null;
 		String instance = null;
@@ -54,7 +54,7 @@ public class CloudSpannerDriver implements Driver
 		String keyFile = null;
 		String oauthToken = null;
 		String productName = null;
-		long extendedModeRecordCountThreshold = -1;
+		boolean allowExtendedMode = false;
 
 		static ConnectionProperties parse(String url) throws SQLException
 		{
@@ -79,17 +79,16 @@ public class CloudSpannerDriver implements Driver
 						res.oauthToken = conPart.substring(OAUTH_ACCESS_TOKEN_URL_PART.length());
 					else if (conPart.startsWith(SIMULATE_PRODUCT_NAME))
 						res.productName = conPart.substring(SIMULATE_PRODUCT_NAME.length());
-					else if (conPart.startsWith(EXTENDED_MODE_RECORD_COUNT_THRESHOLD))
+					else if (conPart.startsWith(ALLOW_EXTENDED_MODE))
 					{
 						try
 						{
-							res.extendedModeRecordCountThreshold = Long
-									.valueOf(conPart.substring(EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length()));
+							res.allowExtendedMode = Boolean.valueOf(conPart.substring(ALLOW_EXTENDED_MODE.length()));
 						}
 						catch (NumberFormatException e)
 						{
 							throw new SQLException("Invalid value for " + conPart + ": "
-									+ conPart.substring(EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length()), e);
+									+ conPart.substring(ALLOW_EXTENDED_MODE.length()), e);
 						}
 					}
 					else
@@ -113,15 +112,15 @@ public class CloudSpannerDriver implements Driver
 						productName);
 				try
 				{
-					extendedModeRecordCountThreshold = Long.valueOf(info.getProperty(
-							EXTENDED_MODE_RECORD_COUNT_THRESHOLD.substring(0,
-									EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length() - 1),
-							String.valueOf(extendedModeRecordCountThreshold)));
+					allowExtendedMode = Boolean.valueOf(
+							info.getProperty(ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
+									String.valueOf(allowExtendedMode)));
 				}
 				catch (NumberFormatException e)
 				{
-					throw new SQLException("Invalid value for " + EXTENDED_MODE_RECORD_COUNT_THRESHOLD.substring(0,
-							EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length() - 1), e);
+					throw new SQLException(
+							"Invalid value for " + ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
+							e);
 				}
 			}
 		}
@@ -143,11 +142,9 @@ public class CloudSpannerDriver implements Driver
 			res[5] = new DriverPropertyInfo(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
 					productName);
 			res[5].description = "Use this property to make the driver return a different database product name than Google Cloud Spanner, for example if you are using a framework like Spring that use this property to determine how to a generate data model for Spring Batch";
-			res[6] = new DriverPropertyInfo(
-					EXTENDED_MODE_RECORD_COUNT_THRESHOLD.substring(0,
-							EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length() - 1),
-					String.valueOf(extendedModeRecordCountThreshold));
-			res[6].description = "Threshold before the driver enters 'extended' mode for bulk operations. A value of -1 (default) indicates no threshold and that the driver should never enter extended mode. If a positive value is set, the driver will execute all bulk DML-operations in a separate transaction when the number of records affected is greater-or-equal to this threshold.";
+			res[6] = new DriverPropertyInfo(ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
+					String.valueOf(allowExtendedMode));
+			res[6].description = "Allow the driver to enter 'extended' mode for bulk operations. A value of false (default) indicates that the driver should never enter extended mode. If this property is set to true, the driver will execute all bulk DML-operations in a separate transaction when the number of records affected is greater than what will exceed the limitations of Cloud Spanner.";
 
 			return res;
 		}
@@ -186,7 +183,7 @@ public class CloudSpannerDriver implements Driver
 
 		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, properties.project,
 				properties.instance, properties.database, properties.keyFile, properties.oauthToken,
-				properties.extendedModeRecordCountThreshold, info);
+				properties.allowExtendedMode, info);
 		connection.setSimulateProductName(properties.productName);
 		registerConnection(connection);
 

@@ -67,7 +67,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private final Properties suppliedProperties;
 
-	private final long extendedModeRecordCountThreshold;
+	private final boolean allowExtendedMode;
 
 	private String simulateProductName;
 
@@ -80,14 +80,14 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private MetaDataStore metaDataStore;
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
-			String credentialsPath, String oauthToken, long extendedModeRecordCountThreshold,
-			Properties suppliedProperties) throws SQLException
+			String credentialsPath, String oauthToken, boolean allowExtendedMode, Properties suppliedProperties)
+			throws SQLException
 	{
 		this.driver = driver;
 		this.instanceId = instanceId;
 		this.database = database;
 		this.url = url;
-		this.extendedModeRecordCountThreshold = extendedModeRecordCountThreshold;
+		this.allowExtendedMode = allowExtendedMode;
 		this.suppliedProperties = suppliedProperties;
 		try
 		{
@@ -396,9 +396,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return suppliedProperties;
 	}
 
-	public long getExtendedModeRecordCountThreshold()
+	public boolean isAllowExtendedMode()
 	{
-		return extendedModeRecordCountThreshold;
+		return allowExtendedMode;
 	}
 
 }

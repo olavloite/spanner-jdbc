@@ -19,24 +19,25 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 	protected final Select select;
 
 	/**
-	 * This threshold indicates at which record count the worker should go into
-	 * 'extended' mode. Extended mode means that a separate connection will be
+	 * This flag indicates whether the worker should go into 'extended' mode if
+	 * the number of records/mutations is expected to exceed the limitations of
+	 * Cloud Spanner. Extended mode means that a separate connection will be
 	 * opened and that the inserts will be performed on that connection. These
 	 * inserts will also be committed automatically, and there is no guarantee
 	 * that the entire insert operation will succeed (the insert is not
 	 * performed atomically)
 	 */
-	private long extendedRecordCountThreshold;
+	private boolean allowExtendedMode;
 
 	private Mode mode = Mode.Unknown;
 
 	private long estimatedRecordCount = -1;
 
-	AbstractTablePartWorker(CloudSpannerConnection connection, Select select, long extendedRecordCountThreshold)
+	AbstractTablePartWorker(CloudSpannerConnection connection, Select select, boolean allowExtendedMode)
 	{
 		this.connection = connection;
 		this.select = select;
-		this.extendedRecordCountThreshold = extendedRecordCountThreshold;
+		this.allowExtendedMode = allowExtendedMode;
 	}
 
 	@Override
@@ -70,18 +71,18 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 		return estimatedRecordCount;
 	}
 
-	protected boolean isExtendedMode() throws SQLException
+	protected boolean isExtendedMode(long batchSize) throws SQLException
 	{
 		if (mode == Mode.Unknown)
 		{
-			if (extendedRecordCountThreshold == -1)
+			if (!allowExtendedMode)
 			{
 				mode = Mode.Normal;
 			}
 			else
 			{
 				long count = getEstimatedRecordCount(select);
-				if (count >= extendedRecordCountThreshold)
+				if (count >= batchSize)
 				{
 					mode = Mode.Extended;
 				}
