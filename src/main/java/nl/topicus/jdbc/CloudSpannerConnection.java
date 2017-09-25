@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Properties;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,6 +65,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private final String url;
 
+	private final Properties suppliedProperties;
+
+	private final long extendedModeRecordCountThreshold;
+
 	private String simulateProductName;
 
 	private String instanceId;
@@ -75,12 +80,15 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private MetaDataStore metaDataStore;
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
-			String credentialsPath, String oauthToken) throws SQLException
+			String credentialsPath, String oauthToken, long extendedModeRecordCountThreshold,
+			Properties suppliedProperties) throws SQLException
 	{
 		this.driver = driver;
 		this.instanceId = instanceId;
 		this.database = database;
 		this.url = url;
+		this.extendedModeRecordCountThreshold = extendedModeRecordCountThreshold;
+		this.suppliedProperties = suppliedProperties;
 		try
 		{
 			Builder builder = SpannerOptions.newBuilder();
@@ -381,6 +389,16 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public TableKeyMetaData getTable(String name) throws SQLException
 	{
 		return metaDataStore.getTable(name);
+	}
+
+	public Properties getSuppliedProperties()
+	{
+		return suppliedProperties;
+	}
+
+	public long getExtendedModeRecordCountThreshold()
+	{
+		return extendedModeRecordCountThreshold;
 	}
 
 }

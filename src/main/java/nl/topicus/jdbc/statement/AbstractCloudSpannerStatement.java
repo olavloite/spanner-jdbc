@@ -7,13 +7,13 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 
 import com.google.cloud.spanner.DatabaseClient;
-import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.ReadContext;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
 import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.extended.ConversionResult;
 
 /**
  * 
@@ -76,30 +76,44 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		return connection.getTransaction();
 	}
 
-	protected int writeMutation(Mutation mutation) throws SQLException
+	protected long writeMutations(Mutations mutations) throws SQLException
 	{
 		if (connection.isReadOnly())
 		{
 			throw new SQLException("Connection is in read-only mode. Mutations are not allowed");
 		}
-		if (connection.getAutoCommit())
+		if (mutations.isWorker())
 		{
-			dbClient.readWriteTransaction().run(new TransactionCallable<Void>()
+			ConversionResult result = mutations.getWorker().call();
+			if (result.getException() != null)
 			{
-
-				@Override
-				public Void run(TransactionContext transaction) throws Exception
-				{
-					transaction.buffer(mutation);
-					return null;
-				}
-			});
+				if (result.getException() instanceof SQLException)
+					throw (SQLException) result.getException();
+				throw new SQLException(result.getException());
+			}
 		}
 		else
 		{
-			connection.getTransaction().buffer(mutation);
+
+			if (connection.getAutoCommit())
+			{
+				dbClient.readWriteTransaction().run(new TransactionCallable<Void>()
+				{
+
+					@Override
+					public Void run(TransactionContext transaction) throws Exception
+					{
+						transaction.buffer(mutations.getMutations());
+						return null;
+					}
+				});
+			}
+			else
+			{
+				connection.getTransaction().buffer(mutations.getMutations());
+			}
 		}
-		return 1;
+		return mutations.getNumberOfResults();
 	}
 
 	@Override

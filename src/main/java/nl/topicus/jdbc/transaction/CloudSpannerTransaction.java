@@ -74,42 +74,55 @@ public class CloudSpannerTransaction implements TransactionContext
 
 	public void commit() throws SQLException
 	{
-		if (connection.isReadOnly())
+		try
 		{
-			if (readOnlyTransaction != null)
+			if (connection.isReadOnly())
 			{
-				readOnlyTransaction.close();
-				readOnlyTransaction = null;
+				if (readOnlyTransaction != null)
+				{
+					readOnlyTransaction.close();
+				}
+			}
+			else
+			{
+				if (transactionThread != null)
+				{
+					transactionThread.commit();
+				}
 			}
 		}
-		else
+		finally
 		{
-			if (transactionThread != null)
-			{
-				transactionThread.commit();
-				transactionThread = null;
-			}
+			transactionThread = null;
+			readOnlyTransaction = null;
 		}
 	}
 
 	public void rollback() throws SQLException
 	{
-		if (connection.isReadOnly())
+		try
 		{
-			if (readOnlyTransaction != null)
+			if (connection.isReadOnly())
 			{
-				readOnlyTransaction.close();
-				readOnlyTransaction = null;
+				if (readOnlyTransaction != null)
+				{
+					readOnlyTransaction.close();
+				}
+			}
+			else
+			{
+				if (transactionThread != null)
+				{
+					transactionThread.rollback();
+				}
 			}
 		}
-		else
+		finally
 		{
-			if (transactionThread != null)
-			{
-				transactionThread.rollback();
-				transactionThread = null;
-			}
+			transactionThread = null;
+			readOnlyTransaction = null;
 		}
+
 	}
 
 	private void checkTransaction()

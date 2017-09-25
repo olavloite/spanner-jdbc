@@ -46,12 +46,15 @@ public class CloudSpannerDriver implements Driver
 
 		private static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
 
+		private static final String EXTENDED_MODE_RECORD_COUNT_THRESHOLD = "ExtendedModeRecordCountThreshold=";
+
 		String project = null;
 		String instance = null;
 		String database = null;
 		String keyFile = null;
 		String oauthToken = null;
 		String productName = null;
+		long extendedModeRecordCountThreshold = -1;
 
 		static ConnectionProperties parse(String url) throws SQLException
 		{
@@ -76,6 +79,19 @@ public class CloudSpannerDriver implements Driver
 						res.oauthToken = conPart.substring(OAUTH_ACCESS_TOKEN_URL_PART.length());
 					else if (conPart.startsWith(SIMULATE_PRODUCT_NAME))
 						res.productName = conPart.substring(SIMULATE_PRODUCT_NAME.length());
+					else if (conPart.startsWith(EXTENDED_MODE_RECORD_COUNT_THRESHOLD))
+					{
+						try
+						{
+							res.extendedModeRecordCountThreshold = Long
+									.valueOf(conPart.substring(EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length()));
+						}
+						catch (NumberFormatException e)
+						{
+							throw new SQLException("Invalid value for " + conPart + ": "
+									+ conPart.substring(EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length()), e);
+						}
+					}
 					else
 						throw new SQLException("Unknown URL parameter " + conPart);
 				}
@@ -83,7 +99,7 @@ public class CloudSpannerDriver implements Driver
 			return res;
 		}
 
-		void setAdditionalConnectionProperties(Properties info)
+		void setAdditionalConnectionProperties(Properties info) throws SQLException
 		{
 			if (info != null)
 			{
@@ -95,12 +111,24 @@ public class CloudSpannerDriver implements Driver
 						OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), oauthToken);
 				productName = info.getProperty(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
 						productName);
+				try
+				{
+					extendedModeRecordCountThreshold = Long.valueOf(info.getProperty(
+							EXTENDED_MODE_RECORD_COUNT_THRESHOLD.substring(0,
+									EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length() - 1),
+							String.valueOf(extendedModeRecordCountThreshold)));
+				}
+				catch (NumberFormatException e)
+				{
+					throw new SQLException("Invalid value for " + EXTENDED_MODE_RECORD_COUNT_THRESHOLD.substring(0,
+							EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length() - 1), e);
+				}
 			}
 		}
 
 		DriverPropertyInfo[] getPropertyInfo()
 		{
-			DriverPropertyInfo[] res = new DriverPropertyInfo[6];
+			DriverPropertyInfo[] res = new DriverPropertyInfo[7];
 			res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
 			res[0].description = "Google Cloud Project id";
 			res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
@@ -115,6 +143,11 @@ public class CloudSpannerDriver implements Driver
 			res[5] = new DriverPropertyInfo(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
 					productName);
 			res[5].description = "Use this property to make the driver return a different database product name than Google Cloud Spanner, for example if you are using a framework like Spring that use this property to determine how to a generate data model for Spring Batch";
+			res[6] = new DriverPropertyInfo(
+					EXTENDED_MODE_RECORD_COUNT_THRESHOLD.substring(0,
+							EXTENDED_MODE_RECORD_COUNT_THRESHOLD.length() - 1),
+					String.valueOf(extendedModeRecordCountThreshold));
+			res[6].description = "Threshold before the driver enters 'extended' mode for bulk operations. A value of -1 (default) indicates no threshold and that the driver should never enter extended mode. If a positive value is set, the driver will execute all bulk DML-operations in a separate transaction when the number of records affected is greater-or-equal to this threshold.";
 
 			return res;
 		}
@@ -152,7 +185,8 @@ public class CloudSpannerDriver implements Driver
 		properties.setAdditionalConnectionProperties(info);
 
 		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, properties.project,
-				properties.instance, properties.database, properties.keyFile, properties.oauthToken);
+				properties.instance, properties.database, properties.keyFile, properties.oauthToken,
+				properties.extendedModeRecordCountThreshold, info);
 		connection.setSimulateProductName(properties.productName);
 		registerConnection(connection);
 

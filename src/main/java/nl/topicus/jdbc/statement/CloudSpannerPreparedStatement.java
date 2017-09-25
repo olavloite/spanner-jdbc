@@ -33,6 +33,7 @@ import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.extended.InsertWorker;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 /**
@@ -50,7 +51,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private String sql;
 
-	private List<Mutation> batchMutations = new ArrayList<>();
+	private List<Mutations> batchMutations = new ArrayList<>();
 
 	public CloudSpannerPreparedStatement(String sql, CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
@@ -180,8 +181,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new SQLFeatureNotSupportedException("DDL statements may not be batched");
 		}
-		Mutation mutation = createMutation();
-		batchMutations.add(mutation);
+		Mutations mutations = createMutations();
+		batchMutations.add(mutations);
 		getParameterStore().clearParameters();
 	}
 
@@ -197,9 +198,9 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		int[] res = new int[batchMutations.size()];
 		int index = 0;
-		for (Mutation mutation : batchMutations)
+		for (Mutations mutation : batchMutations)
 		{
-			res[index] = writeMutation(mutation);
+			res[index] = (int) writeMutations(mutation);
 			index++;
 		}
 		batchMutations.clear();
@@ -215,10 +216,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			String ddl = formatDDLStatement(sql);
 			return executeDDL(ddl);
 		}
-		return writeMutation(createMutation());
+		Mutations mutations = createMutations();
+		return (int) writeMutations(mutations);
 	}
 
-	private Mutation createMutation() throws SQLException
+	private Mutations createMutations() throws SQLException
 	{
 		try
 		{
@@ -229,15 +231,18 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			Statement statement = CCJSqlParserUtil.parse(sql);
 			if (statement instanceof Insert)
 			{
-				return createInsertMutation((Insert) statement);
+				Insert insertStatement = (Insert) statement;
+				if (insertStatement.getSelect() != null)
+					return new Mutations(createInsertWithSelectStatement(insertStatement));
+				return new Mutations(createInsertMutation(insertStatement));
 			}
 			else if (statement instanceof Update)
 			{
-				return createUpdateMutation((Update) statement);
+				return new Mutations(createUpdateMutation((Update) statement));
 			}
 			else if (statement instanceof Delete)
 			{
-				return createDeleteMutation((Delete) statement);
+				return new Mutations(createDeleteMutation((Delete) statement));
 			}
 			else
 			{
@@ -478,7 +483,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				// Create mutation, but don't do anything with it. This
 				// initializes column names of the parameter store.
-				createMutation();
+				createMutations();
 			}
 			else if (statement instanceof Select)
 			{
@@ -492,6 +497,17 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
 		}
 		return new CloudSpannerParameterMetaData(this);
+	}
+
+	private InsertWorker createInsertWithSelectStatement(Insert insert) throws SQLException
+	{
+		Select select = insert.getSelect();
+		if (select == null)
+		{
+			throw new SQLException("Insert statement must contain a select statement");
+		}
+		return new InsertWorker(getConnection(), select, insert, getConnection().getExtendedModeRecordCountThreshold(),
+				insert.isUseDuplicate());
 	}
 
 }

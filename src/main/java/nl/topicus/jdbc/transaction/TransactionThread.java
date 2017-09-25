@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
@@ -77,10 +78,21 @@ class TransactionThread extends Thread
 						{
 							try
 							{
-								Statement statement = statements.take();
-								if (!(statement.getSql().equals("commit") || statement.getSql().equals("rollback")))
+								Statement statement = statements.poll(5, TimeUnit.SECONDS);
+								if (statement != null)
 								{
-									resultSets.put(transaction.executeQuery(statement));
+									if (!(statement.getSql().equals("commit") || statement.getSql().equals("rollback")))
+									{
+										resultSets.put(transaction.executeQuery(statement));
+									}
+								}
+								else
+								{
+									// keep alive
+									try (ResultSet rs = transaction.executeQuery(Statement.of("SELECT 1")))
+									{
+										rs.next();
+									}
 								}
 							}
 							catch (InterruptedException e)
@@ -128,6 +140,8 @@ class TransactionThread extends Thread
 
 	void buffer(Mutation mutation)
 	{
+		if (mutation == null)
+			throw new NullPointerException("Mutation is null");
 		mutations.add(mutation);
 	}
 
