@@ -63,7 +63,7 @@ Example usage:
 ****
 spring.datasource.driver-class-name=nl.topicus.jdbc.CloudSpannerDriver
 
-spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL;PvtKeyPath=key_file
+spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL;PvtKeyPath=key_file;AllowExtendedMode=false
 
 ****
 
