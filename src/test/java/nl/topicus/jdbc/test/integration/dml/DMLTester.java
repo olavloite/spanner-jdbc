@@ -95,8 +95,8 @@ public class DMLTester
 			PreparedStatement statement = connection.prepareStatement(sql);
 			statement.executeUpdate();
 			connection.commit();
-			verifyTableContents("SELECT COUNT(*) FROM TEST", 2 ^ (i + 2));
-			verifyTableContents("SELECT MAX(ID) FROM TEST", 2 ^ (i + 2));
+			verifyTableContents("SELECT COUNT(*) FROM TEST", (int) Math.pow(2, (i + 2)));
+			verifyTableContents("SELECT MAX(ID) FROM TEST", (int) Math.pow(2, (i + 2)));
 			log.info("Finished insert-with-select test no #" + i);
 		}
 		String sql = "UPDATE TEST SET DESCRIPTION='Divisble by three' WHERE MOD(ID, 3)=0";
