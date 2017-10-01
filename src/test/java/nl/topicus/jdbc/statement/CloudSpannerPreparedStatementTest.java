@@ -261,9 +261,10 @@ public class CloudSpannerPreparedStatementTest
 		@Test
 		public void testUpdateStatementWithoutWhereClause() throws SQLException
 		{
-			thrown.expect(SQLException.class);
-			thrown.expectMessage("The UPDATE statement does not contain a valid WHERE clause.");
-			getMutation("UPDATE FOO SET COL1=1, COL2=2");
+			Mutations mutations = getMutations("UPDATE FOO SET COL1=1, COL2=2");
+			Assert.assertTrue(mutations.isWorker());
+			Assert.assertNotNull(mutations.getWorker());
+			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
 		}
 
 		@Test
@@ -299,14 +300,14 @@ public class CloudSpannerPreparedStatementTest
 		@Test
 		public void testInsertStatement() throws SQLException
 		{
-			assertInsertOnDuplicateKey(getMutation("INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa)"),
+			assertSingleInsert(getMutation("INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa)"),
 					Mutation.Op.INSERT);
 		}
 
 		@Test
 		public void testInsertOnDuplicateKeyStatementWithDiffentUpdateValues() throws SQLException
 		{
-			assertInsertOnDuplicateKey(
+			assertSingleInsert(
 					getMutation(
 							"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='three', COL3=0xbb"),
 					Mutation.Op.INSERT_OR_UPDATE);
@@ -315,13 +316,32 @@ public class CloudSpannerPreparedStatementTest
 		@Test
 		public void testInsertOnDuplicateKeyStatementWithEqualUpdateValues() throws SQLException
 		{
-			assertInsertOnDuplicateKey(
+			assertSingleInsert(
 					getMutation(
 							"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='two', COL3=0xaa"),
 					Mutation.Op.INSERT_OR_UPDATE);
 		}
 
-		private void assertInsertOnDuplicateKey(Mutation mutation, Mutation.Op operation)
+		@Test
+		public void assertInsertWithSelect() throws SQLException
+		{
+			Mutations mutations = getMutations("INSERT INTO FOO (COL1, COL2, COL3) SELECT 1, 'two', 0xaa");
+			Assert.assertTrue(mutations.isWorker());
+			Assert.assertNotNull(mutations.getWorker());
+			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+		}
+
+		@Test
+		public void assertInsertWithSelectTable() throws SQLException
+		{
+			Mutations mutations = getMutations(
+					"INSERT INTO FOO (COL1, COL2, COL3) SELECT COLA, COLB, COLC FROM OTHER_TABLE");
+			Assert.assertTrue(mutations.isWorker());
+			Assert.assertNotNull(mutations.getWorker());
+			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+		}
+
+		private void assertSingleInsert(Mutation mutation, Mutation.Op operation)
 		{
 			Assert.assertNotNull(mutation);
 			Assert.assertEquals(operation, mutation.getOperation());
@@ -417,6 +437,11 @@ public class CloudSpannerPreparedStatementTest
 
 	private static Mutation getMutation(String sql) throws SQLException
 	{
+		return getMutations(sql).getMutations().get(0);
+	}
+
+	public static Mutations getMutations(String sql) throws SQLException
+	{
 		Mutations mutations = null;
 		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
 		CloudSpannerDatabaseMetaData metadata = Mockito.mock(CloudSpannerDatabaseMetaData.class);
@@ -431,9 +456,9 @@ public class CloudSpannerPreparedStatementTest
 		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, connection, null);
 		try
 		{
-			Method createMutations = ps.getClass().getDeclaredMethod("createMutations");
+			Method createMutations = ps.getClass().getDeclaredMethod("createMutations", String.class);
 			createMutations.setAccessible(true);
-			mutations = (Mutations) createMutations.invoke(ps);
+			mutations = (Mutations) createMutations.invoke(ps, sql);
 		}
 		catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e)
 		{
@@ -447,7 +472,7 @@ public class CloudSpannerPreparedStatementTest
 			}
 			throw new RuntimeException(e);
 		}
-		return mutations.getMutations().get(0);
+		return mutations;
 	}
 
 }

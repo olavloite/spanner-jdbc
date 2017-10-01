@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.extended;
+package nl.topicus.jdbc.statement;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.CloudSpannerDriver;
 
 public class InsertWorker extends AbstractTablePartWorker
 {
@@ -33,17 +34,19 @@ public class InsertWorker extends AbstractTablePartWorker
 	protected void run() throws SQLException
 	{
 		ConverterUtils converterUtils = new ConverterUtils();
+		String unquotedTableName = CloudSpannerDriver.unquoteIdentifier(insert.getTable().getName());
 		List<String> columnNamesList;
 		if (insert.getColumns() == null)
 		{
-			columnNamesList = converterUtils.getColumnNames(connection, null, null, insert.getTable().getName());
+			columnNamesList = converterUtils.getQuotedColumnNames(connection, null, null, unquotedTableName);
 		}
 		else
 		{
-			columnNamesList = insert.getColumns().stream().map(x -> x.getColumnName()).collect(Collectors.toList());
+			columnNamesList = insert.getColumns().stream()
+					.map(x -> CloudSpannerDriver.quoteIdentifier(x.getColumnName())).collect(Collectors.toList());
 		}
 		long batchSize = converterUtils.calculateActualBatchSize(columnNamesList.size(), connection, null, null,
-				insert.getTable().getName());
+				unquotedTableName);
 		boolean isExtendedMode = isExtendedMode(batchSize);
 
 		boolean wasAutocommit = connection.getAutoCommit();
@@ -64,7 +67,8 @@ public class InsertWorker extends AbstractTablePartWorker
 			Arrays.fill(params, "?");
 			String parameterNames = String.join(", ", params);
 
-			String sql = "INSERT INTO " + insert.getTable().getName() + " (" + columnNames + ") VALUES \n";
+			String sql = "INSERT INTO " + CloudSpannerDriver.quoteIdentifier(insert.getTable().getName()) + " ("
+					+ columnNames + ") VALUES \n";
 			sql = sql + "(" + parameterNames + ")";
 			if (onDuplicateKeyUpdate)
 			{
@@ -121,6 +125,16 @@ public class InsertWorker extends AbstractTablePartWorker
 	public long getRecordCount()
 	{
 		return recordCount;
+	}
+
+	Insert getInsert()
+	{
+		return insert;
+	}
+
+	boolean isOnDuplicateKeyUpdate()
+	{
+		return onDuplicateKeyUpdate;
 	}
 
 }

@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.extended;
+package nl.topicus.jdbc.statement;
 
 public class ConversionResult
 {

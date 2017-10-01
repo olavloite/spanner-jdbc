@@ -268,4 +268,23 @@ public class CloudSpannerDriver implements Driver
 		throw new SQLFeatureNotSupportedException("java.util.logging is not used");
 	}
 
+	public static String quoteIdentifier(String identifier)
+	{
+		if (identifier == null)
+			return identifier;
+		if (identifier.charAt(0) == '`' && identifier.charAt(identifier.length() - 1) == '`')
+			return identifier;
+		return new StringBuilder(identifier.length() + 2).append("`").append(identifier).append("`").toString();
+	}
+
+	public static String unquoteIdentifier(String identifier)
+	{
+		String res = identifier;
+		if (identifier == null)
+			return identifier;
+		if (identifier.charAt(0) == '`' && identifier.charAt(identifier.length() - 1) == '`')
+			res = identifier.substring(1, identifier.length() - 1);
+		return res;
+	}
+
 }

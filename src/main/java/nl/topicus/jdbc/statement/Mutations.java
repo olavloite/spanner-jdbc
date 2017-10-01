@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.google.cloud.spanner.Mutation;
 
-import nl.topicus.jdbc.extended.AbstractTablePartWorker;
-
 class Mutations
 {
 	private final List<Mutation> mutations;

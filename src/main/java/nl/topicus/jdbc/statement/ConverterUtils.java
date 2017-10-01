@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.extended;
+package nl.topicus.jdbc.statement;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+
+import nl.topicus.jdbc.CloudSpannerDriver;
 
 public class ConverterUtils
 {
@@ -43,14 +45,14 @@ public class ConverterUtils
 		return count;
 	}
 
-	public List<String> getColumnNames(Connection destination, String catalog, String schema, String table)
+	public List<String> getQuotedColumnNames(Connection destination, String catalog, String schema, String table)
 			throws SQLException
 	{
 		List<String> res = new ArrayList<>();
 		try (ResultSet cols = destination.getMetaData().getColumns(catalog, schema, table, null))
 		{
 			while (cols.next())
-				res.add(cols.getString("COLUMN_NAME"));
+				res.add(CloudSpannerDriver.quoteIdentifier(cols.getString("COLUMN_NAME")));
 		}
 		return res;
 	}

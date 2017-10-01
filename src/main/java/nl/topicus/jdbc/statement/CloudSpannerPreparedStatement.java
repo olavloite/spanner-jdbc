@@ -33,7 +33,7 @@ import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
-import nl.topicus.jdbc.extended.InsertWorker;
+import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 /**
@@ -181,7 +181,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new SQLFeatureNotSupportedException("DDL statements may not be batched");
 		}
-		Mutations mutations = createMutations();
+		Mutations mutations = createMutations(sql);
 		batchMutations.add(mutations);
 		getParameterStore().clearParameters();
 	}
@@ -216,11 +216,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			String ddl = formatDDLStatement(sql);
 			return executeDDL(ddl);
 		}
-		Mutations mutations = createMutations();
+		Mutations mutations = createMutations(sql);
 		return (int) writeMutations(mutations);
 	}
 
-	private Mutations createMutations() throws SQLException
+	private Mutations createMutations(String sql) throws SQLException
 	{
 		try
 		{
@@ -232,13 +232,22 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			if (statement instanceof Insert)
 			{
 				Insert insertStatement = (Insert) statement;
-				if (insertStatement.getSelect() != null)
-					return new Mutations(createInsertWithSelectStatement(insertStatement));
-				return new Mutations(createInsertMutation(insertStatement));
+				if (insertStatement.getSelect() == null)
+					return new Mutations(createInsertMutation(insertStatement));
+				return new Mutations(createInsertWithSelectStatement(insertStatement));
 			}
 			else if (statement instanceof Update)
 			{
-				return new Mutations(createUpdateMutation((Update) statement));
+				Update updateStatement = (Update) statement;
+				if (updateStatement.getSelect() != null)
+					throw new SQLException(
+							"UPDATE statement using SELECT is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE");
+				if (isValidWhereClause(updateStatement.getWhere()))
+					return new Mutations(createUpdateMutation(updateStatement));
+				// Translate into an 'INSERT ... SELECT ... ON DUPLICATE KEY
+				// UPDATE'-statement
+				String insertSQL = createInsertSelectOnDuplicateKeyUpdateStatement(updateStatement);
+				return createMutations(insertSQL);
 			}
 			else if (statement instanceof Delete)
 			{
@@ -394,6 +403,26 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 	}
 
+	private boolean isValidWhereClause(Expression where)
+	{
+		if (where != null)
+		{
+			DMLWhereClauseVisitor whereClauseVisitor = new DMLWhereClauseVisitor(getParameterStore())
+			{
+
+				@Override
+				protected void visitExpression(Column col, Expression expression)
+				{
+					// ignore
+				}
+
+			};
+			where.accept(whereClauseVisitor);
+			return whereClauseVisitor.isValid();
+		}
+		return false;
+	}
+
 	private void visitUpdateWhereClause(Expression where, WriteBuilder builder) throws SQLException
 	{
 		if (where != null)
@@ -424,12 +453,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private static String unquoteIdentifier(String identifier)
 	{
-		String res = identifier;
-		if (identifier == null)
-			return identifier;
-		if (identifier.charAt(0) == '`' && identifier.charAt(identifier.length() - 1) == '`')
-			res = identifier.substring(1, identifier.length() - 1);
-		return res;
+		return CloudSpannerDriver.unquoteIdentifier(identifier);
 	}
 
 	private int executeDDL(String ddl) throws SQLException
@@ -483,7 +507,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				// Create mutation, but don't do anything with it. This
 				// initializes column names of the parameter store.
-				createMutations();
+				createMutations(sql);
 			}
 			else if (statement instanceof Select)
 			{

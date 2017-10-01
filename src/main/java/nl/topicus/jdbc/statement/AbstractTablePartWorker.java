@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.extended;
+package nl.topicus.jdbc.statement;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

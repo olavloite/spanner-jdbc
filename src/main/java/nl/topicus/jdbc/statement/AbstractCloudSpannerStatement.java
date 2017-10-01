@@ -5,15 +5,19 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.ReadContext;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 
+import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 import nl.topicus.jdbc.CloudSpannerConnection;
-import nl.topicus.jdbc.extended.ConversionResult;
+import nl.topicus.jdbc.CloudSpannerDriver;
+import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 
 /**
  * 
@@ -63,6 +67,56 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 			sql = sql + " FOO=BAR";
 		}
 		return sql;
+	}
+
+	/**
+	 * Transform the given UPDATE-statement into an "INSERT INTO TAB1 (...)
+	 * SELECT ... FROM TAB1 WHERE ... ON DUPLICATE KEY UPDATE"
+	 * 
+	 * @param update
+	 *            The UPDATE-statement
+	 * @return An SQL-statement equal to the UPDATE-statement but in INSERT form
+	 * @throws SQLException
+	 */
+	protected String createInsertSelectOnDuplicateKeyUpdateStatement(Update update) throws SQLException
+	{
+		String tableName = update.getTables().get(0).getName();
+		TableKeyMetaData table = getConnection().getTable(tableName);
+		List<String> keyColumns = table.getKeyColumns();
+		List<String> updateColumns = update.getColumns().stream().map(x -> x.getColumnName())
+				.collect(Collectors.toList());
+		List<String> quotedKeyColumns = keyColumns.stream().map(x -> quoteIdentifier(x)).collect(Collectors.toList());
+		List<String> quotedAndQualifiedKeyColumns = keyColumns.stream()
+				.map(x -> quoteIdentifier(tableName) + "." + quoteIdentifier(x)).collect(Collectors.toList());
+
+		List<String> quotedUpdateColumns = updateColumns.stream().map(x -> quoteIdentifier(x))
+				.collect(Collectors.toList());
+		List<String> expressions = update.getExpressions().stream().map(x -> x.toString()).collect(Collectors.toList());
+		if (updateColumns.stream().anyMatch(x -> keyColumns.contains(x)))
+		{
+			String invalidCols = updateColumns.stream().filter(x -> keyColumns.contains(x))
+					.collect(Collectors.joining());
+			throw new SQLException(
+					"UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) " + invalidCols);
+		}
+
+		StringBuilder res = new StringBuilder();
+		res.append("INSERT INTO ").append(quoteIdentifier(tableName)).append("\n(");
+		res.append(String.join(", ", quotedKeyColumns)).append(", ");
+		res.append(String.join(", ", quotedUpdateColumns)).append(")");
+		res.append("\nSELECT ").append(String.join(", ", quotedAndQualifiedKeyColumns)).append(", ");
+		res.append(String.join(", ", expressions));
+		res.append("\nFROM ").append(quoteIdentifier(tableName));
+		if (update.getWhere() != null)
+			res.append("\n").append("WHERE ").append(update.getWhere().toString());
+		res.append("\nON DUPLICATE KEY UPDATE");
+
+		return res.toString();
+	}
+
+	protected String quoteIdentifier(String identifier)
+	{
+		return CloudSpannerDriver.quoteIdentifier(identifier);
 	}
 
 	protected DatabaseClient getDbClient()
