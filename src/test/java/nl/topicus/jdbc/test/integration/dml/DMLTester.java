@@ -91,7 +91,7 @@ public class DMLTester
 		for (int i = 0; i < 10; i++)
 		{
 			log.info("Starting insert-with-select test no #" + i);
-			String sql = "INSERT INTO TEST SELECT ID + (SELECT MAX(ID) FROM TEST), UUID, ACTIVE, AMOUNT, DESCRIPTION, CREATED_DATE, LAST_UPDATED";
+			String sql = "INSERT INTO TEST SELECT ID + (SELECT MAX(ID) FROM TEST), UUID, ACTIVE, AMOUNT, DESCRIPTION, CREATED_DATE, LAST_UPDATED FROM TEST";
 			PreparedStatement statement = connection.prepareStatement(sql);
 			statement.executeUpdate();
 			connection.commit();
