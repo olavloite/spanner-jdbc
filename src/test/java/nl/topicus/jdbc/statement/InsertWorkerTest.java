@@ -49,10 +49,10 @@ public class InsertWorkerTest
 		{
 			Mutations mutations = CloudSpannerPreparedStatementTest.getMutations("UPDATE FOO SET COL1=1, COL2=2");
 			InsertWorker worker = (InsertWorker) mutations.getWorker();
-			Assert.assertEquals("SELECT `ID`, 1, 2 FROM `FOO`", worker.select.toString());
+			Assert.assertEquals("SELECT `FOO`.`ID`, 1, 2 FROM `FOO`", worker.select.toString());
 			Assert.assertTrue(worker.isOnDuplicateKeyUpdate());
 			Assert.assertEquals(
-					"INSERT INTO `FOO` (`ID`, `COL1`, `COL2`) SELECT `ID`, 1, 2 FROM `FOO` ON DUPLICATE KEY UPDATE FOO = BAR",
+					"INSERT INTO `FOO` (`ID`, `COL1`, `COL2`) SELECT `FOO`.`ID`, 1, 2 FROM `FOO` ON DUPLICATE KEY UPDATE FOO = BAR",
 					worker.getInsert().toString());
 
 			mockConnection(worker.connection);
@@ -68,11 +68,11 @@ public class InsertWorkerTest
 			Mutations mutations = CloudSpannerPreparedStatementTest
 					.getMutations("UPDATE FOO SET COL1=COL1+COL2, COL2=COL2*1.1 WHERE COL1<100");
 			InsertWorker worker = (InsertWorker) mutations.getWorker();
-			Assert.assertEquals("SELECT `ID`, COL1 + COL2, COL2 * 1.1 FROM `FOO` WHERE COL1 < 100",
+			Assert.assertEquals("SELECT `FOO`.`ID`, COL1 + COL2, COL2 * 1.1 FROM `FOO` WHERE COL1 < 100",
 					worker.select.toString());
 			Assert.assertTrue(worker.isOnDuplicateKeyUpdate());
 			Assert.assertEquals(
-					"INSERT INTO `FOO` (`ID`, `COL1`, `COL2`) SELECT `ID`, COL1 + COL2, COL2 * 1.1 FROM `FOO` WHERE COL1 < 100 ON DUPLICATE KEY UPDATE FOO = BAR",
+					"INSERT INTO `FOO` (`ID`, `COL1`, `COL2`) SELECT `FOO`.`ID`, COL1 + COL2, COL2 * 1.1 FROM `FOO` WHERE COL1 < 100 ON DUPLICATE KEY UPDATE FOO = BAR",
 					worker.getInsert().toString());
 
 			mockConnection(worker.connection);
