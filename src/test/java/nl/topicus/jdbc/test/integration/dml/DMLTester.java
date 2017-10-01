@@ -79,6 +79,31 @@ public class DMLTester
 
 		runDeleteTests();
 		runRollbackTests();
+
+		// After rollback test, the contents of the TEST table is equal to the
+		// contents after the insert tests.
+		runBulkTests();
+	}
+
+	private void runBulkTests() throws SQLException
+	{
+		verifyTableContentsAfterInsert();
+		for (int i = 0; i < 10; i++)
+		{
+			log.info("Starting insert-with-select test no #" + i);
+			String sql = "INSERT INTO TEST SELECT ID + (SELECT MAX(ID) FROM TEST), UUID, ACTIVE, AMOUNT, DESCRIPTION, CREATED_DATE, LAST_UPDATED";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.executeUpdate();
+			connection.commit();
+			verifyTableContents("SELECT COUNT(*) FROM TEST", 2 ^ (i + 2));
+			verifyTableContents("SELECT MAX(ID) FROM TEST", 2 ^ (i + 2));
+			log.info("Finished insert-with-select test no #" + i);
+		}
+		String sql = "UPDATE TEST SET DESCRIPTION='Divisble by three' WHERE MOD(ID, 3)=0";
+		PreparedStatement statement = connection.prepareStatement(sql);
+		statement.executeUpdate();
+		connection.commit();
+		verifyTableContents("SELECT DESCRIPTION FROM TEST WHERE ID=3", "Divisble by three");
 	}
 
 	private void runInsertTests() throws IOException, URISyntaxException, SQLException
