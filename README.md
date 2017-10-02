@@ -19,23 +19,23 @@ This driver supports a number of unsupported features of the official JDBC drive
 
 The driver ofcourse also supports normal SELECT-statements, including parameters.
 
-Releases are available on Maven Central. Current release is version 0.15.
+Releases are available on Maven Central. Current release is version 0.16.
 
 <div class="highlight highlight-text-xml"><pre>
 &lt;<span class="pl-ent">dependency</span>&gt;
  	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.15&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.16&lt;/<span class="pl-ent">version</span>&gt;
 &lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
-There is also a 'thick-jar'-version available for use with third-party tools such as SQuirreL, DbVisualizer or Safe FME. This jar contains all the necessary dependencies for the driver. The thick-jar version can be found here: https://github.com/olavloite/spanner-jdbc/releases
+There is also a 'thick-jar'-version available for use with third-party tools such as SQuirreL, SQL Workbench, DbVisualizer or Safe FME. This jar contains all the necessary dependencies for the driver. The thick-jar version can be found here: https://github.com/olavloite/spanner-jdbc/releases
 
 
 This driver does allow DML operations, although also limited because of the underlying limitations of Google Cloud Spanner. All data manipulation operations are limited to operations that operate on one record. This means that:
 * Inserts can only insert one row at a time
 * Updates and deletes must include a where-clause specifying the primary key (and nothing else). E.g. 'WHERE ID=?'.
-* As of version 0.15 the driver also supports bulk INSERT-statements. These statements can also be used to perform bulk UPDATE operations by adding an 'ON DUPLICATE KEY UPDATE'-clause to the INSERT-statement. Please note that the underlying limitations of Google Cloud Spanner transactions still apply: https://cloud.google.com/spanner/quotas. This means a maximum of 20,000 mutations and 100MB of data in one transaction.
+* As of version 0.16 and newer the driver also supports bulk INSERT/UPDATE/DELETE-statements. Please note that the underlying limitations of Google Cloud Spanner transactions still apply: https://cloud.google.com/spanner/quotas. This means a maximum of 20,000 mutations and 100MB of data in one transaction. You can get the driver to automatically bypass these quotas by setting the connection property AllowExtendedMode=true (see the Wiki-pages of this driver: https://github.com/olavloite/spanner-jdbc/wiki/URL-and-Connection-Properties).
 
 Example of bulk INSERT:  
 INSERT INTO TABLE1  
@@ -44,7 +44,7 @@ SELECT SOMECOL1, SOMECOL2, SOMECOL3
 FROM TABLE2  
 WHERE SOMECOL1>? AND SOMECOL3 LIKE ?  
 
-Example of bulk UPDATE:  
+Example of bulk INSERT-OR-UPDATE:  
 INSERT INTO TABLE1  
 (COL1, COL2, COL3)  
 SELECT COL1, COL2+COL4, COL3*2  
@@ -53,6 +53,12 @@ WHERE COL4=?
 ON DUPLICATE KEY UPDATE  
 
 The above UPDATE example is equal to: UPDATE TABLE1 SET COL2=COL2+COL4 AND COL3=COL3*2 WHERE COL4=? (assuming that COL1 is the primary key of the table).
+
+Example of bulk UPDATE:  
+UPDATE TABLE1 SET  
+COL1=COL1*1.1,  
+COL2=COL3+COL4  
+WHERE COL5<1000  
 
 The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 
