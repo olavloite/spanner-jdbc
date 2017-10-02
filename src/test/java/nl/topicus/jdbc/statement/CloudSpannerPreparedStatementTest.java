@@ -282,10 +282,10 @@ public class CloudSpannerPreparedStatementTest
 		@Test
 		public void testUpdateStatementWithMultipleWhereClauses() throws SQLException
 		{
-			Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID1=1 AND ID2=1");
+			Mutation updateMutation = getMutation("UPDATE BAR SET COL1=1, COL2=2 WHERE ID1=1 AND ID2=1");
 			Assert.assertNotNull(updateMutation);
 			Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
-			Assert.assertEquals("FOO", updateMutation.getTable());
+			Assert.assertEquals("BAR", updateMutation.getTable());
 			List<String> columns = Lists.newArrayList(updateMutation.getColumns());
 			Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID1", "ID2" }, columns.toArray());
 			Assert.assertArrayEquals(new String[] { "1", "2", "1", "1" }, getValues(updateMutation.getValues()));
@@ -445,14 +445,23 @@ public class CloudSpannerPreparedStatementTest
 		Mutations mutations = null;
 		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
 		CloudSpannerDatabaseMetaData metadata = Mockito.mock(CloudSpannerDatabaseMetaData.class);
-		CloudSpannerResultSet resultSet = Mockito.mock(CloudSpannerResultSet.class);
-		TableKeyMetaData table = Mockito.mock(TableKeyMetaData.class);
+		CloudSpannerResultSet resultSetFoo = Mockito.mock(CloudSpannerResultSet.class);
+		TableKeyMetaData tableFoo = Mockito.mock(TableKeyMetaData.class);
 		Mockito.when(connection.getMetaData()).thenReturn(metadata);
-		Mockito.when(metadata.getPrimaryKeys(null, null, "FOO")).thenReturn(resultSet);
-		Mockito.when(resultSet.next()).thenReturn(true, false);
-		Mockito.when(resultSet.getString("COLUMN_NAME")).thenReturn("ID");
-		Mockito.when(connection.getTable("FOO")).thenReturn(table);
-		Mockito.when(table.getKeyColumns()).thenReturn(Arrays.asList("ID"));
+		Mockito.when(metadata.getPrimaryKeys(null, null, "FOO")).thenReturn(resultSetFoo);
+		Mockito.when(resultSetFoo.next()).thenReturn(true, false);
+		Mockito.when(resultSetFoo.getString("COLUMN_NAME")).thenReturn("ID");
+		Mockito.when(connection.getTable("FOO")).thenReturn(tableFoo);
+		Mockito.when(tableFoo.getKeyColumns()).thenReturn(Arrays.asList("ID"));
+
+		CloudSpannerResultSet resultSetBar = Mockito.mock(CloudSpannerResultSet.class);
+		TableKeyMetaData tableBar = Mockito.mock(TableKeyMetaData.class);
+		Mockito.when(metadata.getPrimaryKeys(null, null, "BAR")).thenReturn(resultSetBar);
+		Mockito.when(resultSetBar.next()).thenReturn(true, true, false);
+		Mockito.when(resultSetBar.getString("COLUMN_NAME")).thenReturn("ID1", "ID2");
+		Mockito.when(connection.getTable("BAR")).thenReturn(tableBar);
+		Mockito.when(tableBar.getKeyColumns()).thenReturn(Arrays.asList("ID1", "ID2"));
+
 		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, connection, null);
 		try
 		{
