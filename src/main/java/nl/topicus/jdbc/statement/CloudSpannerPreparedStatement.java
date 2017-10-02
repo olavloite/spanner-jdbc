@@ -36,6 +36,7 @@ import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
+import nl.topicus.jdbc.statement.InsertWorker.Mode;
 
 /**
  * 
@@ -51,6 +52,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	private static final String PARSE_ERROR = "Error while parsing sql statement ";
 
 	private String sql;
+
+	/**
+	 * Flag indicating that an INSERT INTO ... ON DUPLICATE KEY UPDATE statement
+	 * should be forced to do only an update
+	 */
+	private boolean forceUpdate;
 
 	private List<Mutations> batchMutations = new ArrayList<>();
 
@@ -223,6 +230,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private Mutations createMutations(String sql) throws SQLException
 	{
+		return createMutations(sql, false);
+	}
+
+	private Mutations createMutations(String sql, boolean forceUpdate) throws SQLException
+	{
 		try
 		{
 			if (isDDLStatement(sql))
@@ -235,7 +247,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				Insert insertStatement = (Insert) statement;
 				if (insertStatement.getSelect() == null)
 					return new Mutations(createInsertMutation(insertStatement));
-				return new Mutations(createInsertWithSelectStatement(insertStatement));
+				return new Mutations(createInsertWithSelectStatement(insertStatement, forceUpdate));
 			}
 			else if (statement instanceof Update)
 			{
@@ -254,7 +266,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				// Translate into an 'INSERT ... SELECT ... ON DUPLICATE KEY
 				// UPDATE'-statement
 				String insertSQL = createInsertSelectOnDuplicateKeyUpdateStatement(updateStatement);
-				return createMutations(insertSQL);
+				return createMutations(insertSQL, true);
 			}
 			else if (statement instanceof Delete)
 			{
@@ -328,7 +340,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			 * statement will be considered. Anything specified in the 'ON
 			 * DUPLICATE KEY UPDATE ...' statement will be ignored.
 			 */
-			builder = Mutation.newInsertOrUpdateBuilder(table);
+			if (this.forceUpdate)
+				builder = Mutation.newUpdateBuilder(table);
+			else
+				builder = Mutation.newInsertOrUpdateBuilder(table);
 		}
 		else
 		{
@@ -539,15 +554,22 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return new CloudSpannerParameterMetaData(this);
 	}
 
-	private InsertWorker createInsertWithSelectStatement(Insert insert) throws SQLException
+	private InsertWorker createInsertWithSelectStatement(Insert insert, boolean forceUpdate) throws SQLException
 	{
 		Select select = insert.getSelect();
 		if (select == null)
 		{
 			throw new SQLException("Insert statement must contain a select statement");
 		}
-		return new InsertWorker(getConnection(), select, insert, getConnection().isAllowExtendedMode(),
-				insert.isUseDuplicate());
+		boolean isDuplicate = insert.isUseDuplicate();
+		InsertWorker.Mode mode;
+		if (forceUpdate)
+			mode = Mode.Update;
+		else if (isDuplicate)
+			mode = Mode.OnDuplicateKeyUpdate;
+		else
+			mode = Mode.Insert;
+		return new InsertWorker(getConnection(), select, insert, getConnection().isAllowExtendedMode(), mode);
 	}
 
 	private DeleteWorker createDeleteWorker(Delete delete) throws SQLException
@@ -557,6 +579,16 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			throw new SQLException("DELETE statement must contain only one table");
 		}
 		return new DeleteWorker(getConnection(), delete, getConnection().isAllowExtendedMode());
+	}
+
+	boolean isForceUpdate()
+	{
+		return forceUpdate;
+	}
+
+	void setForceUpdate(boolean forceUpdate)
+	{
+		this.forceUpdate = forceUpdate;
 	}
 
 }

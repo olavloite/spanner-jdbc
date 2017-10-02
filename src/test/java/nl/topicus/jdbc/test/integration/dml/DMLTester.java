@@ -124,8 +124,6 @@ public class DMLTester
 		statement.executeUpdate();
 		connection.commit();
 		verifyTableContents("SELECT COUNT(*) FROM TEST WHERE DESCRIPTION='Divisble by three'", 0L);
-		verifyTableContents("SELECT COUNT(*) FROM TEST",
-				(2l * Double.valueOf(Math.pow(2, (BULK_INSERT_COUNT + 1))).longValue()) / 3l);
 		log.info("Finished bulk update test");
 	}
 

@@ -16,18 +16,23 @@ import nl.topicus.jdbc.CloudSpannerDriver;
 
 public class InsertWorker extends AbstractTablePartWorker
 {
+	public static enum Mode
+	{
+		Insert, OnDuplicateKeyUpdate, Update;
+	}
+
 	private final Insert insert;
 
 	private long recordCount;
 
-	private final boolean onDuplicateKeyUpdate;
+	private final Mode mode;
 
 	public InsertWorker(CloudSpannerConnection connection, Select select, Insert insert, boolean allowExtendedMode,
-			boolean onDuplicateKeyUpdate)
+			Mode mode)
 	{
 		super(connection, select, allowExtendedMode);
 		this.insert = insert;
-		this.onDuplicateKeyUpdate = onDuplicateKeyUpdate;
+		this.mode = mode;
 	}
 
 	@Override
@@ -70,13 +75,18 @@ public class InsertWorker extends AbstractTablePartWorker
 			String sql = "INSERT INTO " + CloudSpannerDriver.quoteIdentifier(insert.getTable().getName()) + " ("
 					+ columnNames + ") VALUES \n";
 			sql = sql + "(" + parameterNames + ")";
-			if (onDuplicateKeyUpdate)
+			if (mode == Mode.OnDuplicateKeyUpdate || mode == Mode.Update)
 			{
 				sql = sql + " ON DUPLICATE KEY UPDATE";
 			}
 			try (PreparedStatement statement = destination == null ? connection.prepareStatement(sql)
 					: destination.prepareStatement(sql))
 			{
+				if (mode == Mode.Update)
+				{
+					// Set force update
+					((CloudSpannerPreparedStatement) statement).setForceUpdate(true);
+				}
 				try (ResultSet rs = connection.prepareStatement(select.toString()).executeQuery())
 				{
 					while (rs.next())
@@ -132,9 +142,9 @@ public class InsertWorker extends AbstractTablePartWorker
 		return insert;
 	}
 
-	boolean isOnDuplicateKeyUpdate()
+	Mode getMode()
 	{
-		return onDuplicateKeyUpdate;
+		return mode;
 	}
 
 }
