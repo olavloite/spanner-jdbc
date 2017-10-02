@@ -34,6 +34,7 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
+import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 /**
@@ -242,7 +243,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				if (updateStatement.getSelect() != null)
 					throw new SQLException(
 							"UPDATE statement using SELECT is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE");
-				if (isValidWhereClause(updateStatement.getWhere()))
+				if (updateStatement.getTables().size() > 1)
+					throw new SQLException(
+							"UPDATE statement using multiple tables is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE");
+
+				if (isSingleRowWhereClause(
+						getConnection().getTable(unquoteIdentifier(updateStatement.getTables().get(0).getName())),
+						updateStatement.getWhere()))
 					return new Mutations(createUpdateMutation(updateStatement));
 				// Translate into an 'INSERT ... SELECT ... ON DUPLICATE KEY
 				// UPDATE'-statement
@@ -251,7 +258,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			}
 			else if (statement instanceof Delete)
 			{
-				return new Mutations(createDeleteMutation((Delete) statement));
+				Delete deleteStatement = (Delete) statement;
+				if (deleteStatement.getWhere() == null || isSingleRowWhereClause(
+						getConnection().getTable(unquoteIdentifier(deleteStatement.getTable().getName())),
+						deleteStatement.getWhere()))
+					return new Mutations(createDeleteMutation(deleteStatement));
+				return new Mutations(createDeleteWorker(deleteStatement));
 			}
 			else
 			{
@@ -403,22 +415,26 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 	}
 
-	private boolean isValidWhereClause(Expression where)
+	private boolean isSingleRowWhereClause(TableKeyMetaData table, Expression where)
 	{
 		if (where != null)
 		{
+			SingleRowWhereClauseValidator validator = new SingleRowWhereClauseValidator(table);
 			DMLWhereClauseVisitor whereClauseVisitor = new DMLWhereClauseVisitor(getParameterStore())
 			{
 
 				@Override
 				protected void visitExpression(Column col, Expression expression)
 				{
-					// ignore
+					String columnName = unquoteIdentifier(col.getFullyQualifiedName());
+					validator.set(columnName);
+					expression.accept(
+							new SingleRowWhereClauseValidatorExpressionVisitorAdapter(getParameterStore(), validator));
 				}
 
 			};
 			where.accept(whereClauseVisitor);
-			return whereClauseVisitor.isValid();
+			return whereClauseVisitor.isValid() && validator.isValid();
 		}
 		return false;
 	}
@@ -532,6 +548,15 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		return new InsertWorker(getConnection(), select, insert, getConnection().isAllowExtendedMode(),
 				insert.isUseDuplicate());
+	}
+
+	private DeleteWorker createDeleteWorker(Delete delete) throws SQLException
+	{
+		if (delete.getTable() == null || (delete.getTables() != null && delete.getTables().size() > 0))
+		{
+			throw new SQLException("DELETE statement must contain only one table");
+		}
+		return new DeleteWorker(getConnection(), delete, getConnection().isAllowExtendedMode());
 	}
 
 }

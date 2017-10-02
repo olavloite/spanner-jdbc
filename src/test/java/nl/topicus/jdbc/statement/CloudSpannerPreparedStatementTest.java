@@ -70,186 +70,186 @@ public class CloudSpannerPreparedStatementTest
 		@Test
 		public void testDeleteStatementWithInWhereClauses() throws SQLException
 		{
-			thrown.expect(SQLException.class);
-			thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
-			getMutation("DELETE FROM FOO WHERE ID IN (1,2)");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID IN (1,2)");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID IN (1, 2)",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithoutIdInWhere() throws SQLException
 		{
-			thrown.expect(SQLException.class);
-			thrown.expectMessage("No value supplied for key column ID");
-			getMutation("DELETE FROM FOO WHERE BAR=1");
-		}
-
-	}
-
-	public static class DeleteStatementsWithInvalidWhereClauses
-	{
-		@Rule
-		public ExpectedException thrown = ExpectedException.none();
-
-		public DeleteStatementsWithInvalidWhereClauses()
-		{
-			thrown.expect(SQLException.class);
-			thrown.expectMessage("The DELETE statement does not contain a valid WHERE clause.");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE BAR=1");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE BAR = 1", mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithNullValue() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID IS NULL");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID IS NULL");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID IS NULL",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithFunction() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE TO_STRING(ID)=1");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE TO_STRING(ID)=1");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE TO_STRING(ID) = 1",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithNamedParameter() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=:NAMED_PARAMETER");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=:NAMED_PARAMETER");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = :NAMED_PARAMETER",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithAddition() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=1+2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=1+2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = 1 + 2",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithDivision() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=1/2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=1/2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = 1 / 2",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithMultiplication() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=1*2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=1*2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = 1 * 2",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithSubtraction() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=1-2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=1-2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = 1 - 2",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithOr() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=1 OR ID=2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=1 OR ID=2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = 1 OR ID = 2",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithBetween() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID BETWEEN 1 AND 10");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID BETWEEN 1 AND 10");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID BETWEEN 1 AND 10",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithLargerThan() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID>2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID>2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID > 2", mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithLargerOrEquals() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID>=2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID>=2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID >= 2", mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithLessThan() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID<2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID<2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID < 2", mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithLessOrEquals() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID<=2");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID<=2");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID <= 2", mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithLike() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID LIKE 'TEST'");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID LIKE 'TEST'");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID LIKE 'TEST'",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithNotEquals() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID!=1");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID!=1");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID != 1", mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithSubSelect() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=(SELECT 1 FROM BAR)");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=(SELECT 1 FROM BAR)");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = (SELECT 1 FROM BAR)",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithCaseStatement() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=CASE WHEN FOO=1 THEN 1 WHEN FOO=2 THEN 2 ELSE 3 END");
+			Mutations mutations = getMutations(
+					"DELETE FROM FOO WHERE ID=CASE WHEN FOO=1 THEN 1 WHEN FOO=2 THEN 2 ELSE 3 END");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals(
+					"SELECT `FOO`.`ID` FROM `FOO` WHERE ID = CASE WHEN FOO = 1 THEN 1 WHEN FOO = 2 THEN 2 ELSE 3 END",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithExists() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE EXISTS (SELECT ID FROM FOO WHERE ID=1)");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE EXISTS (SELECT ID FROM FOO WHERE ID=1)");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE EXISTS (SELECT ID FROM FOO WHERE ID = 1)",
+					mutations.getWorker().select.toString());
 		}
 
 		@Test()
 		public void testDeleteStatementWithAll() throws SQLException
 		{
-			getMutation("DELETE FROM FOO WHERE ID=ALL (SELECT ID FROM FOO WHERE ID=1)");
-		}
-
-		@Test()
-		public void testDeleteStatementWithAny() throws SQLException
-		{
-			getMutation("DELETE FROM FOO WHERE ID=ANY (SELECT ID FROM FOO WHERE ID=1)");
-		}
-
-		@Test()
-		public void testDeleteStatementWithConcat() throws SQLException
-		{
-			getMutation("DELETE FROM FOO WHERE ID='FOO' || 'BAR'");
-		}
-
-		@Test()
-		public void testDeleteStatementWithBitwiseAnd() throws SQLException
-		{
-			getMutation("DELETE FROM FOO WHERE ID=(1 & 2)");
-		}
-
-		@Test()
-		public void testDeleteStatementWithBitwiseOr() throws SQLException
-		{
-			getMutation("DELETE FROM FOO WHERE ID=(1 | 2)");
-		}
-
-		@Test()
-		public void testDeleteStatementWithBitwiseXOr() throws SQLException
-		{
-			getMutation("DELETE FROM FOO WHERE ID=(1 ^ 2)");
-		}
-
-		@Test()
-		public void testDeleteStatementWithCast() throws SQLException
-		{
-			getMutation("DELETE FROM FOO WHERE CAST(ID AS STRING)='FOO'");
-		}
-
-		@Test()
-		public void testDeleteStatementWithModulo() throws SQLException
-		{
-			getMutation("DELETE FROM FOO WHERE ID=(1 % 2)");
+			Mutations mutations = getMutations("DELETE FROM FOO WHERE ID=ALL (SELECT ID FROM FOO WHERE ID=1)");
+			Assert.assertEquals(DeleteWorker.class, mutations.getWorker().getClass());
+			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = ALL (SELECT ID FROM FOO WHERE ID = 1)",
+					mutations.getWorker().select.toString());
 		}
 	}
 

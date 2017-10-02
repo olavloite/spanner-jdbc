@@ -26,6 +26,8 @@ public class DMLTester
 {
 	private static final Logger log = Logger.getLogger(DMLTester.class.getName());
 
+	private static final int BULK_INSERT_COUNT = 10;
+
 	private static enum ExecuteMode
 	{
 		Commit
@@ -82,28 +84,49 @@ public class DMLTester
 
 		// After rollback test, the contents of the TEST table is equal to the
 		// contents after the insert tests.
-		runBulkTests();
+		runBulkInsertTests();
+		runBulkUpdateTests();
+		runBulkDeleteTests();
 	}
 
-	private void runBulkTests() throws SQLException
+	private void runBulkInsertTests() throws SQLException
 	{
 		verifyTableContentsAfterInsert();
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < BULK_INSERT_COUNT; i++)
 		{
 			log.info("Starting insert-with-select test no #" + i);
 			String sql = "INSERT INTO TEST SELECT ID + (SELECT MAX(ID) FROM TEST), UUID, ACTIVE, AMOUNT, DESCRIPTION, CREATED_DATE, LAST_UPDATED FROM TEST";
 			PreparedStatement statement = connection.prepareStatement(sql);
 			statement.executeUpdate();
 			connection.commit();
-			verifyTableContents("SELECT COUNT(*) FROM TEST", (int) Math.pow(2, (i + 2)));
-			verifyTableContents("SELECT MAX(ID) FROM TEST", (int) Math.pow(2, (i + 2)));
+			verifyTableContents("SELECT COUNT(*) FROM TEST", Double.valueOf(Math.pow(2, (i + 2))).longValue());
+			verifyTableContents("SELECT MAX(ID) FROM TEST", Double.valueOf(Math.pow(2, (i + 2))).longValue());
 			log.info("Finished insert-with-select test no #" + i);
 		}
+	}
+
+	private void runBulkUpdateTests() throws SQLException
+	{
+		log.info("Starting bulk update test");
 		String sql = "UPDATE TEST SET DESCRIPTION='Divisble by three' WHERE MOD(ID, 3)=0";
 		PreparedStatement statement = connection.prepareStatement(sql);
 		statement.executeUpdate();
 		connection.commit();
 		verifyTableContents("SELECT DESCRIPTION FROM TEST WHERE ID=3", "Divisble by three");
+		log.info("Finished bulk update test");
+	}
+
+	private void runBulkDeleteTests() throws SQLException
+	{
+		log.info("Starting bulk delete test");
+		String sql = "DELETE FROM TEST WHERE MOD(ID, 3)=0";
+		PreparedStatement statement = connection.prepareStatement(sql);
+		statement.executeUpdate();
+		connection.commit();
+		verifyTableContents("SELECT COUNT(*) FROM TEST WHERE DESCRIPTION='Divisble by three'", 0L);
+		verifyTableContents("SELECT COUNT(*) FROM TEST",
+				(2l * Double.valueOf(Math.pow(2, (BULK_INSERT_COUNT + 1))).longValue()) / 3l);
+		log.info("Finished bulk update test");
 	}
 
 	private void runInsertTests() throws IOException, URISyntaxException, SQLException
