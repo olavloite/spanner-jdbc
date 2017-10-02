@@ -21,6 +21,8 @@ import com.google.cloud.ByteArray;
 import com.google.cloud.Date;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.ResultSet;
+import com.google.cloud.spanner.Type;
+import com.google.cloud.spanner.Type.StructField;
 
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
@@ -28,73 +30,73 @@ import nl.topicus.jdbc.test.category.UnitTest;
 @Category(UnitTest.class)
 public class CloudSpannerResultSetTest
 {
-	private static final String STRING_COL_NULL = "STRING_COL_NULL";
+	static final String STRING_COL_NULL = "STRING_COL_NULL";
 
-	private static final String STRING_COL_NOT_NULL = "STRING_COL_NOT_NULL";
+	static final String STRING_COL_NOT_NULL = "STRING_COL_NOT_NULL";
 
-	private static final int STRING_COLINDEX_NULL = 1;
+	static final int STRING_COLINDEX_NULL = 1;
 
-	private static final int STRING_COLINDEX_NOTNULL = 2;
+	static final int STRING_COLINDEX_NOTNULL = 2;
 
-	private static final String BOOLEAN_COL_NULL = "BOOLEAN_COL_NULL";
+	static final String BOOLEAN_COL_NULL = "BOOLEAN_COL_NULL";
 
-	private static final String BOOLEAN_COL_NOT_NULL = "BOOLEAN_COL_NOT_NULL";
+	static final String BOOLEAN_COL_NOT_NULL = "BOOLEAN_COL_NOT_NULL";
 
-	private static final int BOOLEAN_COLINDEX_NULL = 1;
+	static final int BOOLEAN_COLINDEX_NULL = 3;
 
-	private static final int BOOLEAN_COLINDEX_NOTNULL = 2;
+	static final int BOOLEAN_COLINDEX_NOTNULL = 4;
 
-	private static final String DOUBLE_COL_NULL = "DOUBLE_COL_NULL";
+	static final String DOUBLE_COL_NULL = "DOUBLE_COL_NULL";
 
-	private static final String DOUBLE_COL_NOT_NULL = "DOUBLE_COL_NOT_NULL";
+	static final String DOUBLE_COL_NOT_NULL = "DOUBLE_COL_NOT_NULL";
 
-	private static final int DOUBLE_COLINDEX_NULL = 1;
+	static final int DOUBLE_COLINDEX_NULL = 5;
 
-	private static final int DOUBLE_COLINDEX_NOTNULL = 2;
+	static final int DOUBLE_COLINDEX_NOTNULL = 6;
 
-	private static final String BYTES_COL_NULL = "BYTES_COL_NULL";
+	static final String BYTES_COL_NULL = "BYTES_COL_NULL";
 
-	private static final String BYTES_COL_NOT_NULL = "BYTES_COL_NOT_NULL";
+	static final String BYTES_COL_NOT_NULL = "BYTES_COL_NOT_NULL";
 
-	private static final int BYTES_COLINDEX_NULL = 1;
+	static final int BYTES_COLINDEX_NULL = 7;
 
-	private static final int BYTES_COLINDEX_NOTNULL = 2;
+	static final int BYTES_COLINDEX_NOTNULL = 8;
 
-	private static final String LONG_COL_NULL = "LONG_COL_NULL";
+	static final String LONG_COL_NULL = "LONG_COL_NULL";
 
-	private static final String LONG_COL_NOT_NULL = "LONG_COL_NOT_NULL";
+	static final String LONG_COL_NOT_NULL = "LONG_COL_NOT_NULL";
 
-	private static final int LONG_COLINDEX_NULL = 1;
+	static final int LONG_COLINDEX_NULL = 9;
 
-	private static final int LONG_COLINDEX_NOTNULL = 2;
+	static final int LONG_COLINDEX_NOTNULL = 10;
 
-	private static final String DATE_COL_NULL = "DATE_COL_NULL";
+	static final String DATE_COL_NULL = "DATE_COL_NULL";
 
-	private static final String DATE_COL_NOT_NULL = "DATE_COL_NOT_NULL";
+	static final String DATE_COL_NOT_NULL = "DATE_COL_NOT_NULL";
 
-	private static final int DATE_COLINDEX_NULL = 1;
+	static final int DATE_COLINDEX_NULL = 11;
 
-	private static final int DATE_COLINDEX_NOTNULL = 2;
+	static final int DATE_COLINDEX_NOTNULL = 12;
 
-	private static final String TIMESTAMP_COL_NULL = "TIMESTAMP_COL_NULL";
+	static final String TIMESTAMP_COL_NULL = "TIMESTAMP_COL_NULL";
 
-	private static final String TIMESTAMP_COL_NOT_NULL = "TIMESTAMP_COL_NOT_NULL";
+	static final String TIMESTAMP_COL_NOT_NULL = "TIMESTAMP_COL_NOT_NULL";
 
-	private static final int TIMESTAMP_COLINDEX_NULL = 1;
+	static final int TIMESTAMP_COLINDEX_NULL = 13;
 
-	private static final int TIMESTAMP_COLINDEX_NOTNULL = 2;
+	static final int TIMESTAMP_COLINDEX_NOTNULL = 14;
 
-	private static final String TIME_COL_NULL = "TIME_COL_NULL";
+	static final String TIME_COL_NULL = "TIME_COL_NULL";
 
-	private static final String TIME_COL_NOT_NULL = "TIME_COL_NOT_NULL";
+	static final String TIME_COL_NOT_NULL = "TIME_COL_NOT_NULL";
 
-	private static final int TIME_COLINDEX_NULL = 3;
+	static final int TIME_COLINDEX_NULL = 15;
 
-	private static final int TIME_COLINDEX_NOTNULL = 4;
+	static final int TIME_COLINDEX_NOTNULL = 16;
 
 	private CloudSpannerResultSet subject;
 
-	private static ResultSet getMockResultSet()
+	static ResultSet getMockResultSet()
 	{
 		ResultSet res = mock(ResultSet.class);
 		when(res.getString(STRING_COL_NULL)).thenReturn(null);
@@ -105,6 +107,10 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(STRING_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getString(STRING_COLINDEX_NOTNULL - 1)).thenReturn("BAR");
 		when(res.isNull(STRING_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(STRING_COL_NULL)).thenReturn(Type.string());
+		when(res.getColumnType(STRING_COL_NOT_NULL)).thenReturn(Type.string());
+		when(res.getColumnType(STRING_COLINDEX_NULL - 1)).thenReturn(Type.string());
+		when(res.getColumnType(STRING_COLINDEX_NOTNULL - 1)).thenReturn(Type.string());
 
 		when(res.getBoolean(BOOLEAN_COL_NULL)).thenReturn(false);
 		when(res.isNull(BOOLEAN_COL_NULL)).thenReturn(true);
@@ -114,6 +120,10 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(BOOLEAN_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getBoolean(BOOLEAN_COLINDEX_NOTNULL - 1)).thenReturn(false);
 		when(res.isNull(BOOLEAN_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(BOOLEAN_COL_NULL)).thenReturn(Type.bool());
+		when(res.getColumnType(BOOLEAN_COL_NOT_NULL)).thenReturn(Type.bool());
+		when(res.getColumnType(BOOLEAN_COLINDEX_NULL - 1)).thenReturn(Type.bool());
+		when(res.getColumnType(BOOLEAN_COLINDEX_NOTNULL - 1)).thenReturn(Type.bool());
 
 		when(res.getDouble(DOUBLE_COL_NULL)).thenReturn(0d);
 		when(res.isNull(DOUBLE_COL_NULL)).thenReturn(true);
@@ -123,6 +133,10 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(DOUBLE_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getDouble(DOUBLE_COLINDEX_NOTNULL - 1)).thenReturn(2.123456789d);
 		when(res.isNull(DOUBLE_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(DOUBLE_COL_NULL)).thenReturn(Type.float64());
+		when(res.getColumnType(DOUBLE_COL_NOT_NULL)).thenReturn(Type.float64());
+		when(res.getColumnType(DOUBLE_COLINDEX_NULL - 1)).thenReturn(Type.float64());
+		when(res.getColumnType(DOUBLE_COLINDEX_NOTNULL - 1)).thenReturn(Type.float64());
 
 		when(res.getString(BYTES_COL_NULL)).thenReturn(null);
 		when(res.isNull(BYTES_COL_NULL)).thenReturn(true);
@@ -132,6 +146,10 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(BYTES_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getBytes(BYTES_COLINDEX_NOTNULL - 1)).thenReturn(ByteArray.copyFrom("BAR"));
 		when(res.isNull(BYTES_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(BYTES_COL_NULL)).thenReturn(Type.bytes());
+		when(res.getColumnType(BYTES_COL_NOT_NULL)).thenReturn(Type.bytes());
+		when(res.getColumnType(BYTES_COLINDEX_NULL - 1)).thenReturn(Type.bytes());
+		when(res.getColumnType(BYTES_COLINDEX_NOTNULL - 1)).thenReturn(Type.bytes());
 
 		when(res.getLong(LONG_COL_NULL)).thenReturn(0l);
 		when(res.isNull(LONG_COL_NULL)).thenReturn(true);
@@ -141,6 +159,10 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(LONG_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getLong(LONG_COLINDEX_NOTNULL - 1)).thenReturn(2l);
 		when(res.isNull(LONG_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(LONG_COL_NULL)).thenReturn(Type.int64());
+		when(res.getColumnType(LONG_COL_NOT_NULL)).thenReturn(Type.int64());
+		when(res.getColumnType(LONG_COLINDEX_NULL - 1)).thenReturn(Type.int64());
+		when(res.getColumnType(LONG_COLINDEX_NOTNULL - 1)).thenReturn(Type.int64());
 
 		when(res.getDate(DATE_COL_NULL)).thenReturn(null);
 		when(res.isNull(DATE_COL_NULL)).thenReturn(true);
@@ -150,6 +172,10 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(DATE_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getDate(DATE_COLINDEX_NOTNULL - 1)).thenReturn(Date.fromYearMonthDay(2017, 9, 11));
 		when(res.isNull(DATE_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(DATE_COL_NULL)).thenReturn(Type.date());
+		when(res.getColumnType(DATE_COL_NOT_NULL)).thenReturn(Type.date());
+		when(res.getColumnType(DATE_COLINDEX_NULL - 1)).thenReturn(Type.date());
+		when(res.getColumnType(DATE_COLINDEX_NOTNULL - 1)).thenReturn(Type.date());
 
 		Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 		cal1.clear();
@@ -165,6 +191,10 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(TIMESTAMP_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getTimestamp(TIMESTAMP_COLINDEX_NOTNULL - 1)).thenReturn(Timestamp.of(cal2.getTime()));
 		when(res.isNull(TIMESTAMP_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(TIMESTAMP_COL_NULL)).thenReturn(Type.timestamp());
+		when(res.getColumnType(TIMESTAMP_COL_NOT_NULL)).thenReturn(Type.timestamp());
+		when(res.getColumnType(TIMESTAMP_COLINDEX_NULL - 1)).thenReturn(Type.timestamp());
+		when(res.getColumnType(TIMESTAMP_COLINDEX_NOTNULL - 1)).thenReturn(Type.timestamp());
 
 		Calendar cal3 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 		cal3.clear();
@@ -180,8 +210,24 @@ public class CloudSpannerResultSetTest
 		when(res.isNull(TIME_COLINDEX_NULL - 1)).thenReturn(true);
 		when(res.getTimestamp(TIME_COLINDEX_NOTNULL - 1)).thenReturn(Timestamp.of(cal4.getTime()));
 		when(res.isNull(TIME_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(TIME_COL_NULL)).thenReturn(Type.timestamp());
+		when(res.getColumnType(TIME_COL_NOT_NULL)).thenReturn(Type.timestamp());
+		when(res.getColumnType(TIME_COLINDEX_NULL - 1)).thenReturn(Type.timestamp());
+		when(res.getColumnType(TIME_COLINDEX_NOTNULL - 1)).thenReturn(Type.timestamp());
 
 		when(res.getColumnIndex(STRING_COL_NOT_NULL)).thenReturn(1);
+
+		when(res.getType()).thenReturn(Type.struct(StructField.of(STRING_COL_NULL, Type.string()),
+				StructField.of(STRING_COL_NOT_NULL, Type.string()), StructField.of(BOOLEAN_COL_NULL, Type.bool()),
+				StructField.of(BOOLEAN_COL_NOT_NULL, Type.bool()), StructField.of(DOUBLE_COL_NULL, Type.float64()),
+				StructField.of(DOUBLE_COL_NOT_NULL, Type.float64()), StructField.of(BYTES_COL_NULL, Type.bytes()),
+				StructField.of(BYTES_COL_NOT_NULL, Type.bytes()), StructField.of(LONG_COL_NULL, Type.int64()),
+				StructField.of(LONG_COL_NOT_NULL, Type.int64()), StructField.of(DATE_COL_NULL, Type.date()),
+				StructField.of(DATE_COL_NOT_NULL, Type.date()), StructField.of(TIMESTAMP_COL_NULL, Type.timestamp()),
+				StructField.of(TIMESTAMP_COL_NOT_NULL, Type.timestamp()),
+				StructField.of(TIME_COL_NULL, Type.timestamp()), StructField.of(TIME_COL_NOT_NULL, Type.timestamp())
+
+		));
 
 		// Next behaviour.
 		when(res.next()).thenReturn(true, true, true, true, false);

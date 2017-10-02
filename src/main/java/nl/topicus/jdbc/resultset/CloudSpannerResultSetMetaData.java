@@ -63,6 +63,7 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public int getColumnDisplaySize(int column) throws SQLException
 	{
+		// TODO: implement
 		return 0;
 	}
 
@@ -87,18 +88,21 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public int getPrecision(int column) throws SQLException
 	{
+		// TODO: implement
 		return 0;
 	}
 
 	@Override
 	public int getScale(int column) throws SQLException
 	{
+		// TODO: implement
 		return 0;
 	}
 
 	@Override
 	public String getTableName(int column) throws SQLException
 	{
+		// TODO: implement
 		return "";
 	}
 
@@ -123,18 +127,21 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public boolean isReadOnly(int column) throws SQLException
 	{
-		return true;
+		// TODO: implement
+		return false;
 	}
 
 	@Override
 	public boolean isWritable(int column) throws SQLException
 	{
-		return false;
+		// TODO: implement
+		return true;
 	}
 
 	@Override
 	public boolean isDefinitelyWritable(int column) throws SQLException
 	{
+		// TODO: implement
 		return false;
 	}
 
