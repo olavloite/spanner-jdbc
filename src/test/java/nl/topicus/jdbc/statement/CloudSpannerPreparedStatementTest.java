@@ -1,10 +1,28 @@
 package nl.topicus.jdbc.statement;
 
+import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.NClob;
+import java.sql.Ref;
+import java.sql.ResultSetMetaData;
+import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -28,6 +46,7 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
+import nl.topicus.jdbc.CloudSpannerArray;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
@@ -380,6 +399,115 @@ public class CloudSpannerPreparedStatementTest
 		}
 	}
 
+	public static class ParameterTests
+	{
+		@Test
+		public void testParameters() throws SQLException, MalformedURLException
+		{
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = createPreparedStatement(sql);
+			ps.setArray(1, ps.getConnection().createArrayOf("INT64", new Long[] { 1L, 2L, 3L }));
+			ps.setAsciiStream(2, new ByteArrayInputStream("TEST".getBytes()));
+			ps.setAsciiStream(3, new ByteArrayInputStream("TEST".getBytes()), 4);
+			ps.setAsciiStream(4, new ByteArrayInputStream("TEST".getBytes()), 4l);
+			ps.setBigDecimal(5, BigDecimal.valueOf(1l));
+			ps.setBinaryStream(6, new ByteArrayInputStream("TEST".getBytes()));
+			ps.setBinaryStream(7, new ByteArrayInputStream("TEST".getBytes()), 4);
+			ps.setBinaryStream(8, new ByteArrayInputStream("TEST".getBytes()), 4l);
+			ps.setBlob(9, (Blob) null);
+			ps.setBlob(10, new ByteArrayInputStream("TEST".getBytes()));
+			ps.setBlob(11, new ByteArrayInputStream("TEST".getBytes()), 4l);
+			ps.setBoolean(12, Boolean.TRUE);
+			ps.setByte(13, (byte) 1);
+			ps.setBytes(14, "TEST".getBytes());
+			ps.setCharacterStream(15, new StringReader("TEST"));
+			ps.setCharacterStream(16, new StringReader("TEST"), 4);
+			ps.setCharacterStream(17, new StringReader("TEST"), 4l);
+			ps.setClob(18, (Clob) null);
+			ps.setClob(19, new StringReader("TEST"));
+			ps.setClob(20, new StringReader("TEST"), 4l);
+			ps.setDate(21, new Date(1000l));
+			ps.setDate(22, new Date(1000l), Calendar.getInstance(TimeZone.getTimeZone("GMT")));
+			ps.setDouble(23, 1d);
+			ps.setFloat(24, 1f);
+			ps.setInt(25, 1);
+			ps.setLong(26, 1l);
+			ps.setNCharacterStream(27, new StringReader("TEST"));
+			ps.setNCharacterStream(28, new StringReader("TEST"), 4l);
+			ps.setNClob(29, (NClob) null);
+			ps.setNClob(30, new StringReader("TEST"));
+			ps.setNClob(31, new StringReader("TEST"), 4l);
+			ps.setNString(32, "TEST");
+			ps.setNull(33, Types.BIGINT);
+			ps.setNull(34, Types.BIGINT, "INT64");
+			ps.setObject(35, "TEST");
+			ps.setObject(36, "TEST", Types.NVARCHAR);
+			ps.setObject(37, "TEST", Types.NVARCHAR, 20);
+			ps.setRef(38, (Ref) null);
+			ps.setRowId(39, (RowId) null);
+			ps.setShort(40, (short) 1);
+			ps.setSQLXML(41, (SQLXML) null);
+			ps.setString(42, "TEST");
+			ps.setTime(43, new Time(1000l));
+			ps.setTime(44, new Time(1000l), Calendar.getInstance(TimeZone.getTimeZone("GMT")));
+			ps.setTimestamp(45, new Timestamp(1000l));
+			ps.setTimestamp(46, new Timestamp(1000l), Calendar.getInstance(TimeZone.getTimeZone("GMT")));
+			ps.setUnicodeStream(47, new ByteArrayInputStream("TEST".getBytes()), 4);
+			ps.setURL(48, new URL("http://www.googlecloudspanner.com"));
+
+			CloudSpannerParameterMetaData pmd = ps.getParameterMetaData();
+			Assert.assertEquals(48, pmd.getParameterCount());
+			Assert.assertEquals(CloudSpannerArray.class.getName(), pmd.getParameterClassName(1));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(2));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(3));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(4));
+			Assert.assertEquals(BigDecimal.class.getName(), pmd.getParameterClassName(5));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(6));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(7));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(8));
+			Assert.assertNull(pmd.getParameterClassName(9));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(10));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(11));
+			Assert.assertEquals(Boolean.class.getName(), pmd.getParameterClassName(12));
+			Assert.assertEquals(Byte.class.getName(), pmd.getParameterClassName(13));
+			Assert.assertEquals(byte[].class.getName(), pmd.getParameterClassName(14));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(15));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(16));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(17));
+			Assert.assertNull(pmd.getParameterClassName(18));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(19));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(20));
+			Assert.assertEquals(Date.class.getName(), pmd.getParameterClassName(21));
+			Assert.assertEquals(Date.class.getName(), pmd.getParameterClassName(22));
+			Assert.assertEquals(Double.class.getName(), pmd.getParameterClassName(23));
+			Assert.assertEquals(Float.class.getName(), pmd.getParameterClassName(24));
+			Assert.assertEquals(Integer.class.getName(), pmd.getParameterClassName(25));
+			Assert.assertEquals(Long.class.getName(), pmd.getParameterClassName(26));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(27));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(28));
+			Assert.assertNull(pmd.getParameterClassName(29));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(30));
+			Assert.assertEquals(StringReader.class.getName(), pmd.getParameterClassName(31));
+			Assert.assertEquals(String.class.getName(), pmd.getParameterClassName(32));
+			Assert.assertEquals(Long.class.getName(), pmd.getParameterClassName(33));
+			Assert.assertEquals(Long.class.getName(), pmd.getParameterClassName(34));
+			Assert.assertEquals(String.class.getName(), pmd.getParameterClassName(35));
+			Assert.assertEquals(String.class.getName(), pmd.getParameterClassName(36));
+			Assert.assertEquals(String.class.getName(), pmd.getParameterClassName(37));
+			Assert.assertNull(pmd.getParameterClassName(38));
+			Assert.assertNull(pmd.getParameterClassName(39));
+			Assert.assertEquals(Short.class.getName(), pmd.getParameterClassName(40));
+			Assert.assertNull(pmd.getParameterClassName(41));
+			Assert.assertEquals(String.class.getName(), pmd.getParameterClassName(42));
+			Assert.assertEquals(Time.class.getName(), pmd.getParameterClassName(43));
+			Assert.assertEquals(Time.class.getName(), pmd.getParameterClassName(44));
+			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(45));
+			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(46));
+			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(47));
+			Assert.assertEquals(URL.class.getName(), pmd.getParameterClassName(48));
+		}
+	}
+
 	private static void testCreateTableStatement(String sql) throws SQLException
 	{
 		boolean isDDL = isDDLStatement(sql);
@@ -443,26 +571,7 @@ public class CloudSpannerPreparedStatementTest
 	public static Mutations getMutations(String sql) throws SQLException
 	{
 		Mutations mutations = null;
-		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
-		CloudSpannerDatabaseMetaData metadata = Mockito.mock(CloudSpannerDatabaseMetaData.class);
-		CloudSpannerResultSet resultSetFoo = Mockito.mock(CloudSpannerResultSet.class);
-		TableKeyMetaData tableFoo = Mockito.mock(TableKeyMetaData.class);
-		Mockito.when(connection.getMetaData()).thenReturn(metadata);
-		Mockito.when(metadata.getPrimaryKeys(null, null, "FOO")).thenReturn(resultSetFoo);
-		Mockito.when(resultSetFoo.next()).thenReturn(true, false);
-		Mockito.when(resultSetFoo.getString("COLUMN_NAME")).thenReturn("ID");
-		Mockito.when(connection.getTable("FOO")).thenReturn(tableFoo);
-		Mockito.when(tableFoo.getKeyColumns()).thenReturn(Arrays.asList("ID"));
-
-		CloudSpannerResultSet resultSetBar = Mockito.mock(CloudSpannerResultSet.class);
-		TableKeyMetaData tableBar = Mockito.mock(TableKeyMetaData.class);
-		Mockito.when(metadata.getPrimaryKeys(null, null, "BAR")).thenReturn(resultSetBar);
-		Mockito.when(resultSetBar.next()).thenReturn(true, true, false);
-		Mockito.when(resultSetBar.getString("COLUMN_NAME")).thenReturn("ID1", "ID2");
-		Mockito.when(connection.getTable("BAR")).thenReturn(tableBar);
-		Mockito.when(tableBar.getKeyColumns()).thenReturn(Arrays.asList("ID1", "ID2"));
-
-		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, connection, null);
+		CloudSpannerPreparedStatement ps = createPreparedStatement(sql);
 		try
 		{
 			Method createMutations = ps.getClass().getDeclaredMethod("createMutations", String.class);
@@ -482,6 +591,40 @@ public class CloudSpannerPreparedStatementTest
 			throw new RuntimeException(e);
 		}
 		return mutations;
+	}
+
+	private static CloudSpannerPreparedStatement createPreparedStatement(String sql) throws SQLException
+	{
+		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
+		Mockito.when(connection.createArrayOf(Mockito.anyString(), Mockito.any())).thenCallRealMethod();
+		CloudSpannerDatabaseMetaData metadata = Mockito.mock(CloudSpannerDatabaseMetaData.class);
+		CloudSpannerResultSet resultSetFoo = Mockito.mock(CloudSpannerResultSet.class);
+		TableKeyMetaData tableFoo = Mockito.mock(TableKeyMetaData.class);
+		Mockito.when(connection.getMetaData()).thenReturn(metadata);
+		Mockito.when(metadata.getPrimaryKeys(null, null, "FOO")).thenReturn(resultSetFoo);
+		Mockito.when(resultSetFoo.next()).thenReturn(true, false);
+		Mockito.when(resultSetFoo.getString("COLUMN_NAME")).thenReturn("ID");
+		Mockito.when(connection.getTable("FOO")).thenReturn(tableFoo);
+		Mockito.when(tableFoo.getKeyColumns()).thenReturn(Arrays.asList("ID"));
+
+		CloudSpannerResultSet resultSetBar = Mockito.mock(CloudSpannerResultSet.class);
+		TableKeyMetaData tableBar = Mockito.mock(TableKeyMetaData.class);
+		Mockito.when(metadata.getPrimaryKeys(null, null, "BAR")).thenReturn(resultSetBar);
+		Mockito.when(resultSetBar.next()).thenReturn(true, true, false);
+		Mockito.when(resultSetBar.getString("COLUMN_NAME")).thenReturn("ID1", "ID2");
+		Mockito.when(connection.getTable("BAR")).thenReturn(tableBar);
+		Mockito.when(tableBar.getKeyColumns()).thenReturn(Arrays.asList("ID1", "ID2"));
+
+		CloudSpannerResultSet fooColumns = Mockito.mock(CloudSpannerResultSet.class);
+		Mockito.when(fooColumns.next()).thenReturn(true, true, true, false);
+		Mockito.when(fooColumns.getString("COLUMN_NAME")).thenReturn("ID", "COL1", "COL2");
+		Mockito.when(fooColumns.getInt("COLUMN_SIZE")).thenReturn(8, 50, 100);
+		Mockito.when(fooColumns.getInt("DATA_TYPE")).thenReturn(Types.BIGINT, Types.NVARCHAR, Types.NVARCHAR);
+		Mockito.when(fooColumns.getInt("NULLABLE")).thenReturn(ResultSetMetaData.columnNoNulls,
+				ResultSetMetaData.columnNoNulls, ResultSetMetaData.columnNullable);
+		Mockito.when(metadata.getColumns(null, null, "FOO", null)).thenReturn(fooColumns);
+
+		return new CloudSpannerPreparedStatement(sql, connection, null);
 	}
 
 }

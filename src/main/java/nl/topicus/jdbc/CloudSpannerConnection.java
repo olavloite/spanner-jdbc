@@ -24,6 +24,7 @@ import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.auth.oauth2.UserCredentials;
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
@@ -76,6 +77,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private String database;
 
 	private CloudSpannerTransaction transaction;
+
+	private Timestamp lastCommitTimestamp;
 
 	private MetaDataStore metaDataStore;
 
@@ -247,7 +250,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public void commit() throws SQLException
 	{
-		transaction.commit();
+		lastCommitTimestamp = transaction.commit();
 	}
 
 	@Override
@@ -399,6 +402,16 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public boolean isAllowExtendedMode()
 	{
 		return allowExtendedMode;
+	}
+
+	/**
+	 * 
+	 * @return The commit timestamp of the last transaction that committed
+	 *         succesfully
+	 */
+	public Timestamp getLastCommitTimestamp()
+	{
+		return lastCommitTimestamp;
 	}
 
 }

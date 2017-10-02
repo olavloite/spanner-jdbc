@@ -8,6 +8,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.ResultSet;
@@ -42,6 +43,8 @@ class TransactionThread extends Thread
 	private boolean stopped;
 
 	private TransactionStatus status = TransactionStatus.NOT_STARTED;
+
+	private Timestamp commitTimestamp;
 
 	private Exception exception;
 
@@ -111,6 +114,7 @@ class TransactionThread extends Thread
 						return TransactionStatus.SUCCESS;
 					}
 				});
+				commitTimestamp = runner.getCommitTimestamp();
 			}
 			catch (Exception e)
 			{
@@ -152,9 +156,10 @@ class TransactionThread extends Thread
 			buffer(it.next());
 	}
 
-	void commit() throws SQLException
+	Timestamp commit() throws SQLException
 	{
 		stopTransaction(true);
+		return commitTimestamp;
 	}
 
 	void rollback() throws SQLException

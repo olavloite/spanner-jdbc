@@ -2,6 +2,7 @@ package nl.topicus.jdbc.transaction;
 
 import java.sql.SQLException;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeySet;
@@ -72,8 +73,9 @@ public class CloudSpannerTransaction implements TransactionContext
 		}
 	}
 
-	public void commit() throws SQLException
+	public Timestamp commit() throws SQLException
 	{
+		Timestamp res = null;
 		try
 		{
 			if (connection.isReadOnly())
@@ -87,7 +89,7 @@ public class CloudSpannerTransaction implements TransactionContext
 			{
 				if (transactionThread != null)
 				{
-					transactionThread.commit();
+					res = transactionThread.commit();
 				}
 			}
 		}
@@ -96,6 +98,7 @@ public class CloudSpannerTransaction implements TransactionContext
 			transactionThread = null;
 			readOnlyTransaction = null;
 		}
+		return res;
 	}
 
 	public void rollback() throws SQLException

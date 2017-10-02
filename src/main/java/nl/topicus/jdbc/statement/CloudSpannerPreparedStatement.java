@@ -1,6 +1,5 @@
 package nl.topicus.jdbc.statement;
 
-import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -524,7 +523,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	}
 
 	@Override
-	public ParameterMetaData getParameterMetaData() throws SQLException
+	public CloudSpannerParameterMetaData getParameterMetaData() throws SQLException
 	{
 		// parse the SQL statement without executing it
 		try

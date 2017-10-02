@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.statement;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.Date;
@@ -91,6 +93,17 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		else if (byte[].class.isAssignableFrom(value.getClass()))
 		{
 			return binder.to(ByteArray.copyFrom((byte[]) value));
+		}
+		else if (ByteArrayInputStream.class.isAssignableFrom(value.getClass()))
+		{
+			try
+			{
+				return binder.to(ByteArray.copyFrom((ByteArrayInputStream) value));
+			}
+			catch (IOException e)
+			{
+				throw new IllegalArgumentException("Could not copy bytes from input stream: " + e.getMessage(), e);
+			}
 		}
 		else if (Array.class.isAssignableFrom(value.getClass()))
 		{
