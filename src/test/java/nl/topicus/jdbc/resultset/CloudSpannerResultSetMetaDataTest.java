@@ -79,7 +79,8 @@ public class CloudSpannerResultSetMetaDataTest
 	@Test
 	public void testGetColumnDisplaySize() throws SQLException
 	{
-		assertEquals(0, subject.getColumnDisplaySize(1));
+		assertEquals(50, subject.getColumnDisplaySize(CloudSpannerResultSetTest.STRING_COLINDEX_NOTNULL));
+		assertEquals(10, subject.getColumnDisplaySize(CloudSpannerResultSetTest.LONG_COLINDEX_NOTNULL));
 	}
 
 	@Test

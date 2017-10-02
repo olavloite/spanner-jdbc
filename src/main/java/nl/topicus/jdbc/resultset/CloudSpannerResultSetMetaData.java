@@ -63,8 +63,27 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public int getColumnDisplaySize(int column) throws SQLException
 	{
-		// TODO: implement
-		return 0;
+		int colType = getColumnType(column);
+		switch (colType)
+		{
+		case Types.ARRAY:
+			return 50;
+		case Types.BOOLEAN:
+			return 5;
+		case Types.BINARY:
+			return 50;
+		case Types.DATE:
+			return 10;
+		case Types.DOUBLE:
+			return 14;
+		case Types.BIGINT:
+			return 10;
+		case Types.NVARCHAR:
+			return 50;
+		case Types.TIMESTAMP:
+			return 16;
+		}
+		return 10;
 	}
 
 	@Override
