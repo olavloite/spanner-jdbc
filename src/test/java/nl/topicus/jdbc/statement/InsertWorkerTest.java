@@ -1,8 +1,6 @@
 package nl.topicus.jdbc.statement;
 
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -97,18 +95,6 @@ public class InsertWorkerTest
 		Mockito.when(selectResult.getObject(2)).thenReturn("One", "Two");
 		Mockito.when(selectResult.getObject(3)).thenReturn("En", "To");
 		Mockito.when(insertStatement.executeUpdate()).thenReturn(1, 1);
-
-		DatabaseMetaData metadata = connection.getMetaData();
-		CloudSpannerResultSet columns = Mockito.mock(CloudSpannerResultSet.class);
-		Mockito.when(metadata.getColumns(null, null, "FOO", null)).thenReturn(columns);
-		Mockito.when(columns.next()).thenReturn(true, true, true, false);
-		Mockito.when(columns.getString("COLUMN_NAME")).thenReturn("ID", "COL1", "COL2");
-		Mockito.when(columns.getLong("COLUMN_SIZE")).thenReturn(8l, 50l, 100l);
-		Mockito.when(columns.getInt("DATA_TYPE")).thenReturn(Types.BIGINT, Types.NVARCHAR, Types.NVARCHAR);
-
-		CloudSpannerResultSet indices = Mockito.mock(CloudSpannerResultSet.class);
-		Mockito.when(metadata.getIndexInfo(null, null, "FOO", false, false)).thenReturn(indices);
-		Mockito.when(indices.next()).thenReturn(true, false);
 	}
 
 }

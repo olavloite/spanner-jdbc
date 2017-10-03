@@ -12,14 +12,12 @@ import java.sql.Clob;
 import java.sql.Date;
 import java.sql.NClob;
 import java.sql.Ref;
-import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
@@ -33,7 +31,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.ByteArray;
@@ -47,11 +44,8 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import nl.topicus.jdbc.CloudSpannerArray;
-import nl.topicus.jdbc.CloudSpannerConnection;
-import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
-import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
-import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.test.category.UnitTest;
+import nl.topicus.jdbc.test.util.CloudSpannerTestObjects;
 
 @RunWith(Enclosed.class)
 @Category(UnitTest.class)
@@ -405,7 +399,7 @@ public class CloudSpannerPreparedStatementTest
 		public void testParameters() throws SQLException, MalformedURLException
 		{
 			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
-			CloudSpannerPreparedStatement ps = createPreparedStatement(sql);
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
 			ps.setArray(1, ps.getConnection().createArrayOf("INT64", new Long[] { 1L, 2L, 3L }));
 			ps.setAsciiStream(2, new ByteArrayInputStream("TEST".getBytes()));
 			ps.setAsciiStream(3, new ByteArrayInputStream("TEST".getBytes()), 4);
@@ -571,7 +565,7 @@ public class CloudSpannerPreparedStatementTest
 	public static Mutations getMutations(String sql) throws SQLException
 	{
 		Mutations mutations = null;
-		CloudSpannerPreparedStatement ps = createPreparedStatement(sql);
+		CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
 		try
 		{
 			Method createMutations = ps.getClass().getDeclaredMethod("createMutations", String.class);
@@ -591,40 +585,6 @@ public class CloudSpannerPreparedStatementTest
 			throw new RuntimeException(e);
 		}
 		return mutations;
-	}
-
-	private static CloudSpannerPreparedStatement createPreparedStatement(String sql) throws SQLException
-	{
-		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
-		Mockito.when(connection.createArrayOf(Mockito.anyString(), Mockito.any())).thenCallRealMethod();
-		CloudSpannerDatabaseMetaData metadata = Mockito.mock(CloudSpannerDatabaseMetaData.class);
-		CloudSpannerResultSet resultSetFoo = Mockito.mock(CloudSpannerResultSet.class);
-		TableKeyMetaData tableFoo = Mockito.mock(TableKeyMetaData.class);
-		Mockito.when(connection.getMetaData()).thenReturn(metadata);
-		Mockito.when(metadata.getPrimaryKeys(null, null, "FOO")).thenReturn(resultSetFoo);
-		Mockito.when(resultSetFoo.next()).thenReturn(true, false);
-		Mockito.when(resultSetFoo.getString("COLUMN_NAME")).thenReturn("ID");
-		Mockito.when(connection.getTable("FOO")).thenReturn(tableFoo);
-		Mockito.when(tableFoo.getKeyColumns()).thenReturn(Arrays.asList("ID"));
-
-		CloudSpannerResultSet resultSetBar = Mockito.mock(CloudSpannerResultSet.class);
-		TableKeyMetaData tableBar = Mockito.mock(TableKeyMetaData.class);
-		Mockito.when(metadata.getPrimaryKeys(null, null, "BAR")).thenReturn(resultSetBar);
-		Mockito.when(resultSetBar.next()).thenReturn(true, true, false);
-		Mockito.when(resultSetBar.getString("COLUMN_NAME")).thenReturn("ID1", "ID2");
-		Mockito.when(connection.getTable("BAR")).thenReturn(tableBar);
-		Mockito.when(tableBar.getKeyColumns()).thenReturn(Arrays.asList("ID1", "ID2"));
-
-		CloudSpannerResultSet fooColumns = Mockito.mock(CloudSpannerResultSet.class);
-		Mockito.when(fooColumns.next()).thenReturn(true, true, true, false);
-		Mockito.when(fooColumns.getString("COLUMN_NAME")).thenReturn("ID", "COL1", "COL2");
-		Mockito.when(fooColumns.getInt("COLUMN_SIZE")).thenReturn(8, 50, 100);
-		Mockito.when(fooColumns.getInt("DATA_TYPE")).thenReturn(Types.BIGINT, Types.NVARCHAR, Types.NVARCHAR);
-		Mockito.when(fooColumns.getInt("NULLABLE")).thenReturn(ResultSetMetaData.columnNoNulls,
-				ResultSetMetaData.columnNoNulls, ResultSetMetaData.columnNullable);
-		Mockito.when(metadata.getColumns(null, null, "FOO", null)).thenReturn(fooColumns);
-
-		return new CloudSpannerPreparedStatement(sql, connection, null);
 	}
 
 }
