@@ -67,19 +67,20 @@ public class CloudSpannerDriver implements Driver
 				for (int i = 1; i < connectionParts.length; i++)
 				{
 					String conPart = connectionParts[i].replace(" ", "");
-					if (conPart.startsWith(PROJECT_URL_PART))
+					String conPartLower = conPart.toLowerCase();
+					if (conPartLower.startsWith(PROJECT_URL_PART.toLowerCase()))
 						res.project = conPart.substring(PROJECT_URL_PART.length());
-					else if (conPart.startsWith(INSTANCE_URL_PART))
+					else if (conPartLower.startsWith(INSTANCE_URL_PART.toLowerCase()))
 						res.instance = conPart.substring(INSTANCE_URL_PART.length());
-					else if (conPart.startsWith(DATABASE_URL_PART))
+					else if (conPartLower.startsWith(DATABASE_URL_PART.toLowerCase()))
 						res.database = conPart.substring(DATABASE_URL_PART.length());
-					else if (conPart.startsWith(KEY_FILE_URL_PART))
+					else if (conPartLower.startsWith(KEY_FILE_URL_PART.toLowerCase()))
 						res.keyFile = conPart.substring(KEY_FILE_URL_PART.length());
-					else if (conPart.startsWith(OAUTH_ACCESS_TOKEN_URL_PART))
+					else if (conPartLower.startsWith(OAUTH_ACCESS_TOKEN_URL_PART.toLowerCase()))
 						res.oauthToken = conPart.substring(OAUTH_ACCESS_TOKEN_URL_PART.length());
-					else if (conPart.startsWith(SIMULATE_PRODUCT_NAME))
+					else if (conPartLower.startsWith(SIMULATE_PRODUCT_NAME.toLowerCase()))
 						res.productName = conPart.substring(SIMULATE_PRODUCT_NAME.length());
-					else if (conPart.startsWith(ALLOW_EXTENDED_MODE))
+					else if (conPartLower.startsWith(ALLOW_EXTENDED_MODE.toLowerCase()))
 					{
 						try
 						{
@@ -102,19 +103,31 @@ public class CloudSpannerDriver implements Driver
 		{
 			if (info != null)
 			{
-				project = info.getProperty(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
-				instance = info.getProperty(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
-				database = info.getProperty(DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1), database);
-				keyFile = info.getProperty(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1), keyFile);
-				oauthToken = info.getProperty(
-						OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1), oauthToken);
-				productName = info.getProperty(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
+				// Make all lower case
+				Properties lowerCaseInfo = new Properties();
+				for (String key : info.stringPropertyNames())
+				{
+					lowerCaseInfo.setProperty(key.toLowerCase(), info.getProperty(key));
+				}
+
+				project = lowerCaseInfo.getProperty(
+						PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1).toLowerCase(), project);
+				instance = lowerCaseInfo.getProperty(
+						INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1).toLowerCase(), instance);
+				database = lowerCaseInfo.getProperty(
+						DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1).toLowerCase(), database);
+				keyFile = lowerCaseInfo.getProperty(
+						KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1).toLowerCase(), keyFile);
+				oauthToken = lowerCaseInfo.getProperty(OAUTH_ACCESS_TOKEN_URL_PART
+						.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1).toLowerCase(), oauthToken);
+				productName = lowerCaseInfo.getProperty(
+						SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1).toLowerCase(),
 						productName);
 				try
 				{
-					allowExtendedMode = Boolean.valueOf(
-							info.getProperty(ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
-									String.valueOf(allowExtendedMode)));
+					allowExtendedMode = Boolean.valueOf(lowerCaseInfo.getProperty(
+							ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1).toLowerCase(),
+							String.valueOf(allowExtendedMode)));
 				}
 				catch (NumberFormatException e)
 				{
