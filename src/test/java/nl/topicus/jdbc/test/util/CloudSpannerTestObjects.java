@@ -18,6 +18,7 @@ import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
+import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
 
 public class CloudSpannerTestObjects
 {
@@ -28,6 +29,10 @@ public class CloudSpannerTestObjects
 		Mockito.when(connection.createArrayOf(Mockito.anyString(), Mockito.any())).thenCallRealMethod();
 		DatabaseMetaData metadata = createMetaData();
 		Mockito.when(connection.getMetaData()).thenReturn(metadata);
+		CloudSpannerTransaction transaction = Mockito.mock(CloudSpannerTransaction.class);
+		Mockito.when(transaction.executeQuery(Mockito.any()))
+				.thenReturn(Mockito.mock(com.google.cloud.spanner.ResultSet.class));
+		Mockito.when(connection.getTransaction()).thenReturn(transaction);
 
 		TableKeyMetaData tableFoo = Mockito.mock(TableKeyMetaData.class);
 		Mockito.when(tableFoo.getKeyColumns()).thenAnswer(new Returns(Arrays.asList("ID")));

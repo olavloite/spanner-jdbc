@@ -79,6 +79,9 @@ public class DMLTester
 		log.info("Verifying table contents after update");
 		verifyTableContentsAfterUpdate();
 
+		log.info("Running specific select tests");
+		runSelectTests();
+
 		runDeleteTests();
 		runRollbackTests();
 
@@ -87,6 +90,21 @@ public class DMLTester
 		runBulkInsertTests();
 		runBulkUpdateTests();
 		runBulkDeleteTests();
+	}
+
+	private void runSelectTests() throws SQLException
+	{
+		String sql = "SELECT * FROM TESTCHILD@{FORCE_INDEX=IDX_TESTCHILD_DESCRIPTION} WHERE DESCRIPTION LIKE ?";
+		PreparedStatement ps = connection.prepareStatement(sql);
+		ps.setString(1, "Child%");
+		int count = 0;
+		try (ResultSet rs = ps.executeQuery())
+		{
+			while (rs.next())
+				count++;
+		}
+		if (count != 4)
+			throw new SQLException("Expected 4 records, found " + count);
 	}
 
 	private void runBulkInsertTests() throws SQLException

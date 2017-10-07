@@ -12,6 +12,7 @@ import java.sql.Clob;
 import java.sql.Date;
 import java.sql.NClob;
 import java.sql.Ref;
+import java.sql.ResultSet;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
@@ -499,6 +500,41 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(46));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(47));
 			Assert.assertEquals(URL.class.getName(), pmd.getParameterClassName(48));
+		}
+	}
+
+	public static class SelectStatementTests
+	{
+		@Test
+		public void testSimpleSelect() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT * FROM FOO";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
+		public void testSelectWithParameters() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT * FROM FOO WHERE ID=?";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000L);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
+		public void testSelectWithForceIndex() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT * FROM FOO@{FORCE_INDEX=TEST_INDEX} WHERE ID=?";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000L);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
 		}
 	}
 
