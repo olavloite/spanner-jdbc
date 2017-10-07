@@ -19,17 +19,30 @@ This driver supports a number of unsupported features of the official JDBC drive
 
 The driver ofcourse also supports normal SELECT-statements, including parameters.
 
-Releases are available on Maven Central. Current release is version 0.16.
+Releases are available on Maven Central. Current release is version 0.17.
+
+Include the following if you want the thick jar version that includes all (shaded) dependencies. This is the recommended version unless you know that the transitive dependencies of the small jar will not conflict with the rest of your project.
 
 <div class="highlight highlight-text-xml"><pre>
 &lt;<span class="pl-ent">dependency</span>&gt;
  	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.16&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.17&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">classifier</span>&gt;shaded&lt;/<span class="pl-ent">classifier</span>&gt;
 &lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
-There is also a 'thick-jar'-version available for use with third-party tools such as SQuirreL, SQL Workbench, DbVisualizer or Safe FME. This jar contains all the necessary dependencies for the driver. The thick-jar version can be found here: https://github.com/olavloite/spanner-jdbc/releases
+Include this if you want the light-weight jar.
+
+<div class="highlight highlight-text-xml"><pre>
+&lt;<span class="pl-ent">dependency</span>&gt;
+ 	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
+    	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.17&lt;/<span class="pl-ent">version</span>&gt;
+&lt;/<span class="pl-ent">dependency</span>&gt;
+</pre></div>
+
+You can also use the 'thick-jar'-version with third-party tools such as SQuirreL, SQL Workbench, DbVisualizer or Safe FME. This jar contains all the necessary (shaded) dependencies for the driver. The thick-jar version can also be found here: https://github.com/olavloite/spanner-jdbc/releases
 
 
 This driver does allow DML operations, although also limited because of the underlying limitations of Google Cloud Spanner. All data manipulation operations are limited to operations that operate on one record. This means that:
