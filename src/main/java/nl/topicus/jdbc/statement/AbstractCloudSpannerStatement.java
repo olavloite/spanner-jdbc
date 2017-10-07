@@ -66,6 +66,11 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		{
 			sql = sql + " FOO=BAR";
 		}
+		// Remove @{FORCE_INDEX...} statements
+		if (formatted.contains("@{FORCE_INDEX"))
+		{
+			sql = formatted.replaceAll("\\@\\{FORCE_INDEX=.*\\}", "");
+		}
 		return sql;
 	}
 
