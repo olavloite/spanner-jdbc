@@ -103,8 +103,8 @@ public class DMLTester
 			while (rs.next())
 				count++;
 		}
-		if (count != 4)
-			throw new SQLException("Expected 4 records, found " + count);
+		if (count != 2)
+			throw new SQLException("Expected 2 records, found " + count);
 	}
 
 	private void runBulkInsertTests() throws SQLException
