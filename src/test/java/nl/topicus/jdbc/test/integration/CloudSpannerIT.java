@@ -129,6 +129,9 @@ public class CloudSpannerIT
 			// Test meta data functions
 			MetaDataTester metaDataTester = new MetaDataTester(connection);
 			metaDataTester.runMetaDataTests();
+			// Test transaction functions
+			TransactionTester txTester = new TransactionTester(connection);
+			txTester.runTransactionTests();
 
 			// Test drop statements
 			tableDDLTester.runDropTests();
