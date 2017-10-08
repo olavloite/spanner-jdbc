@@ -47,7 +47,8 @@ abstract class DMLWhereClauseVisitor extends DMLWhereClauseVisitorAdapter
 	@Override
 	public void visit(EqualsTo expr)
 	{
-		foundEquals = true;
+		// If it is an NOT ID=1, then it's not a valid equals clause
+		foundEquals = !expr.isNot();
 		super.visit(expr);
 	}
 
