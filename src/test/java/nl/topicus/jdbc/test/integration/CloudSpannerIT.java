@@ -132,6 +132,9 @@ public class CloudSpannerIT
 			// Test transaction functions
 			TransactionTester txTester = new TransactionTester(connection);
 			txTester.runTransactionTests();
+			// Test select statements
+			SelectStatementsTester selectTester = new SelectStatementsTester(connection);
+			selectTester.runSelectTests();
 
 			// Test drop statements
 			tableDDLTester.runDropTests();
