@@ -12,11 +12,6 @@ public class ConversionResult
 
 	private final Exception exception;
 
-	ConversionResult(long recordCount, long byteCount, long startTime, long endTime)
-	{
-		this(recordCount, byteCount, startTime, endTime, null);
-	}
-
 	ConversionResult(long recordCount, long byteCount, long startTime, long endTime, Exception exception)
 	{
 		this.recordCount = recordCount;
