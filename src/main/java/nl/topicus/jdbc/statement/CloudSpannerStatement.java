@@ -124,16 +124,23 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public boolean getMoreResults() throws SQLException
 	{
-		lastResultSet.close();
-		lastResultSet = null;
-		lastUpdateCount = -1;
+		moveToNextResult(CLOSE_CURRENT_RESULT);
 		return false;
 	}
 
 	@Override
 	public boolean getMoreResults(int current) throws SQLException
 	{
-		return getMoreResults();
+		moveToNextResult(current);
+		return false;
+	}
+
+	private void moveToNextResult(int current) throws SQLException
+	{
+		if (current != java.sql.Statement.KEEP_CURRENT_RESULT && lastResultSet != null)
+			lastResultSet.close();
+		lastResultSet = null;
+		lastUpdateCount = -1;
 	}
 
 	@Override
