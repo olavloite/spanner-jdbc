@@ -126,6 +126,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	{
 		lastResultSet.close();
 		lastResultSet = null;
+		lastUpdateCount = -1;
 		return false;
 	}
 
