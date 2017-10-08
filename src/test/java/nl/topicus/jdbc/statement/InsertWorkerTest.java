@@ -86,14 +86,20 @@ public class InsertWorkerTest
 	{
 		CloudSpannerPreparedStatement insertStatement = Mockito.mock(CloudSpannerPreparedStatement.class);
 		CloudSpannerPreparedStatement selectStatement = Mockito.mock(CloudSpannerPreparedStatement.class);
+		CloudSpannerPreparedStatement countStatement = Mockito.mock(CloudSpannerPreparedStatement.class);
 		CloudSpannerResultSet selectResult = Mockito.mock(CloudSpannerResultSet.class);
+		CloudSpannerResultSet countResult = Mockito.mock(CloudSpannerResultSet.class);
 		Mockito.when(connection.prepareStatement(Mockito.startsWith("INSERT"))).thenReturn(insertStatement);
-		Mockito.when(connection.prepareStatement(Mockito.startsWith("SELECT"))).thenReturn(selectStatement);
+		Mockito.when(connection.prepareStatement(Mockito.startsWith("SELECT `FOO`"))).thenReturn(selectStatement);
+		Mockito.when(connection.prepareStatement(Mockito.startsWith("SELECT COUNT(*)"))).thenReturn(countStatement);
 		Mockito.when(selectStatement.executeQuery()).thenReturn(selectResult);
 		Mockito.when(selectResult.next()).thenReturn(true, true, false);
 		Mockito.when(selectResult.getObject(1)).thenReturn(1L, 2L);
 		Mockito.when(selectResult.getObject(2)).thenReturn("One", "Two");
 		Mockito.when(selectResult.getObject(3)).thenReturn("En", "To");
+		Mockito.when(countStatement.executeQuery()).thenReturn(countResult);
+		Mockito.when(countResult.next()).thenReturn(true, false);
+		Mockito.when(countResult.getLong(1)).thenReturn(2L);
 		Mockito.when(insertStatement.executeUpdate()).thenReturn(1, 1);
 	}
 
