@@ -240,6 +240,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		try
 		{
+			if (getConnection().isReadOnly())
+			{
+				throw new SQLException("The connection is in read-only mode. Mutations are not allowed.");
+			}
 			if (isDDLStatement(sql))
 			{
 				throw new SQLException("Cannot create mutation for DDL statement. Expected INSERT, UPDATE or DELETE");

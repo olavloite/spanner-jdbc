@@ -26,14 +26,48 @@ public class TransactionTester
 	{
 		connection.setAutoCommit(false);
 		runRollbackTests();
+		runReadOnlyTests();
+	}
+
+	private void runReadOnlyTests() throws SQLException
+	{
+		boolean exception = false;
+		connection.setReadOnly(true);
+		List<Object[]> originalRows = getResultList("SELECT * FROM TEST");
+		try
+		{
+			insertRowInTest();
+			connection.commit();
+		}
+		catch (SQLException e)
+		{
+			connection.rollback();
+			exception = true;
+		}
+		connection.setReadOnly(false);
+		List<Object[]> rows = getResultList("SELECT * FROM TEST");
+		Assert.assertTrue("Expected exception", exception);
+		Assert.assertEquals(originalRows.size(), rows.size());
+		for (int index = 0; index < rows.size(); index++)
+			Assert.assertArrayEquals(originalRows.get(index), rows.get(index));
 	}
 
 	private void runRollbackTests() throws SQLException
 	{
 		List<Object[]> originalRows = getResultList("SELECT * FROM TEST");
+		insertRowInTest();
+		connection.rollback();
+		List<Object[]> rows = getResultList("SELECT * FROM TEST");
+		Assert.assertEquals(originalRows.size(), rows.size());
+		for (int index = 0; index < rows.size(); index++)
+			Assert.assertArrayEquals(originalRows.get(index), rows.get(index));
+	}
+
+	private void insertRowInTest() throws SQLException
+	{
 		PreparedStatement ps = connection.prepareStatement(
 				"INSERT INTO TEST (ID, UUID, ACTIVE, AMOUNT, DESCRIPTION, CREATED_DATE, LAST_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?)");
-		ps.setLong(1, 1l);
+		ps.setLong(1, 1000l);
 		ps.setBytes(2, "FOO".getBytes());
 		ps.setBoolean(3, true);
 		ps.setDouble(4, 50d);
@@ -41,11 +75,6 @@ public class TransactionTester
 		ps.setDate(6, new Date(1000l));
 		ps.setTimestamp(7, new Timestamp(5000l));
 		ps.executeUpdate();
-		connection.rollback();
-		List<Object[]> rows = getResultList("SELECT * FROM TEST");
-		Assert.assertEquals(originalRows.size(), rows.size());
-		for (int index = 0; index < rows.size(); index++)
-			Assert.assertArrayEquals(originalRows.get(index), rows.get(index));
 	}
 
 	private List<Object[]> getResultList(String sql) throws SQLException
