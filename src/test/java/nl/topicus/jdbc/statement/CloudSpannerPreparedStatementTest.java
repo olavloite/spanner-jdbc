@@ -438,6 +438,14 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
+		public void testInsertStatementWithoutColumns() throws SQLException
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("Insert statement must specify a list of column names");
+			assertSingleInsert(getMutation("INSERT INTO FOO VALUES (1, 'two', 0xaa)"), Mutation.Op.INSERT);
+		}
+
+		@Test
 		public void testInsertOnDuplicateKeyStatementWithDiffentUpdateValues() throws SQLException
 		{
 			assertSingleInsert(

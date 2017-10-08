@@ -332,7 +332,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		ItemsList items = insert.getItemsList();
 		if (!(items instanceof ExpressionList))
 		{
-			throw new SQLException("Insert statement must contain a list of values");
+			throw new SQLException("Insert statement must specify a list of values");
+		}
+		if (insert.getColumns() == null || insert.getColumns().isEmpty())
+		{
+			throw new SQLException("Insert statement must specify a list of column names");
 		}
 		List<Expression> expressions = ((ExpressionList) items).getExpressions();
 		String table = unquoteIdentifier(insert.getTable().getFullyQualifiedName());

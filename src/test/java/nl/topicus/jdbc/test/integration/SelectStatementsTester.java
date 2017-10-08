@@ -23,11 +23,6 @@ public class SelectStatementsTester
 
 	public void runSelectTests() throws SQLException
 	{
-		testSimpleSelects();
-	}
-
-	public void testSimpleSelects() throws SQLException
-	{
 		testSelect("SELECT * FROM TEST ORDER BY UUID");
 		testSelect("SELECT * FROM TEST ORDER BY UUID DESC");
 		testSelect("SELECT ID, UUID, UPDATED FROM TEST ORDER BY UUID DESC, ID");
@@ -36,6 +31,8 @@ public class SelectStatementsTester
 		testSelect("SELECT `ID`, `UUID`, `UPDATED` FROM `TEST` ORDER BY `UUID` DESC, `ID`");
 		testSelect("SELECT ID, UUID, UPDATED FROM TEST WHERE ID=? ORDER BY UUID DESC, ID", 1L);
 		testSelect("SELECT * FROM TEST WHERE ID IN (SELECT CHILDID FROM TESTCHILD)", 1L);
+		testSelect("SELECT * FROM TESTCHILD@{FORCE_INDEX=IDX_TESTCHILD_DESCRIPTION} WHERE DESCRIPTION LIKE ?",
+				"%CHILD%");
 	}
 
 	private void testSelect(String sql, Object... parameters) throws SQLException
