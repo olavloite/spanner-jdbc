@@ -371,6 +371,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public boolean isValid(int timeout) throws SQLException
 	{
+		if (isClosed())
+			return false;
 		Statement statement = createStatement();
 		statement.setQueryTimeout(timeout);
 		try (ResultSet rs = statement.executeQuery("SELECT 1"))
