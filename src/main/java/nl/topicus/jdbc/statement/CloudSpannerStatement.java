@@ -99,6 +99,16 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		return false;
 	}
 
+	protected boolean isSelectStatement(String sql)
+	{
+		String select = sql.trim();
+		select = select.substring(0, Math.min(6, select.length())).toUpperCase();
+		if (select.startsWith("SELECT"))
+			return true;
+
+		return false;
+	}
+
 	@Override
 	public ResultSet getResultSet() throws SQLException
 	{

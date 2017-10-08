@@ -2,6 +2,7 @@ package nl.topicus.jdbc.statement;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -485,6 +487,88 @@ public class CloudSpannerPreparedStatementTest
 		}
 	}
 
+	public static class BatchTests
+	{
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
+		@Test
+		public void testBatchedInsertStatements() throws SQLException, NoSuchFieldException, SecurityException,
+				IllegalArgumentException, IllegalAccessException
+		{
+			Field batchMutationsField = CloudSpannerPreparedStatement.class.getDeclaredField("batchMutations");
+			batchMutationsField.setAccessible(true);
+			String sql = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			for (int i = 1; i <= 2; i++)
+			{
+				ps.setInt(1, i);
+				ps.setString(2, String.valueOf(i));
+				ps.setBytes(3, String.valueOf(i).getBytes());
+				ps.addBatch();
+				@SuppressWarnings("unchecked")
+				List<Mutations> batchMutations = (List<Mutations>) batchMutationsField.get(ps);
+				Assert.assertEquals(i, batchMutations.size());
+			}
+			int[] res = ps.executeBatch();
+			Assert.assertArrayEquals(new int[] { 1, 1 }, res);
+			@SuppressWarnings("unchecked")
+			List<Mutations> batchMutations = (List<Mutations>) batchMutationsField.get(ps);
+			Assert.assertEquals(0, batchMutations.size());
+		}
+
+		@Test
+		public void testClearBatch() throws SQLException, NoSuchFieldException, SecurityException,
+				IllegalArgumentException, IllegalAccessException
+		{
+			Field batchMutationsField = CloudSpannerPreparedStatement.class.getDeclaredField("batchMutations");
+			batchMutationsField.setAccessible(true);
+			String sql = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			for (int i = 1; i <= 2; i++)
+			{
+				ps.setInt(1, i);
+				ps.setString(2, String.valueOf(i));
+				ps.setBytes(3, String.valueOf(i).getBytes());
+				ps.addBatch();
+				@SuppressWarnings("unchecked")
+				List<Mutations> batchMutations = (List<Mutations>) batchMutationsField.get(ps);
+				Assert.assertEquals(i, batchMutations.size());
+			}
+			ps.clearBatch();
+			@SuppressWarnings("unchecked")
+			List<Mutations> batchMutations = (List<Mutations>) batchMutationsField.get(ps);
+			Assert.assertEquals(0, batchMutations.size());
+			int[] res = ps.executeBatch();
+			Assert.assertArrayEquals(new int[] {}, res);
+		}
+
+		@Test
+		public void testBatchWithSelect() throws SQLException, NoSuchFieldException, SecurityException,
+				IllegalArgumentException, IllegalAccessException
+		{
+			String sql = "\nSELECT * FROM FOO WHERE ID<?";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000l);
+			thrown.expect(SQLFeatureNotSupportedException.class);
+			thrown.expectMessage("SELECT statements may not be batched");
+			ps.addBatch();
+		}
+
+		@Test
+		public void testBatchWithDDL() throws SQLException, NoSuchFieldException, SecurityException,
+				IllegalArgumentException, IllegalAccessException
+		{
+			String sql = "\nCREATE TABLE FOO (ID INT64 NOT NULL, COL1 STRING(100)) PRIMARY KEY (ID)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000l);
+			thrown.expect(SQLFeatureNotSupportedException.class);
+			thrown.expectMessage("DDL statements may not be batched");
+			ps.addBatch();
+		}
+
+	}
+
 	public static class DDLStatementTests
 	{
 		@Rule
@@ -622,6 +706,45 @@ public class CloudSpannerPreparedStatementTest
 
 	public static class SelectStatementTests
 	{
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
+		@Test
+		public void testExecuteQuerySQL() throws SQLException, MalformedURLException
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("The executeQuery(String sql)-method may not be called on a PreparedStatement");
+			String sql = "SELECT * FROM FOO";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			try (ResultSet rs = ps.executeQuery(sql))
+			{
+			}
+		}
+
+		@Test
+		public void testInvalidSQL() throws SQLException, MalformedURLException
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage(CloudSpannerPreparedStatement.PARSE_ERROR);
+			String sql = "SELECT * FOO";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
+		public void testExecuteQueryWithDML() throws SQLException, MalformedURLException
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("SQL statement not suitable for executeQuery. Expected SELECT-statement.");
+			String sql = "DELETE FROM FOO";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
 		@Test
 		public void testSimpleSelect() throws SQLException, MalformedURLException
 		{
@@ -644,6 +767,17 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
+		public void testSelectWithSubSelect() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT * FROM FOO WHERE ID IN (SELECT COL1 FROM BAR WHERE COL2=?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000L);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
 		public void testSelectWithForceIndex() throws SQLException, MalformedURLException
 		{
 			String sql = "SELECT * FROM FOO@{FORCE_INDEX=TEST_INDEX} WHERE ID=?";
@@ -652,6 +786,49 @@ public class CloudSpannerPreparedStatementTest
 			try (ResultSet rs = ps.executeQuery())
 			{
 			}
+		}
+
+		@Test
+		public void testSelectWithLimitAndOffset() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT * FROM FOO LIMIT ? OFFSET ?";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000l);
+			ps.setLong(2, 10000l);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+
+			com.google.cloud.spanner.Statement.Builder res = null;
+			try
+			{
+				Statement statement = CCJSqlParserUtil.parse(ps.sanitizeSQL(sql));
+				Method createSelectBuilder = CloudSpannerPreparedStatement.class
+						.getDeclaredMethod("createSelectBuilder", Statement.class);
+				createSelectBuilder.setAccessible(true);
+				res = (com.google.cloud.spanner.Statement.Builder) createSelectBuilder.invoke(ps, statement);
+			}
+			catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+					| JSQLParserException e)
+			{
+				throw new RuntimeException(e);
+			}
+			catch (InvocationTargetException e)
+			{
+				if (e.getTargetException() instanceof SQLException)
+				{
+					throw (SQLException) e.getTargetException();
+				}
+				throw new RuntimeException(e);
+			}
+			// Check the resulting builder.
+			com.google.cloud.spanner.Statement googleStatement = res.build();
+			String googleSql = googleStatement.getSql();
+			long param1 = googleStatement.getParameters().get("p1").getInt64();
+			long param2 = googleStatement.getParameters().get("p2").getInt64();
+			Assert.assertEquals("SELECT * FROM FOO LIMIT @p1 OFFSET @p2", googleSql);
+			Assert.assertEquals(1000l, param1);
+			Assert.assertEquals(10000l, param2);
 		}
 	}
 

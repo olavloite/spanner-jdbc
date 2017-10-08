@@ -48,7 +48,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private static final String INVALID_WHERE_CLAUSE_UPDATE_MESSAGE = "The UPDATE statement does not contain a valid WHERE clause. UPDATE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form 'ID=value' or 'ID1=value1 AND ID2=value2'";
 
-	private static final String PARSE_ERROR = "Error while parsing sql statement ";
+	static final String PARSE_ERROR = "Error while parsing sql statement ";
 
 	private String sql;
 
@@ -187,6 +187,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		if (isDDLStatement(sql))
 		{
 			throw new SQLFeatureNotSupportedException("DDL statements may not be batched");
+		}
+		if (isSelectStatement(sql))
+		{
+			throw new SQLFeatureNotSupportedException("SELECT statements may not be batched");
 		}
 		Mutations mutations = createMutations(sql);
 		batchMutations.add(mutations);
