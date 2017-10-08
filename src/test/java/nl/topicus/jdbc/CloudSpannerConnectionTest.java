@@ -1,12 +1,18 @@
 package nl.topicus.jdbc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Savepoint;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -28,6 +34,11 @@ public class CloudSpannerConnectionTest
 
 	public CloudSpannerConnectionTest() throws SQLException
 	{
+		subject = createConnection();
+	}
+
+	private static CloudSpannerConnection createConnection() throws SQLException
+	{
 		String url = "jdbc:cloudspanner://localhost";
 		String project = "test-project-id";
 		String instance = "test-instance-id";
@@ -40,7 +51,7 @@ public class CloudSpannerConnectionTest
 		properties.setProperty("Database", database);
 		properties.setProperty("SimulateProductName", product);
 		properties.setProperty("AllowExtendedMode", allowExtendedMode);
-		subject = (CloudSpannerConnection) DriverManager.getConnection(url, properties);
+		return (CloudSpannerConnection) DriverManager.getConnection(url, properties);
 	}
 
 	@Test
@@ -169,6 +180,131 @@ public class CloudSpannerConnectionTest
 	public void testGetLastCommitTimestamp()
 	{
 		Assert.assertNull(subject.getLastCommitTimestamp());
+	}
+
+	@Test
+	public void testClosedAbstractCloudSpannerConnection() throws SQLException, NoSuchMethodException,
+			SecurityException, IllegalAccessException, IllegalArgumentException
+	{
+		testClosed(AbstractCloudSpannerConnection.class, "getCatalog");
+		testClosed(AbstractCloudSpannerConnection.class, "getWarnings");
+		testClosed(AbstractCloudSpannerConnection.class, "clearWarnings");
+		testClosed(AbstractCloudSpannerConnection.class, "getTypeMap");
+		testClosed(AbstractCloudSpannerConnection.class, "getHoldability");
+		testClosed(AbstractCloudSpannerConnection.class, "setSavepoint");
+		testClosed(AbstractCloudSpannerConnection.class, "createClob");
+		testClosed(AbstractCloudSpannerConnection.class, "createBlob");
+		testClosed(AbstractCloudSpannerConnection.class, "createNClob");
+		testClosed(AbstractCloudSpannerConnection.class, "createSQLXML");
+		testClosed(AbstractCloudSpannerConnection.class, "getCatalog");
+		testClosed(AbstractCloudSpannerConnection.class, "getClientInfo");
+		testClosed(AbstractCloudSpannerConnection.class, "getSchema");
+		testClosed(AbstractCloudSpannerConnection.class, "getNetworkTimeout");
+
+		testClosed(AbstractCloudSpannerConnection.class, "setCatalog", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(AbstractCloudSpannerConnection.class, "prepareCall",
+				new Class<?>[] { String.class, int.class, int.class }, new Object[] { "TEST", 0, 0 });
+		testClosed(AbstractCloudSpannerConnection.class, "setTypeMap", new Class<?>[] { Map.class },
+				new Object[] { Collections.EMPTY_MAP });
+		testClosed(AbstractCloudSpannerConnection.class, "setSavepoint", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(AbstractCloudSpannerConnection.class, "rollback", new Class<?>[] { Savepoint.class },
+				new Object[] { null });
+		testClosed(AbstractCloudSpannerConnection.class, "releaseSavepoint", new Class<?>[] { Savepoint.class },
+				new Object[] { null });
+		testClosed(AbstractCloudSpannerConnection.class, "prepareCall",
+				new Class<?>[] { String.class, int.class, int.class, int.class }, new Object[] { "TEST", 0, 0, 0 });
+		testClosed(AbstractCloudSpannerConnection.class, "setClientInfo", new Class<?>[] { String.class, String.class },
+				new Object[] { "TEST", "TEST" });
+		testClosed(AbstractCloudSpannerConnection.class, "setClientInfo", new Class<?>[] { Properties.class },
+				new Object[] { null });
+		testClosed(AbstractCloudSpannerConnection.class, "getClientInfo", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(AbstractCloudSpannerConnection.class, "createStruct",
+				new Class<?>[] { String.class, Object[].class }, new Object[] { "TEST", new Object[] {} });
+		testClosed(AbstractCloudSpannerConnection.class, "setSchema", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(AbstractCloudSpannerConnection.class, "setNetworkTimeout",
+				new Class<?>[] { Executor.class, int.class }, new Object[] { null, 0 });
+	}
+
+	@Test
+	public void testClosedCloudSpannerConnection() throws SQLException, NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException
+	{
+		testClosed(CloudSpannerConnection.class, "createStatement");
+		testClosed(CloudSpannerConnection.class, "getAutoCommit");
+		testClosed(CloudSpannerConnection.class, "commit");
+		testClosed(CloudSpannerConnection.class, "rollback");
+		testClosed(CloudSpannerConnection.class, "getMetaData");
+		testClosed(CloudSpannerConnection.class, "isReadOnly");
+		testClosed(CloudSpannerConnection.class, "getTransactionIsolation");
+
+		testClosed(CloudSpannerConnection.class, "prepareStatement", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(CloudSpannerConnection.class, "prepareCall", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(CloudSpannerConnection.class, "nativeSQL", new Class<?>[] { String.class }, new Object[] { "TEST" });
+		testClosed(CloudSpannerConnection.class, "prepareStatement", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(CloudSpannerConnection.class, "setAutoCommit", new Class<?>[] { boolean.class },
+				new Object[] { true });
+		testClosed(CloudSpannerConnection.class, "setReadOnly", new Class<?>[] { boolean.class },
+				new Object[] { true });
+		testClosed(CloudSpannerConnection.class, "setTransactionIsolation", new Class<?>[] { int.class },
+				new Object[] { 0 });
+		testClosed(CloudSpannerConnection.class, "createStatement", new Class<?>[] { int.class, int.class },
+				new Object[] { 0, 0 });
+		testClosed(CloudSpannerConnection.class, "prepareStatement",
+				new Class<?>[] { String.class, int.class, int.class }, new Object[] { "TEST", 0, 0 });
+		testClosed(CloudSpannerConnection.class, "createStatement", new Class<?>[] { int.class, int.class, int.class },
+				new Object[] { 0, 0, 0 });
+		testClosed(CloudSpannerConnection.class, "prepareStatement",
+				new Class<?>[] { String.class, int.class, int.class, int.class }, new Object[] { "TEST", 0, 0, 0 });
+		testClosed(CloudSpannerConnection.class, "prepareStatement", new Class<?>[] { String.class, int.class },
+				new Object[] { "TEST", 0 });
+		testClosed(CloudSpannerConnection.class, "prepareStatement", new Class<?>[] { String.class, int[].class },
+				new Object[] { "TEST", new int[] { 0 } });
+		testClosed(CloudSpannerConnection.class, "prepareStatement", new Class<?>[] { String.class, String[].class },
+				new Object[] { "TEST", new String[] { "COL1" } });
+		testClosed(CloudSpannerConnection.class, "createArrayOf", new Class<?>[] { String.class, Object[].class },
+				new Object[] { "TEST", new Object[] { "COL1" } });
+	}
+
+	private void testClosed(Class<? extends AbstractCloudSpannerConnection> clazz, String name)
+			throws NoSuchMethodException, SecurityException, SQLException, IllegalAccessException,
+			IllegalArgumentException
+	{
+		testClosed(clazz, name, null, null);
+	}
+
+	private void testClosed(Class<? extends AbstractCloudSpannerConnection> clazz, String name, Class<?>[] paramTypes,
+			Object[] args) throws NoSuchMethodException, SecurityException, SQLException, IllegalAccessException,
+			IllegalArgumentException
+	{
+		Method method = clazz.getDeclaredMethod(name, paramTypes);
+		testInvokeMethodOnClosedConnection(method, args);
+	}
+
+	private void testInvokeMethodOnClosedConnection(Method method, Object... args)
+			throws SQLException, IllegalAccessException, IllegalArgumentException
+	{
+		CloudSpannerConnection connection = createConnection();
+		connection.close();
+		boolean valid = false;
+		try
+		{
+			method.invoke(connection, args);
+		}
+		catch (InvocationTargetException e)
+		{
+			if (e.getCause().getMessage().equals(AbstractCloudSpannerConnection.CONNECTION_CLOSED))
+			{
+				valid = true;
+			}
+		}
+		Assert.assertTrue("Method did not throw exception on closed connection", valid);
 	}
 
 }
