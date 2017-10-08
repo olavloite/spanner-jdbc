@@ -88,6 +88,7 @@ public class DMLTester
 		// After rollback test, the contents of the TEST table is equal to the
 		// contents after the insert tests.
 		runBulkInsertTests();
+		runBulkInsertWithExceptionTest();
 		runBulkUpdateTests();
 		runBulkDeleteTests();
 	}
@@ -121,6 +122,28 @@ public class DMLTester
 			verifyTableContents("SELECT MAX(ID) FROM TEST", Double.valueOf(Math.pow(2, (i + 2))).longValue());
 			log.info("Finished insert-with-select test no #" + i);
 		}
+	}
+
+	private void runBulkInsertWithExceptionTest() throws SQLException
+	{
+		log.info("Starting bulk insert with exception test");
+		verifyTableContents("SELECT COUNT(*) FROM TEST",
+				Double.valueOf(Math.pow(2, (BULK_INSERT_COUNT + 1))).longValue());
+
+		String sql = "INSERT INTO TEST SELECT ID, UUID, ACTIVE, AMOUNT, DESCRIPTION, CREATED_DATE, LAST_UPDATED FROM TEST";
+		PreparedStatement statement = connection.prepareStatement(sql);
+		try
+		{
+			statement.executeUpdate();
+			connection.commit();
+		}
+		catch (SQLException e)
+		{
+			connection.rollback();
+		}
+		verifyTableContents("SELECT COUNT(*) FROM TEST",
+				Double.valueOf(Math.pow(2, (BULK_INSERT_COUNT + 1))).longValue());
+		log.info("Finished bulk insert with exception test");
 	}
 
 	private void runBulkUpdateTests() throws SQLException
