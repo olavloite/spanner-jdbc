@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.sql.Array;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -279,7 +278,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	}
 
 	@Override
-	public DatabaseMetaData getMetaData() throws SQLException
+	public CloudSpannerDatabaseMetaData getMetaData() throws SQLException
 	{
 		return new CloudSpannerDatabaseMetaData(this);
 	}

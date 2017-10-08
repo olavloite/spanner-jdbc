@@ -1,6 +1,5 @@
 package nl.topicus.jdbc.test.util;
 
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -28,7 +27,7 @@ public class CloudSpannerTestObjects
 		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
 		Mockito.when(connection.isAllowExtendedMode()).thenAnswer(new Returns(true));
 		Mockito.when(connection.createArrayOf(Mockito.anyString(), Mockito.any())).thenCallRealMethod();
-		DatabaseMetaData metadata = createMetaData();
+		CloudSpannerDatabaseMetaData metadata = createMetaData();
 		Mockito.when(connection.getMetaData()).thenReturn(metadata);
 		CloudSpannerTransaction transaction = Mockito.mock(CloudSpannerTransaction.class);
 		Mockito.when(transaction.executeQuery(Mockito.any()))
