@@ -27,11 +27,24 @@ public class TransactionTester
 		connection.setAutoCommit(false);
 		runRollbackTests();
 		runReadOnlyTests();
+		runAutoCommitTests();
+	}
+
+	private void runAutoCommitTests() throws SQLException
+	{
+		connection.commit();
+		connection.setAutoCommit(true);
+		List<Object[]> originalRows = getResultList("SELECT * FROM TEST");
+		insertRowInTest();
+		List<Object[]> rows = getResultList("SELECT * FROM TEST");
+		connection.setAutoCommit(false);
+		Assert.assertEquals(originalRows.size() + 1, rows.size());
 	}
 
 	private void runReadOnlyTests() throws SQLException
 	{
 		boolean exception = false;
+		connection.commit();
 		connection.setReadOnly(true);
 		List<Object[]> originalRows = getResultList("SELECT * FROM TEST");
 		try
