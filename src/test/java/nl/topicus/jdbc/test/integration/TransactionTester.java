@@ -80,7 +80,7 @@ public class TransactionTester
 	{
 		PreparedStatement ps = connection.prepareStatement(
 				"INSERT INTO TEST (ID, UUID, ACTIVE, AMOUNT, DESCRIPTION, CREATED_DATE, LAST_UPDATED) VALUES (?, ?, ?, ?, ?, ?, ?)");
-		ps.setLong(1, 1000l);
+		ps.setLong(1, 100000l);
 		ps.setBytes(2, "FOO".getBytes());
 		ps.setBoolean(3, true);
 		ps.setDouble(4, 50d);
