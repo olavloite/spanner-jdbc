@@ -3,7 +3,7 @@ package nl.topicus.jdbc.test.category;
 /**
  * Marker interface for integration tests
  * 
- * @author Olav
+ * @author loite
  *
  */
 public interface IntegrationTest

@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+/**
+ * Implementation of java.sql.Array for Google Cloud Spanner
+ * 
+ * @author loite
+ *
+ */
 public class CloudSpannerArray implements Array
 {
 	private static final String FREE_EXCEPTION = "free() has been called, array is no longer available";

@@ -13,7 +13,7 @@ import java.util.Objects;
  * Class for storing meta data needed for translating SQL statements into Cloud
  * Spanner mutations, such as key columns and their ordinal positions
  * 
- * @author Olav
+ * @author loite
  *
  */
 public class MetaDataStore
@@ -22,7 +22,7 @@ public class MetaDataStore
 	 * Class for storing the primary key columns of a table in the correct
 	 * order.
 	 * 
-	 * @author Olav
+	 * @author loite
 	 *
 	 */
 	public class TableKeyMetaData

@@ -16,7 +16,7 @@ import nl.topicus.jdbc.test.category.UnitTest;
 @Category(UnitTest.class)
 public class CloudSpannerDatabaseMetaDataTest
 {
-	private static final String URL = "jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL";
+	private static final String URL = "jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL";
 
 	private final CloudSpannerDatabaseMetaData testSubject;
 

@@ -35,7 +35,7 @@ public class CloudSpannerDriverTest
 		{
 			Driver driver = getDriver();
 			assertTrue(driver.acceptsURL(
-					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json"));
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json"));
 		}
 
 		@Test
@@ -53,11 +53,11 @@ public class CloudSpannerDriverTest
 		public void parseURLWithAllParts() throws Exception
 		{
 			ConnectionProperties properties = ConnectionProperties.parse(
-					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL");
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL");
 			assertEquals("adroit-hall-xxx", properties.project);
 			assertEquals("test-instance", properties.instance);
 			assertEquals("testdb", properties.database);
-			assertEquals("C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json", properties.keyFile);
+			assertEquals("C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json", properties.keyFile);
 			assertEquals("PostgreSQL", properties.productName);
 			assertNull(properties.oauthToken);
 		}
@@ -66,7 +66,7 @@ public class CloudSpannerDriverTest
 		public void parseURLAndProperties() throws Exception
 		{
 			ConnectionProperties properties = ConnectionProperties.parse(
-					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL");
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL");
 			properties.setAdditionalConnectionProperties(createProperties());
 			assertProperties(properties);
 		}
@@ -84,7 +84,7 @@ public class CloudSpannerDriverTest
 			assertEquals("foo", properties.project);
 			assertEquals("bar", properties.instance);
 			assertEquals("gamma", properties.database);
-			assertEquals("C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner4.json", properties.keyFile);
+			assertEquals("C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner4.json", properties.keyFile);
 			assertEquals("SQL Server", properties.productName);
 			assertNull(properties.oauthToken);
 		}
@@ -95,7 +95,7 @@ public class CloudSpannerDriverTest
 			info.setProperty("Project", "foo");
 			info.setProperty("Instance", "bar");
 			info.setProperty("Database", "gamma");
-			info.setProperty("PvtKeyPath", "C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner4.json");
+			info.setProperty("PvtKeyPath", "C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner4.json");
 			info.setProperty("SimulateProductName", "SQL Server");
 
 			return info;
@@ -121,13 +121,13 @@ public class CloudSpannerDriverTest
 		{
 			Driver driver = getDriver();
 			DriverPropertyInfo[] properties = driver.getPropertyInfo(
-					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL",
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL",
 					null);
 			assertEquals(7, properties.length);
 			assertEquals("adroit-hall-xxx", properties[0].value);
 			assertEquals("test-instance", properties[1].value);
 			assertEquals("testdb", properties[2].value);
-			assertEquals("C:\\Users\\Olav\\Documents\\CloudSpannerKeys\\cloudspanner3.json", properties[3].value);
+			assertEquals("C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json", properties[3].value);
 			assertNull(properties[4].value);
 			assertEquals("PostgreSQL", properties[5].value);
 		}

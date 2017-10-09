@@ -8,7 +8,7 @@ import java.sql.SQLException;
 /**
  * Test a variety of SELECT-statements
  * 
- * @author Olav
+ * @author loite
  *
  */
 public class SelectStatementsTester
