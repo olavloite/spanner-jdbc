@@ -60,17 +60,13 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	{
 		// Add a pseudo update to the end if no columns have been specified in
 		// an 'on duplicate key update'-statement
-		String formatted = sql.trim().toUpperCase();
-		formatted = formatted.replaceAll("\n", " ").replaceAll("\t", " ").replaceAll("  ", " ");
-		if (formatted.startsWith("INSERT") && formatted.endsWith("ON DUPLICATE KEY UPDATE"))
+		if (sql.matches("(?is)\\s*INSERT\\s+.*\\s+ON\\s+DUPLICATE\\s+KEY\\s+UPDATE\\s*"))
 		{
 			sql = sql + " FOO=BAR";
 		}
 		// Remove @{FORCE_INDEX...} statements
-		if (formatted.contains("@{FORCE_INDEX"))
-		{
-			sql = formatted.replaceAll("\\@\\{FORCE_INDEX=.*\\}", "");
-		}
+		sql = sql.replaceAll("(?is)\\@\\{\\s*FORCE_INDEX.*\\}", "");
+
 		return sql;
 	}
 
