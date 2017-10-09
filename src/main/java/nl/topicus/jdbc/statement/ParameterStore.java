@@ -28,6 +28,7 @@ public class ParameterStore
 
 	void clearParameters()
 	{
+		highestIndex = 0;
 		parameters = new Object[10];
 		types = new Integer[10];
 		nullable = new Integer[10];

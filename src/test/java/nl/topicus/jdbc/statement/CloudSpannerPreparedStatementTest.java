@@ -709,6 +709,11 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(46));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(47));
 			Assert.assertEquals(URL.class.getName(), pmd.getParameterClassName(48));
+
+			ps.clearParameters();
+			pmd = ps.getParameterMetaData();
+			// 3 because the statement has 3 parameters defined in the query
+			Assert.assertEquals(3, pmd.getParameterCount());
 		}
 	}
 
