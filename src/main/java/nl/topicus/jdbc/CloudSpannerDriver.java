@@ -34,19 +34,19 @@ public class CloudSpannerDriver implements Driver
 
 	static final class ConnectionProperties
 	{
-		private static final String PROJECT_URL_PART = "Project=";
+		static final String PROJECT_URL_PART = "Project=";
 
-		private static final String INSTANCE_URL_PART = "Instance=";
+		static final String INSTANCE_URL_PART = "Instance=";
 
-		private static final String DATABASE_URL_PART = "Database=";
+		static final String DATABASE_URL_PART = "Database=";
 
-		private static final String KEY_FILE_URL_PART = "PvtKeyPath=";
+		static final String KEY_FILE_URL_PART = "PvtKeyPath=";
 
-		private static final String OAUTH_ACCESS_TOKEN_URL_PART = "OAuthAccessToken=";
+		static final String OAUTH_ACCESS_TOKEN_URL_PART = "OAuthAccessToken=";
 
-		private static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
+		static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
 
-		private static final String ALLOW_EXTENDED_MODE = "AllowExtendedMode=";
+		static final String ALLOW_EXTENDED_MODE = "AllowExtendedMode=";
 
 		String project = null;
 		String instance = null;
