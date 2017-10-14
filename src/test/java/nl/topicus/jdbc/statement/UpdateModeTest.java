@@ -11,12 +11,13 @@ import org.mockito.Mockito;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
-import nl.topicus.jdbc.statement.InsertWorker.Mode;
+import nl.topicus.jdbc.resultset.CloudSpannerResultSetMetaData;
+import nl.topicus.jdbc.statement.AbstractTablePartWorker.DMLOperation;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @RunWith(Enclosed.class)
 @Category(UnitTest.class)
-public class InsertWorkerTest
+public class UpdateModeTest
 {
 
 	public static class InsertTests
@@ -49,10 +50,10 @@ public class InsertWorkerTest
 			Mutations mutations = CloudSpannerPreparedStatementTest.getMutations("UPDATE FOO SET COL1=1, COL2=2");
 			InsertWorker worker = (InsertWorker) mutations.getWorker();
 			Assert.assertEquals("SELECT `FOO`.`ID`, 1, 2 FROM `FOO`", worker.select.toString());
-			Assert.assertEquals(Mode.Update, worker.getMode());
+			Assert.assertEquals(DMLOperation.Update, worker.operation);
 			Assert.assertEquals(
 					"INSERT INTO `FOO` (`ID`, `COL1`, `COL2`) SELECT `FOO`.`ID`, 1, 2 FROM `FOO` ON DUPLICATE KEY UPDATE FOO = BAR",
-					worker.getInsert().toString());
+					worker.insert.toString());
 
 			mockConnection(worker.connection);
 			ConversionResult res = worker.call();
@@ -69,10 +70,10 @@ public class InsertWorkerTest
 			InsertWorker worker = (InsertWorker) mutations.getWorker();
 			Assert.assertEquals("SELECT `FOO`.`ID`, COL1 + COL2, COL2 * 1.1 FROM `FOO` WHERE COL1 < 100",
 					worker.select.toString());
-			Assert.assertEquals(Mode.Update, worker.getMode());
+			Assert.assertEquals(DMLOperation.Update, worker.operation);
 			Assert.assertEquals(
 					"INSERT INTO `FOO` (`ID`, `COL1`, `COL2`) SELECT `FOO`.`ID`, COL1 + COL2, COL2 * 1.1 FROM `FOO` WHERE COL1 < 100 ON DUPLICATE KEY UPDATE FOO = BAR",
-					worker.getInsert().toString());
+					worker.insert.toString());
 
 			mockConnection(worker.connection);
 			ConversionResult res = worker.call();
@@ -89,6 +90,8 @@ public class InsertWorkerTest
 		CloudSpannerPreparedStatement countStatement = Mockito.mock(CloudSpannerPreparedStatement.class);
 		CloudSpannerResultSet selectResult = Mockito.mock(CloudSpannerResultSet.class);
 		CloudSpannerResultSet countResult = Mockito.mock(CloudSpannerResultSet.class);
+		CloudSpannerResultSetMetaData selectMetadata = Mockito.mock(CloudSpannerResultSetMetaData.class);
+		Mockito.when(selectMetadata.getColumnCount()).thenReturn(3);
 		Mockito.when(connection.prepareStatement(Mockito.startsWith("INSERT"))).thenReturn(insertStatement);
 		Mockito.when(connection.prepareStatement(Mockito.startsWith("SELECT `FOO`"))).thenReturn(selectStatement);
 		Mockito.when(connection.prepareStatement(Mockito.startsWith("SELECT COUNT(*)"))).thenReturn(countStatement);
@@ -97,6 +100,7 @@ public class InsertWorkerTest
 		Mockito.when(selectResult.getObject(1)).thenReturn(1L, 2L);
 		Mockito.when(selectResult.getObject(2)).thenReturn("One", "Two");
 		Mockito.when(selectResult.getObject(3)).thenReturn("En", "To");
+		Mockito.when(selectResult.getMetaData()).thenReturn(selectMetadata);
 		Mockito.when(countStatement.executeQuery()).thenReturn(countResult);
 		Mockito.when(countResult.next()).thenReturn(true, false);
 		Mockito.when(countResult.getLong(1)).thenReturn(2L);

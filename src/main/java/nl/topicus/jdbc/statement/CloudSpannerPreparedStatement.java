@@ -35,7 +35,7 @@ import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
-import nl.topicus.jdbc.statement.InsertWorker.Mode;
+import nl.topicus.jdbc.statement.AbstractTablePartWorker.DMLOperation;
 
 /**
  * 
@@ -573,13 +573,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			throw new SQLException("Insert statement must contain a select statement");
 		}
 		boolean isDuplicate = insert.isUseDuplicate();
-		InsertWorker.Mode mode;
+		InsertWorker.DMLOperation mode;
 		if (forceUpdate)
-			mode = Mode.Update;
+			mode = DMLOperation.Update;
 		else if (isDuplicate)
-			mode = Mode.OnDuplicateKeyUpdate;
+			mode = DMLOperation.OnDuplicateKeyUpdate;
 		else
-			mode = Mode.Insert;
+			mode = DMLOperation.Insert;
 		return new InsertWorker(getConnection(), select, insert, getConnection().isAllowExtendedMode(), mode);
 	}
 

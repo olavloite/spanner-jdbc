@@ -11,11 +11,11 @@ import nl.topicus.jdbc.CloudSpannerDriver;
 
 public class ConverterUtils
 {
-	public ConverterUtils()
+	private ConverterUtils()
 	{
 	}
 
-	public int calculateActualBatchSize(int numberOfCols, Connection destination, String catalog, String schema,
+	public static int calculateActualBatchSize(int numberOfCols, Connection destination, String catalog, String schema,
 			String table) throws SQLException
 	{
 		int batchSize = 1500000;
@@ -28,12 +28,13 @@ public class ConverterUtils
 		return actualBatchSize;
 	}
 
-	public int getRowSize(Connection destination, String catalog, String schema, String table) throws SQLException
+	public static int getRowSize(Connection destination, String catalog, String schema, String table)
+			throws SQLException
 	{
 		return getEstimatedRowSizeInCloudSpanner(destination, catalog, schema, table, null);
 	}
 
-	public int getNumberOfIndices(Connection destination, String catalog, String schema, String table)
+	public static int getNumberOfIndices(Connection destination, String catalog, String schema, String table)
 			throws SQLException
 	{
 		int count = 0;
@@ -45,7 +46,7 @@ public class ConverterUtils
 		return count;
 	}
 
-	public List<String> getQuotedColumnNames(Connection destination, String catalog, String schema, String table)
+	public static List<String> getQuotedColumnNames(Connection destination, String catalog, String schema, String table)
 			throws SQLException
 	{
 		List<String> res = new ArrayList<>();
@@ -62,7 +63,7 @@ public class ConverterUtils
 	 * @return The estimated size in bytes of one row of the specified columns
 	 *         of the specified table
 	 */
-	public int getEstimatedRowSizeInCloudSpanner(Connection connection, String catalog, String schemaPattern,
+	public static int getEstimatedRowSizeInCloudSpanner(Connection connection, String catalog, String schemaPattern,
 			String tableNamePattern, String columnNamePattern) throws SQLException
 	{
 		// There's an 8 bytes storage overhead for each column
