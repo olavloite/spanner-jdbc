@@ -1,7 +1,6 @@
 package nl.topicus.jdbc.statement;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -88,8 +87,7 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 		{
 			connection.setAutoCommit(false);
 		}
-		try (Connection destination = isExtendedMode
-				? DriverManager.getConnection(connection.getUrl(), connection.getSuppliedProperties()) : null)
+		try (Connection destination = isExtendedMode ? connection.createCopyConnection() : null)
 		{
 			if (destination != null)
 			{

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -433,6 +434,19 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public Timestamp getLastCommitTimestamp()
 	{
 		return lastCommitTimestamp;
+	}
+
+	/**
+	 * 
+	 * @return A new connection with the same URL and properties as this
+	 *         connection. You can use this method if you want to open a new
+	 *         connection to the same database, for example to run a number of
+	 *         statements in a different transaction than the transaction you
+	 *         are currently using on this connection.
+	 */
+	public CloudSpannerConnection createCopyConnection() throws SQLException
+	{
+		return (CloudSpannerConnection) DriverManager.getConnection(getUrl(), getSuppliedProperties());
 	}
 
 }
