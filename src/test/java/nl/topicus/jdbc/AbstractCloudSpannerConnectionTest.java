@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.Savepoint;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -81,29 +80,6 @@ public class AbstractCloudSpannerConnectionTest
 		// default test
 		testSubject = createTestSubject();
 		testSubject.prepareCall(sql, resultSetType, resultSetConcurrency);
-	}
-
-	@Test
-	public void testGetTypeMap() throws Exception
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		AbstractCloudSpannerConnection testSubject;
-
-		// default test
-		testSubject = createTestSubject();
-		testSubject.getTypeMap();
-	}
-
-	@Test
-	public void testSetTypeMap() throws Exception
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		AbstractCloudSpannerConnection testSubject;
-		Map<String, Class<?>> map = null;
-
-		// default test
-		testSubject = createTestSubject();
-		testSubject.setTypeMap(map);
 	}
 
 	@Test

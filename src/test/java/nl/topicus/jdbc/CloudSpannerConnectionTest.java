@@ -1,5 +1,9 @@
 package nl.topicus.jdbc;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -52,6 +56,18 @@ public class CloudSpannerConnectionTest
 		properties.setProperty("SimulateProductName", product);
 		properties.setProperty("AllowExtendedMode", allowExtendedMode);
 		return (CloudSpannerConnection) DriverManager.getConnection(url, properties);
+	}
+
+	@Test
+	public void testTypeMap() throws Exception
+	{
+		Map<String, Class<?>> map = subject.getTypeMap();
+		assertTrue(map.isEmpty());
+		map.put("TEST", Object.class);
+		subject.setTypeMap(map);
+		assertEquals(1, map.size());
+		assertNotNull(subject.getTypeMap());
+		assertEquals(1, subject.getTypeMap().size());
 	}
 
 	@Test
@@ -189,7 +205,6 @@ public class CloudSpannerConnectionTest
 		testClosed(AbstractCloudSpannerConnection.class, "getCatalog");
 		testClosed(AbstractCloudSpannerConnection.class, "getWarnings");
 		testClosed(AbstractCloudSpannerConnection.class, "clearWarnings");
-		testClosed(AbstractCloudSpannerConnection.class, "getTypeMap");
 		testClosed(AbstractCloudSpannerConnection.class, "getHoldability");
 		testClosed(AbstractCloudSpannerConnection.class, "setSavepoint");
 		testClosed(AbstractCloudSpannerConnection.class, "createClob");
@@ -205,8 +220,6 @@ public class CloudSpannerConnectionTest
 				new Object[] { "TEST" });
 		testClosed(AbstractCloudSpannerConnection.class, "prepareCall",
 				new Class<?>[] { String.class, int.class, int.class }, new Object[] { "TEST", 0, 0 });
-		testClosed(AbstractCloudSpannerConnection.class, "setTypeMap", new Class<?>[] { Map.class },
-				new Object[] { Collections.EMPTY_MAP });
 		testClosed(AbstractCloudSpannerConnection.class, "setSavepoint", new Class<?>[] { String.class },
 				new Object[] { "TEST" });
 		testClosed(AbstractCloudSpannerConnection.class, "rollback", new Class<?>[] { Savepoint.class },
@@ -233,6 +246,7 @@ public class CloudSpannerConnectionTest
 	public void testClosedCloudSpannerConnection() throws SQLException, NoSuchMethodException, SecurityException,
 			IllegalAccessException, IllegalArgumentException
 	{
+		testClosed(CloudSpannerConnection.class, "getTypeMap");
 		testClosed(CloudSpannerConnection.class, "createStatement");
 		testClosed(CloudSpannerConnection.class, "getAutoCommit");
 		testClosed(CloudSpannerConnection.class, "commit");
@@ -241,6 +255,8 @@ public class CloudSpannerConnectionTest
 		testClosed(CloudSpannerConnection.class, "isReadOnly");
 		testClosed(CloudSpannerConnection.class, "getTransactionIsolation");
 
+		testClosed(CloudSpannerConnection.class, "setTypeMap", new Class<?>[] { Map.class },
+				new Object[] { Collections.EMPTY_MAP });
 		testClosed(CloudSpannerConnection.class, "prepareStatement", new Class<?>[] { String.class },
 				new Object[] { "TEST" });
 		testClosed(CloudSpannerConnection.class, "prepareCall", new Class<?>[] { String.class },

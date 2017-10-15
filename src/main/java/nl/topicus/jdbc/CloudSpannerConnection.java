@@ -480,12 +480,14 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public Map<String, Class<?>> getTypeMap() throws SQLException
 	{
+		checkClosed();
 		return typeMap;
 	}
 
 	@Override
 	public void setTypeMap(Map<String, Class<?>> map) throws SQLException
 	{
+		checkClosed();
 		this.typeMap = map;
 	}
 
