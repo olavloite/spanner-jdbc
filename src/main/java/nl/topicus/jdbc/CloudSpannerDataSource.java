@@ -37,13 +37,9 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 
 	private boolean allowExtendedMode;
 
-	private transient PrintWriter logger;
+	private PrintWriter logger;
 
 	private int loginTimeout = 0;
-
-	public CloudSpannerDataSource()
-	{
-	}
 
 	@Override
 	public PrintWriter getLogWriter() throws SQLException
