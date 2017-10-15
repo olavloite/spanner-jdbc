@@ -25,6 +25,9 @@ public class CloudSpannerTestObjects
 	public static CloudSpannerConnection createConnection() throws SQLException
 	{
 		CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class);
+		Mockito.doCallRealMethod().when(connection).setAutoCommit(Mockito.anyBoolean());
+		Mockito.when(connection.getAutoCommit()).thenCallRealMethod();
+		connection.setAutoCommit(false);
 		Mockito.when(connection.isAllowExtendedMode()).thenAnswer(new Returns(true));
 		Mockito.when(connection.createArrayOf(Mockito.anyString(), Mockito.any())).thenCallRealMethod();
 		CloudSpannerDatabaseMetaData metadata = createMetaData();
