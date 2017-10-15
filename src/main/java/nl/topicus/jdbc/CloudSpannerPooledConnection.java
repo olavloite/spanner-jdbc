@@ -45,7 +45,6 @@ import javax.sql.StatementEventListener;
  * MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  * 
  * @author loite
- * @see org.postgresql.ds.PGPooledConnection
  */
 public class CloudSpannerPooledConnection implements PooledConnection
 {

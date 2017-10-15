@@ -78,6 +78,9 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	 *            The UPDATE-statement
 	 * @return An SQL-statement equal to the UPDATE-statement but in INSERT form
 	 * @throws SQLException
+	 *             if a database exception occurs while getting the table meta
+	 *             data or if the statement tries to update the primary key
+	 *             value
 	 */
 	protected String createInsertSelectOnDuplicateKeyUpdateStatement(Update update) throws SQLException
 	{

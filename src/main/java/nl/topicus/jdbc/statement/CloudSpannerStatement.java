@@ -84,6 +84,8 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	/**
 	 * Do a quick check if this SQL statement is a DDL statement
 	 * 
+	 * @param sql
+	 *            The statement to check
 	 * @return true if the SQL statement is a DDL statement
 	 */
 	protected boolean isDDLStatement(String sql)

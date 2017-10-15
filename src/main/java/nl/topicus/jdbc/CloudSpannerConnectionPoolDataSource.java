@@ -33,7 +33,6 @@ import javax.sql.ConnectionPoolDataSource;
  * MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  * 
  * @author loite
- * @see org.postgresql.ds.PGConnectionPoolDataSource
  */
 public class CloudSpannerConnectionPoolDataSource extends CloudSpannerDataSource
 		implements ConnectionPoolDataSource, Serializable
@@ -42,7 +41,8 @@ public class CloudSpannerConnectionPoolDataSource extends CloudSpannerDataSource
 	private boolean defaultAutoCommit = true;
 
 	/**
-	 * Gets a description of this DataSource.
+	 * 
+	 * @return A description of this data source
 	 */
 	public String getDescription()
 	{

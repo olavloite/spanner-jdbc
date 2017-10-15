@@ -485,6 +485,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 *         connection to the same database, for example to run a number of
 	 *         statements in a different transaction than the transaction you
 	 *         are currently using on this connection.
+	 * @throws SQLException
+	 *             If an error occurs while opening the new connection
 	 */
 	public CloudSpannerConnection createCopyConnection() throws SQLException
 	{
