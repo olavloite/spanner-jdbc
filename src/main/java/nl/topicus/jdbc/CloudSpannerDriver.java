@@ -2,6 +2,7 @@ package nl.topicus.jdbc;
 
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -10,9 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 import com.google.cloud.spanner.Spanner;
+
+import nl.topicus.jdbc.util.SharedTimer;
 
 public class CloudSpannerDriver implements Driver
 {
@@ -20,13 +22,22 @@ public class CloudSpannerDriver implements Driver
 	{
 		try
 		{
-			java.sql.DriverManager.registerDriver(new CloudSpannerDriver());
+			register();
 		}
 		catch (SQLException e)
 		{
 			java.sql.DriverManager.println("Registering driver failed: " + e.getMessage());
 		}
 	}
+	private static CloudSpannerDriver registeredDriver;
+
+	public static final int DEBUG = 2;
+	public static final int INFO = 1;
+	public static final int OFF = 0;
+
+	private static final Logger logger = new Logger();
+	private static boolean logLevelSet = false;
+	private static SharedTimer sharedTimer = new SharedTimer(logger);
 
 	static final int MAJOR_VERSION = 1;
 
@@ -135,6 +146,8 @@ public class CloudSpannerDriver implements Driver
 							"Invalid value for " + ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
 							e);
 				}
+				if (!logLevelSet)
+					setLogLevel(OFF);
 			}
 		}
 
@@ -269,6 +282,11 @@ public class CloudSpannerDriver implements Driver
 		return MINOR_VERSION;
 	}
 
+	public static String getVersion()
+	{
+		return "Google Cloud Spanner Driver " + getDriverMajorVersion() + "." + getDriverMinorVersion();
+	}
+
 	@Override
 	public boolean jdbcCompliant()
 	{
@@ -276,7 +294,7 @@ public class CloudSpannerDriver implements Driver
 	}
 
 	@Override
-	public Logger getParentLogger() throws SQLFeatureNotSupportedException
+	public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
 	{
 		throw new SQLFeatureNotSupportedException("java.util.logging is not used");
 	}
@@ -298,6 +316,80 @@ public class CloudSpannerDriver implements Driver
 		if (identifier.charAt(0) == '`' && identifier.charAt(identifier.length() - 1) == '`')
 			res = identifier.substring(1, identifier.length() - 1);
 		return res;
+	}
+
+	public static void setLogLevel(int logLevel)
+	{
+		synchronized (CloudSpannerDriver.class)
+		{
+			logger.setLogLevel(logLevel);
+			logLevelSet = true;
+		}
+	}
+
+	public static int getLogLevel()
+	{
+		synchronized (CloudSpannerDriver.class)
+		{
+			return logger.getLogLevel();
+		}
+	}
+
+	public static SharedTimer getSharedTimer()
+	{
+		return sharedTimer;
+	}
+
+	/**
+	 * Register the driver against {@link DriverManager}. This is done
+	 * automatically when the class is loaded. Dropping the driver from
+	 * DriverManager's list is possible using {@link #deregister()} method.
+	 *
+	 * @throws IllegalStateException
+	 *             if the driver is already registered
+	 * @throws SQLException
+	 *             if registering the driver fails
+	 */
+	public static void register() throws SQLException
+	{
+		if (isRegistered())
+		{
+			throw new IllegalStateException("Driver is already registered. It can only be registered once.");
+		}
+		CloudSpannerDriver registeredDriver = new CloudSpannerDriver();
+		DriverManager.registerDriver(registeredDriver);
+		CloudSpannerDriver.registeredDriver = registeredDriver;
+	}
+
+	/**
+	 * According to JDBC specification, this driver is registered against
+	 * {@link DriverManager} when the class is loaded. To avoid leaks, this
+	 * method allow unregistering the driver so that the class can be gc'ed if
+	 * necessary.
+	 *
+	 * @throws IllegalStateException
+	 *             if the driver is not registered
+	 * @throws SQLException
+	 *             if deregistering the driver fails
+	 */
+	public static void deregister() throws SQLException
+	{
+		if (!isRegistered())
+		{
+			throw new IllegalStateException(
+					"Driver is not registered (or it has not been registered using Driver.register() method)");
+		}
+		DriverManager.deregisterDriver(registeredDriver);
+		registeredDriver = null;
+	}
+
+	/**
+	 * @return {@code true} if the driver is registered against
+	 *         {@link DriverManager}
+	 */
+	public static boolean isRegistered()
+	{
+		return registeredDriver != null;
 	}
 
 }

@@ -3,7 +3,6 @@ package nl.topicus.jdbc;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
@@ -25,7 +24,8 @@ import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
  * @author loite
  *
  */
-public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpannerWrapper implements Connection
+public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpannerWrapper
+		implements ICloudSpannerConnection
 {
 	static final String CONNECTION_CLOSED = "Connection closed";
 

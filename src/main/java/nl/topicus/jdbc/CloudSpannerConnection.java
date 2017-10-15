@@ -81,6 +81,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private MetaDataStore metaDataStore;
 
+	private static int nextConnectionID = 1;
+
+	private final Logger logger;
+
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
 			String credentialsPath, String oauthToken, boolean allowExtendedMode, Properties suppliedProperties)
 			throws SQLException
@@ -91,6 +95,14 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		this.url = url;
 		this.allowExtendedMode = allowExtendedMode;
 		this.suppliedProperties = suppliedProperties;
+
+		int logLevel = CloudSpannerDriver.getLogLevel();
+		synchronized (CloudSpannerConnection.class)
+		{
+			logger = new Logger(nextConnectionID++);
+			logger.setLogLevel(logLevel);
+		}
+
 		try
 		{
 			Builder builder = SpannerOptions.newBuilder();
@@ -183,6 +195,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return spanner;
 	}
 
+	@Override
 	public void setSimulateProductName(String productName)
 	{
 		this.simulateProductName = productName;
@@ -203,7 +216,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 	}
 
-	String getProductName()
+	@Override
+	public String getProductName()
 	{
 		if (simulateProductName != null)
 			return simulateProductName;
@@ -379,11 +393,13 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return new CloudSpannerPreparedStatement(sql, this, dbClient);
 	}
 
+	@Override
 	public String getUrl()
 	{
 		return url;
 	}
 
+	@Override
 	public String getClientId()
 	{
 		return clientId;
@@ -416,11 +432,13 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return metaDataStore.getTable(name);
 	}
 
+	@Override
 	public Properties getSuppliedProperties()
 	{
 		return suppliedProperties;
 	}
 
+	@Override
 	public boolean isAllowExtendedMode()
 	{
 		return allowExtendedMode;
@@ -431,6 +449,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * @return The commit timestamp of the last transaction that committed
 	 *         succesfully
 	 */
+	@Override
 	public Timestamp getLastCommitTimestamp()
 	{
 		return lastCommitTimestamp;
@@ -447,6 +466,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public CloudSpannerConnection createCopyConnection() throws SQLException
 	{
 		return (CloudSpannerConnection) DriverManager.getConnection(getUrl(), getSuppliedProperties());
+	}
+
+	public Logger getLogger()
+	{
+		return logger;
 	}
 
 }
