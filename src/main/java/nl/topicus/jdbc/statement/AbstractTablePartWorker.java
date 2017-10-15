@@ -136,14 +136,7 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 				connection.rollback();
 				connection.setAutoCommit(true);
 			}
-			if (e instanceof SQLException)
-			{
-				throw (SQLException) e;
-			}
-			else
-			{
-				throw new SQLException(e.getMessage(), e);
-			}
+			throw new SQLException(e.getMessage(), e);
 		}
 
 	}
