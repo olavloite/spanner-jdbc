@@ -17,7 +17,7 @@ This driver supports a number of unsupported features of the official JDBC drive
 * DDL-statements (CREATE TABLE, ALTER TABLE, CREATE INDEX, DROP TABLE, ...)
 * Transactions (both read/write and read-only)
 
-The driver ofcourse also supports normal SELECT-statements, including parameters.
+The driver ofcourse also supports normal SELECT-statements, including parameters. Example usage and tutorials can be found on http://www.googlecloudspanner.com/.
 
 Releases are available on Maven Central. Current release is version 0.17.
 
