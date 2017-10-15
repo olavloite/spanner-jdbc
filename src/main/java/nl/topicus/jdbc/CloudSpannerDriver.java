@@ -14,6 +14,7 @@ import java.util.Properties;
 
 import com.google.cloud.spanner.Spanner;
 
+import nl.topicus.jdbc.CloudSpannerConnection.CloudSpannerDatabaseSpecification;
 import nl.topicus.jdbc.util.SharedTimer;
 
 public class CloudSpannerDriver implements Driver
@@ -207,9 +208,10 @@ public class CloudSpannerDriver implements Driver
 		// Get connection properties from properties
 		properties.setAdditionalConnectionProperties(info);
 
-		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, properties.project,
-				properties.instance, properties.database, properties.keyFile, properties.oauthToken,
-				properties.allowExtendedMode, info);
+		CloudSpannerDatabaseSpecification database = new CloudSpannerDatabaseSpecification(properties.project,
+				properties.instance, properties.database);
+		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, database, properties.keyFile,
+				properties.oauthToken, properties.allowExtendedMode, info);
 		connection.setSimulateProductName(properties.productName);
 		registerConnection(connection);
 

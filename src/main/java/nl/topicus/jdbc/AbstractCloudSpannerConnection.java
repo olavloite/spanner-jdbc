@@ -36,6 +36,18 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 		}
 	}
 
+	private <T> T checkClosedAndReturnNull() throws SQLException
+	{
+		checkClosed();
+		return null;
+	}
+
+	private <T> T checkClosedAndThrowUnsupportedException() throws SQLException
+	{
+		checkClosed();
+		throw new SQLFeatureNotSupportedException();
+	}
+
 	@Override
 	public void setCatalog(String catalog) throws SQLException
 	{
@@ -46,15 +58,13 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public String getCatalog() throws SQLException
 	{
-		checkClosed();
-		return null;
+		return checkClosedAndReturnNull();
 	}
 
 	@Override
 	public SQLWarning getWarnings() throws SQLException
 	{
-		checkClosed();
-		return null;
+		return checkClosedAndReturnNull();
 	}
 
 	@Override
@@ -66,8 +76,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
@@ -88,65 +97,56 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public Savepoint setSavepoint() throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public Savepoint setSavepoint(String name) throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public void rollback(Savepoint savepoint) throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency,
 			int resultSetHoldability) throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public Clob createClob() throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public Blob createBlob() throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public NClob createNClob() throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public SQLXML createSQLXML() throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
@@ -180,8 +180,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public String getClientInfo(String name) throws SQLException
 	{
-		checkClosed();
-		return null;
+		return checkClosedAndReturnNull();
 	}
 
 	@Override
@@ -194,8 +193,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public Struct createStruct(String typeName, Object[] attributes) throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
@@ -208,8 +206,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public String getSchema() throws SQLException
 	{
-		checkClosed();
-		return null;
+		return checkClosedAndReturnNull();
 	}
 
 	@Override
@@ -221,15 +218,13 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override
 	public int getNetworkTimeout() throws SQLException
 	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
+		return checkClosedAndThrowUnsupportedException();
 	}
 
 }

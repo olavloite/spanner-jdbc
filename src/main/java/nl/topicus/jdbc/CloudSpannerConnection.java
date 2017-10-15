@@ -49,7 +49,30 @@ import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
  */
 public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 {
+	public static class CloudSpannerDatabaseSpecification
+	{
+		public final String project;
+
+		public final String instance;
+
+		public final String database;
+
+		public CloudSpannerDatabaseSpecification(String instance, String database)
+		{
+			this(null, instance, database);
+		}
+
+		public CloudSpannerDatabaseSpecification(String project, String instance, String database)
+		{
+			this.project = project;
+			this.instance = instance;
+			this.database = database;
+		}
+	}
+
 	private final CloudSpannerDriver driver;
+
+	private final CloudSpannerDatabaseSpecification database;
 
 	private Spanner spanner;
 
@@ -73,10 +96,6 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private String simulateProductName;
 
-	private String instanceId;
-
-	private String database;
-
 	private CloudSpannerTransaction transaction;
 
 	private Timestamp lastCommitTimestamp;
@@ -89,12 +108,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private Map<String, Class<?>> typeMap = new HashMap<>();
 
-	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
+	CloudSpannerConnection(CloudSpannerDriver driver, String url, CloudSpannerDatabaseSpecification database,
 			String credentialsPath, String oauthToken, boolean allowExtendedMode, Properties suppliedProperties)
 			throws SQLException
 	{
 		this.driver = driver;
-		this.instanceId = instanceId;
 		this.database = database;
 		this.url = url;
 		this.allowExtendedMode = allowExtendedMode;
@@ -110,8 +128,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		try
 		{
 			Builder builder = SpannerOptions.newBuilder();
-			if (projectId != null)
-				builder.setProjectId(projectId);
+			if (database.project != null)
+				builder.setProjectId(database.project);
 			GoogleCredentials credentials = null;
 			if (credentialsPath != null)
 			{
@@ -137,7 +155,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 			SpannerOptions options = builder.build();
 			spanner = options.getService();
-			dbClient = spanner.getDatabaseClient(DatabaseId.of(options.getProjectId(), instanceId, database));
+			dbClient = spanner
+					.getDatabaseClient(DatabaseId.of(options.getProjectId(), database.instance, database.database));
 			adminClient = spanner.getDatabaseAdminClient();
 			transaction = new CloudSpannerTransaction(dbClient, this);
 			metaDataStore = new MetaDataStore(this);
@@ -209,8 +228,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	{
 		try
 		{
-			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(instanceId, database,
-					Arrays.asList(sql), null);
+			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
+					database.database, Arrays.asList(sql), null);
 			operation = operation.waitFor();
 			return operation.getResult();
 		}

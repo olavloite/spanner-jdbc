@@ -8,6 +8,7 @@ import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 
 public abstract class AbstractCloudSpannerFetcher extends AbstractCloudSpannerWrapper
 {
+	private int fetchSize = 1;
 
 	public void setFetchDirection(int direction) throws SQLException
 	{
@@ -22,12 +23,12 @@ public abstract class AbstractCloudSpannerFetcher extends AbstractCloudSpannerWr
 
 	public void setFetchSize(int rows) throws SQLException
 	{
-		// silently ignore
+		this.fetchSize = rows;
 	}
 
 	public int getFetchSize() throws SQLException
 	{
-		return 1;
+		return fetchSize;
 	}
 
 }

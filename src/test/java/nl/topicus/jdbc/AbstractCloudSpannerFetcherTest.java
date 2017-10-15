@@ -44,12 +44,13 @@ public class AbstractCloudSpannerFetcherTest
 	public void testSetFetchSize() throws SQLException
 	{
 		subject.setFetchSize(100);
-		Assert.assertEquals(1, subject.getFetchSize());
+		Assert.assertEquals(100, subject.getFetchSize());
 	}
 
 	@Test
 	public void testGetFetchSize() throws SQLException
 	{
+		subject.setFetchSize(1);
 		Assert.assertEquals(1, subject.getFetchSize());
 	}
 
