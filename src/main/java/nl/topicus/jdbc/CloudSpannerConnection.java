@@ -13,6 +13,8 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.json.JSONException;
@@ -84,6 +86,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private static int nextConnectionID = 1;
 
 	private final Logger logger;
+
+	private Map<String, Class<?>> typeMap = new HashMap<>();
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, String projectId, String instanceId, String database,
 			String credentialsPath, String oauthToken, boolean allowExtendedMode, Properties suppliedProperties)
@@ -471,6 +475,18 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public Logger getLogger()
 	{
 		return logger;
+	}
+
+	@Override
+	public Map<String, Class<?>> getTypeMap() throws SQLException
+	{
+		return typeMap;
+	}
+
+	@Override
+	public void setTypeMap(Map<String, Class<?>> map) throws SQLException
+	{
+		this.typeMap = map;
 	}
 
 }

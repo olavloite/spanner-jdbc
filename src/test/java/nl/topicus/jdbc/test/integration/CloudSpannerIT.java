@@ -1,7 +1,7 @@
 package nl.topicus.jdbc.test.integration;
 
+import java.beans.PropertyVetoException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -114,12 +114,16 @@ public class CloudSpannerIT
 		}
 	}
 
-	private void performJdbcTests() throws SQLException, IOException, URISyntaxException
+	private void performJdbcTests() throws Exception
 	{
 		// Get a JDBC connection
 		try (Connection connection = createConnection())
 		{
 			connection.setAutoCommit(false);
+			// Test connection pooling
+			ConnectionPoolingTester poolingTester = new ConnectionPoolingTester();
+			poolingTester.testPooling((CloudSpannerConnection) connection);
+
 			// Test Table DDL statements
 			TableDDLTester tableDDLTester = new TableDDLTester(connection);
 			tableDDLTester.runCreateTests();
@@ -139,7 +143,7 @@ public class CloudSpannerIT
 			// Test drop statements
 			tableDDLTester.runDropTests();
 		}
-		catch (SQLException e)
+		catch (SQLException | PropertyVetoException e)
 		{
 			log.log(Level.WARNING, "Error during JDBC tests", e);
 			throw e;

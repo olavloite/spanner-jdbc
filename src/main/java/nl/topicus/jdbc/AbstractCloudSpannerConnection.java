@@ -13,7 +13,6 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Struct;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -66,20 +65,6 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 
 	@Override
 	public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException
-	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Map<String, Class<?>> getTypeMap() throws SQLException
-	{
-		checkClosed();
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public void setTypeMap(Map<String, Class<?>> map) throws SQLException
 	{
 		checkClosed();
 		throw new SQLFeatureNotSupportedException();

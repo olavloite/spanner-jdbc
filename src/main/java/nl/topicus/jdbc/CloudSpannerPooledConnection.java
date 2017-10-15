@@ -326,7 +326,7 @@ public class CloudSpannerPooledConnection implements PooledConnection
 		{
 			final String methodName = method.getName();
 			// From Object
-			if (method.getDeclaringClass().getName().equals("java.lang.Object"))
+			if (method.getDeclaringClass().equals(Object.class))
 			{
 				if (methodName.equals("toString"))
 				{
@@ -492,7 +492,7 @@ public class CloudSpannerPooledConnection implements PooledConnection
 		{
 			final String methodName = method.getName();
 			// From Object
-			if (method.getDeclaringClass().getName().equals("java.lang.Object"))
+			if (method.getDeclaringClass().equals(Object.class))
 			{
 				if (methodName.equals("toString"))
 				{
