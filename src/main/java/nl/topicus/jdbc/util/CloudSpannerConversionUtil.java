@@ -56,8 +56,7 @@ public class CloudSpannerConversionUtil
 	{
 		long milliseconds = ts.getTime();
 		long seconds = milliseconds / 1000l;
-		int rest = (int) (milliseconds % 1000l);
-		int nanos = (int) TimeUnit.MILLISECONDS.toNanos(rest) + ts.getNanos();
+		int nanos = ts.getNanos();
 		com.google.cloud.Timestamp res = com.google.cloud.Timestamp.ofTimeSecondsAndNanos(seconds, nanos);
 		return res;
 	}
