@@ -15,7 +15,6 @@ import java.util.Properties;
 import com.google.cloud.spanner.Spanner;
 
 import nl.topicus.jdbc.CloudSpannerConnection.CloudSpannerDatabaseSpecification;
-import nl.topicus.jdbc.util.SharedTimer;
 
 public class CloudSpannerDriver implements Driver
 {
@@ -38,7 +37,6 @@ public class CloudSpannerDriver implements Driver
 
 	private static final Logger logger = new Logger();
 	private static boolean logLevelSet = false;
-	private static SharedTimer sharedTimer = new SharedTimer(logger);
 
 	static final int MAJOR_VERSION = 1;
 
@@ -335,11 +333,6 @@ public class CloudSpannerDriver implements Driver
 		{
 			return logger.getLogLevel();
 		}
-	}
-
-	public static SharedTimer getSharedTimer()
-	{
-		return sharedTimer;
 	}
 
 	/**
