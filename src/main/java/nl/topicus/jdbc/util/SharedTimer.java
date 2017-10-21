@@ -58,7 +58,7 @@ public class SharedTimer
 		if (timer == null)
 		{
 			int index = timerCount.incrementAndGet();
-			timer = new Timer("PostgreSQL-JDBC-SharedTimer-" + index, true);
+			timer = new Timer("CloudSpanner-JDBC-SharedTimer-" + index, true);
 		}
 		refCount.incrementAndGet();
 		return timer;
