@@ -2,6 +2,7 @@ package nl.topicus.jdbc;
 
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 import javax.sql.PooledConnection;
 
@@ -28,7 +29,10 @@ public class CloudSpannerConnectionPoolDataSourceTest
 		subject.setSimulateProductName("PostgreSQL");
 		subject.setAllowExtendedMode(true);
 		subject.setLoginTimeout(10);
+		subject.setDefaultAutoCommit(false);
 		subject.setLogWriter(new PrintWriter(System.out));
+		Assert.assertEquals("ConnectionPoolDataSource from " + nl.topicus.jdbc.CloudSpannerDriver.getVersion(),
+				subject.getDescription());
 		PooledConnection con = subject.getPooledConnection();
 		Assert.assertNotNull(con);
 		ICloudSpannerConnection connection = (ICloudSpannerConnection) con.getConnection();
@@ -39,6 +43,20 @@ public class CloudSpannerConnectionPoolDataSourceTest
 		Assert.assertEquals("test", connection.getSuppliedProperties().getProperty("Database"));
 		Assert.assertEquals("TEST", connection.getSuppliedProperties().getProperty("OAuthAccessToken"));
 		Assert.assertTrue(connection.isAllowExtendedMode());
+		Assert.assertEquals(subject.isDefaultAutoCommit(), connection.getAutoCommit());
+
+		PooledConnection con2 = subject.getPooledConnection("TEST", "TEST");
+		Assert.assertNotNull(con2);
+		boolean exception = false;
+		try
+		{
+			subject.getParentLogger();
+		}
+		catch (SQLFeatureNotSupportedException e)
+		{
+			exception = true;
+		}
+		Assert.assertTrue(exception);
 	}
 
 }
