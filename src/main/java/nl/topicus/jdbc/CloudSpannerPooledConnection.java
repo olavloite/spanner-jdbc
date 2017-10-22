@@ -10,8 +10,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
@@ -247,44 +249,22 @@ public class CloudSpannerPooledConnection implements PooledConnection
 		return new ConnectionEvent(this, e);
 	}
 
-	// Classes we consider fatal.
-	private static String[] fatalClasses = { "08", // connection error
-			"53", // insufficient resources
-
-			// nb: not just "57" as that includes query cancel which is nonfatal
-			"57P01", // admin shutdown
-			"57P02", // crash shutdown
-			"57P03", // cannot connect now
-
-			"58", // system error (backend)
-			"60", // system error (driver)
-			"99", // unexpected error
-			"F0", // configuration file error (backend)
-			"XX", // internal error (backend)
-	};
-
-	private static boolean isFatalState(String state)
+	private static final Set<Code> FATAL_CODES = new HashSet<>();
+	static
 	{
-		if (state == null)
+		FATAL_CODES.add(Code.UNAUTHENTICATED);
+		FATAL_CODES.add(Code.DATA_LOSS);
+		FATAL_CODES.add(Code.INTERNAL);
+	}
+
+	private static boolean isFatalState(Code code)
+	{
+		if (code == null)
 		{
 			// no info, assume fatal
 			return true;
 		}
-		if (state.length() < 2)
-		{
-			// no class info, assume fatal
-			return true;
-		}
-
-		for (String fatalClass : fatalClasses)
-		{
-			if (state.startsWith(fatalClass))
-			{
-				return true; // fatal
-			}
-		}
-
-		return false;
+		return FATAL_CODES.contains(code);
 	}
 
 	/**
@@ -296,11 +276,15 @@ public class CloudSpannerPooledConnection implements PooledConnection
 	 */
 	private void fireConnectionError(SQLException e)
 	{
-		if (!isFatalState(e.getSQLState()))
+		Code code = Code.UNKNOWN;
+		if (e instanceof CloudSpannerSQLException)
+		{
+			code = ((CloudSpannerSQLException) e).getCode();
+		}
+		if (!isFatalState(code))
 		{
 			return;
 		}
-
 		fireConnectionFatalError(e);
 	}
 
