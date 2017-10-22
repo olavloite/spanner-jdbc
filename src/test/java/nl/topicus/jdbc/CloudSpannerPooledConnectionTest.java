@@ -1,9 +1,13 @@
 package nl.topicus.jdbc;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 import javax.sql.StatementEventListener;
 
@@ -21,6 +25,25 @@ public class CloudSpannerPooledConnectionTest
 {
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
+
+	private static final class SimpleConnectionEventListener implements ConnectionEventListener
+	{
+		private boolean error = false;
+
+		private boolean closed = false;
+
+		@Override
+		public void connectionErrorOccurred(ConnectionEvent event)
+		{
+			error = true;
+		}
+
+		@Override
+		public void connectionClosed(ConnectionEvent event)
+		{
+			closed = true;
+		}
+	};
 
 	private static CloudSpannerPooledConnection createConnection() throws SQLException
 	{
@@ -111,6 +134,23 @@ public class CloudSpannerPooledConnectionTest
 		subject.close();
 		Assert.assertTrue(con1.isClosed());
 		Assert.assertTrue(con2.isClosed());
+	}
+
+	@Test
+	public void testCloseConnection() throws SQLException
+	{
+		SimpleConnectionEventListener listener = new SimpleConnectionEventListener();
+		CloudSpannerPooledConnection subject = createConnection();
+		subject.addConnectionEventListener(listener);
+		Connection connection = subject.getConnection();
+		assertFalse(connection.isClosed());
+		assertFalse(listener.closed);
+		assertFalse(listener.error);
+		connection.close();
+		assertTrue(connection.isClosed());
+		assertTrue(listener.closed);
+		assertFalse(listener.error);
+		subject.close();
 	}
 
 }
