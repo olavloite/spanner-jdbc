@@ -127,11 +127,6 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		return CloudSpannerDriver.quoteIdentifier(identifier);
 	}
 
-	protected DatabaseClient getDbClient()
-	{
-		return dbClient;
-	}
-
 	public boolean isForceSingleUseReadContext()
 	{
 		return forceSingleUseReadContext;

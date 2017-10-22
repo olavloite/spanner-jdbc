@@ -34,6 +34,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.Returns;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.ByteArray;
@@ -425,6 +427,14 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertArrayEquals(new String[] { "COL1", "COL2", "ID1", "ID2" }, columns.toArray());
 			Assert.assertArrayEquals(new String[] { "1", "2", "1", "1" }, getValues(updateMutation.getValues()));
 		}
+
+		@Test
+		public void testUpdateStatementWithIDInUpdate() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) ");
+			getMutation("UPDATE FOO SET COL1=1, ID=2 WHERE COL2=5");
+		}
 	}
 
 	public static class InsertStatementTests
@@ -448,6 +458,28 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
+		public void testSingleInsertStatementOnReadOnlyConnection() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("The connection is in read-only mode. Mutations are not allowed.");
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			Mockito.when(ps.getConnection().isReadOnly()).thenAnswer(new Returns(true));
+			ps.executeUpdate();
+		}
+
+		@Test
+		public void testBulkInsertStatementOnReadOnlyConnection() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("The connection is in read-only mode. Mutations are not allowed.");
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) SELECT 1, 2, 3 FROM FOO";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			Mockito.when(ps.getConnection().isReadOnly()).thenAnswer(new Returns(true));
+			ps.executeUpdate();
+		}
+
+		@Test
 		public void testInsertOnDuplicateKeyStatementWithDiffentUpdateValues() throws SQLException
 		{
 			assertSingleInsert(
@@ -466,7 +498,7 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
-		public void assertInsertWithSelect() throws SQLException
+		public void testInsertWithSelect() throws SQLException
 		{
 			Mutations mutations = getMutations("INSERT INTO FOO (COL1, COL2, COL3) SELECT 1, 'two', 0xaa");
 			Assert.assertTrue(mutations.isWorker());
@@ -475,7 +507,7 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
-		public void assertInsertWithSelectTable() throws SQLException
+		public void testInsertWithSelectTable() throws SQLException
 		{
 			Mutations mutations = getMutations(
 					"INSERT INTO FOO (COL1, COL2, COL3) SELECT COLA, COLB, COLC FROM OTHER_TABLE");
@@ -575,6 +607,18 @@ public class CloudSpannerPreparedStatementTest
 			thrown.expect(SQLFeatureNotSupportedException.class);
 			thrown.expectMessage("DDL statements may not be batched");
 			ps.addBatch();
+		}
+
+		@Test
+		public void testBatchedInsertStatementOnReadOnlyConnection() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Connection is in read-only mode. Mutations are not allowed");
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.addBatch();
+			Mockito.when(ps.getConnection().isReadOnly()).thenAnswer(new Returns(true));
+			ps.executeBatch();
 		}
 
 	}
@@ -765,6 +809,7 @@ public class CloudSpannerPreparedStatementTest
 		{
 			String sql = "SELECT * FROM FOO";
 			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			Assert.assertFalse(ps.isForceSingleUseReadContext());
 			try (ResultSet rs = ps.executeQuery())
 			{
 			}
