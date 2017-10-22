@@ -58,7 +58,12 @@ public class CloudSpannerPooledConnectionTest
 		ds.setAllowExtendedMode(true);
 		ds.setLoginTimeout(10);
 		ds.setLogWriter(new PrintWriter(System.out));
-		return ds.getPooledConnection();
+		CloudSpannerPooledConnection res = ds.getPooledConnection();
+
+		SimpleConnectionEventListener listener = new SimpleConnectionEventListener();
+		res.addConnectionEventListener(listener);
+
+		return res;
 	}
 
 	@Test
