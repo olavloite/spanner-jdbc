@@ -79,8 +79,14 @@ public class CloudSpannerResultSetMetaDataTest
 	@Test
 	public void testGetColumnDisplaySize() throws SQLException
 	{
-		assertEquals(50, subject.getColumnDisplaySize(CloudSpannerResultSetTest.STRING_COLINDEX_NOTNULL));
+		assertEquals(5, subject.getColumnDisplaySize(CloudSpannerResultSetTest.BOOLEAN_COLINDEX_NOTNULL));
+		assertEquals(10, subject.getColumnDisplaySize(CloudSpannerResultSetTest.DATE_COLINDEX_NOTNULL));
+		assertEquals(14, subject.getColumnDisplaySize(CloudSpannerResultSetTest.DOUBLE_COLINDEX_NOTNULL));
 		assertEquals(10, subject.getColumnDisplaySize(CloudSpannerResultSetTest.LONG_COLINDEX_NOTNULL));
+		assertEquals(50, subject.getColumnDisplaySize(CloudSpannerResultSetTest.STRING_COLINDEX_NOTNULL));
+		assertEquals(16, subject.getColumnDisplaySize(CloudSpannerResultSetTest.TIMESTAMP_COLINDEX_NOTNULL));
+
+		assertEquals(10, subject.getColumnDisplaySize(100));
 	}
 
 	@Test
@@ -128,7 +134,7 @@ public class CloudSpannerResultSetMetaDataTest
 	@Test
 	public void testGetCatalogName() throws SQLException
 	{
-		assertEquals("", subject.getTableName(1));
+		assertEquals("", subject.getCatalogName(1));
 	}
 
 	@Test
