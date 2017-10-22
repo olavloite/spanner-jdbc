@@ -1,14 +1,19 @@
 package nl.topicus.jdbc;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Statement;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
+import javax.sql.StatementEvent;
 import javax.sql.StatementEventListener;
 
 import org.junit.Assert;
@@ -43,7 +48,22 @@ public class CloudSpannerPooledConnectionTest
 		{
 			closed = true;
 		}
-	};
+	}
+
+	private static final class SimpleStatementEventListener implements StatementEventListener
+	{
+
+		@Override
+		public void statementClosed(StatementEvent event)
+		{
+		}
+
+		@Override
+		public void statementErrorOccurred(StatementEvent event)
+		{
+		}
+
+	}
 
 	private static CloudSpannerPooledConnection createConnection() throws SQLException
 	{
@@ -62,6 +82,7 @@ public class CloudSpannerPooledConnectionTest
 
 		SimpleConnectionEventListener listener = new SimpleConnectionEventListener();
 		res.addConnectionEventListener(listener);
+		res.addStatementEventListener(new SimpleStatementEventListener());
 
 		return res;
 	}
@@ -155,7 +176,52 @@ public class CloudSpannerPooledConnectionTest
 		assertTrue(connection.isClosed());
 		assertTrue(listener.closed);
 		assertFalse(listener.error);
+		// Try to close the connection once more, this should be a no-op
+		connection.close();
+		assertTrue(connection.isClosed());
 		subject.close();
+	}
+
+	@Test
+	public void testObjectMethods() throws SQLException
+	{
+		CloudSpannerPooledConnection subject = createConnection();
+		Connection connection = subject.getConnection();
+		assertTrue(connection.toString().contains("Pooled connection wrapping physical connection "));
+		assertEquals(System.identityHashCode(connection), connection.hashCode());
+		assertTrue(connection.equals(connection));
+		assertTrue(connection.getClass().toString().contains("Proxy"));
+	}
+
+	@Test
+	public void testPrepareStatement() throws SQLException
+	{
+		CloudSpannerPooledConnection subject = createConnection();
+		Connection connection = subject.getConnection();
+		PreparedStatement statement = connection.prepareStatement("SELECT COL1, COL2, COL3 FROM FOO");
+		assertFalse(statement.isClosed());
+		statement.close();
+		assertTrue(statement.isClosed());
+	}
+
+	@Test
+	public void testCreateStatement() throws SQLException
+	{
+		CloudSpannerPooledConnection subject = createConnection();
+		Connection connection = subject.getConnection();
+		Statement statement = connection.createStatement();
+		assertFalse(statement.isClosed());
+		statement.close();
+		assertTrue(statement.isClosed());
+	}
+
+	@Test
+	public void testPrepareCall() throws SQLException
+	{
+		CloudSpannerPooledConnection subject = createConnection();
+		Connection connection = subject.getConnection();
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		connection.prepareCall("");
 	}
 
 }
