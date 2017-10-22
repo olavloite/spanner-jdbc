@@ -8,6 +8,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.List;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.ValueBinder;
@@ -56,6 +57,10 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		{
 			return binder.to(((Byte) value).longValue());
 		}
+		else if (Short.class.isAssignableFrom(value.getClass()))
+		{
+			return binder.to(((Short) value).longValue());
+		}
 		else if (Integer.class.isAssignableFrom(value.getClass()))
 		{
 			return binder.to(((Integer) value).longValue());
@@ -90,6 +95,20 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		{
 			return binder.to((String) value);
 		}
+		else if (Character.class.isAssignableFrom(value.getClass()))
+		{
+			return binder.to(((Character) value).toString());
+		}
+		else if (Character[].class.isAssignableFrom(value.getClass()))
+		{
+			List<Character> list = Arrays.asList((Character[]) value);
+			String s = list.stream().map(c -> c.toString()).reduce("", String::concat);
+			return binder.to(s);
+		}
+		else if (char[].class.isAssignableFrom(value.getClass()))
+		{
+			return binder.to(String.valueOf((char[]) value));
+		}
 		else if (byte[].class.isAssignableFrom(value.getClass()))
 		{
 			return binder.to(ByteArray.copyFrom((byte[]) value));
@@ -122,25 +141,55 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 
 	private R setArrayValue(Object value)
 	{
-		if (Boolean[].class.isAssignableFrom(value.getClass()))
+		if (boolean[].class.isAssignableFrom(value.getClass()))
+		{
+			return binder.toBoolArray((boolean[]) value);
+		}
+		else if (Boolean[].class.isAssignableFrom(value.getClass()))
 		{
 			return binder.toBoolArray(Booleans.toArray(Arrays.asList((Boolean[]) value)));
 		}
-		else if (Byte[].class.isAssignableFrom(value.getClass()))
+		else if (short[].class.isAssignableFrom(value.getClass()))
 		{
-			return binder.toInt64Array(Longs.toArray(Arrays.asList((Byte[]) value)));
+			long[] l = new long[((short[]) value).length];
+			Arrays.parallelSetAll(l, i -> ((short[]) value)[i]);
+			return binder.toInt64Array(l);
+		}
+		else if (Short[].class.isAssignableFrom(value.getClass()))
+		{
+			return binder.toInt64Array(Longs.toArray(Arrays.asList((Short[]) value)));
+		}
+		else if (int[].class.isAssignableFrom(value.getClass()))
+		{
+			long[] l = new long[((int[]) value).length];
+			Arrays.parallelSetAll(l, i -> ((int[]) value)[i]);
+			return binder.toInt64Array(l);
 		}
 		else if (Integer[].class.isAssignableFrom(value.getClass()))
 		{
 			return binder.toInt64Array(Longs.toArray(Arrays.asList((Integer[]) value)));
 		}
+		else if (long[].class.isAssignableFrom(value.getClass()))
+		{
+			return binder.toInt64Array((long[]) value);
+		}
 		else if (Long[].class.isAssignableFrom(value.getClass()))
 		{
 			return binder.toInt64Array(Longs.toArray(Arrays.asList((Long[]) value)));
 		}
+		else if (float[].class.isAssignableFrom(value.getClass()))
+		{
+			double[] l = new double[((float[]) value).length];
+			Arrays.parallelSetAll(l, i -> ((float[]) value)[i]);
+			return binder.toFloat64Array(l);
+		}
 		else if (Float[].class.isAssignableFrom(value.getClass()))
 		{
 			return binder.toFloat64Array(Doubles.toArray(Arrays.asList((Float[]) value)));
+		}
+		else if (double[].class.isAssignableFrom(value.getClass()))
+		{
+			return binder.toFloat64Array((double[]) value);
 		}
 		else if (Double[].class.isAssignableFrom(value.getClass()))
 		{
