@@ -85,8 +85,6 @@ public class CloudSpannerResultSetMetaDataTest
 		assertEquals(10, subject.getColumnDisplaySize(CloudSpannerResultSetTest.LONG_COLINDEX_NOTNULL));
 		assertEquals(50, subject.getColumnDisplaySize(CloudSpannerResultSetTest.STRING_COLINDEX_NOTNULL));
 		assertEquals(16, subject.getColumnDisplaySize(CloudSpannerResultSetTest.TIMESTAMP_COLINDEX_NOTNULL));
-
-		assertEquals(10, subject.getColumnDisplaySize(100));
 	}
 
 	@Test
