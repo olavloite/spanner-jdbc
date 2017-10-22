@@ -38,7 +38,7 @@ Include this if you want the light-weight jar.
 &lt;<span class="pl-ent">dependency</span>&gt;
  	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.18&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.19&lt;/<span class="pl-ent">version</span>&gt;
 &lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
