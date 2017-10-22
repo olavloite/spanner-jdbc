@@ -34,9 +34,11 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
+import com.google.rpc.Code;
 import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
@@ -161,9 +163,15 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			transaction = new CloudSpannerTransaction(dbClient, this);
 			metaDataStore = new MetaDataStore(this);
 		}
-		catch (Exception e)
+		catch (SpannerException e)
 		{
-			throw new SQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(), e);
+			throw new CloudSpannerSQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(),
+					e);
+		}
+		catch (IOException e)
+		{
+			throw new CloudSpannerSQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(),
+					Code.UNKNOWN, e);
 		}
 	}
 
@@ -235,7 +243,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 		catch (SpannerException e)
 		{
-			throw new SQLException("Could not execute DDL statement " + sql + ": " + e.getLocalizedMessage(), e);
+			throw new CloudSpannerSQLException("Could not execute DDL statement " + sql + ": " + e.getMessage(), e);
 		}
 	}
 
@@ -334,8 +342,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	{
 		checkClosed();
 		if (transaction.isRunning())
-			throw new SQLException(
-					"There is currently a transaction running. Commit or rollback the running transaction before changing read-only mode.");
+			throw new CloudSpannerSQLException(
+					"There is currently a transaction running. Commit or rollback the running transaction before changing read-only mode.",
+					Code.FAILED_PRECONDITION);
 		this.readOnly = readOnly;
 	}
 
@@ -352,8 +361,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		checkClosed();
 		if (level != Connection.TRANSACTION_SERIALIZABLE)
 		{
-			throw new SQLException("Transaction level " + level
-					+ " is not supported. Only Connection.TRANSACTION_SERIALIZABLE is supported");
+			throw new CloudSpannerSQLException(
+					"Transaction level " + level
+							+ " is not supported. Only Connection.TRANSACTION_SERIALIZABLE is supported",
+					Code.INVALID_ARGUMENT);
 		}
 	}
 

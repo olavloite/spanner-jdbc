@@ -12,10 +12,14 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.ResultSet;
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
+import com.google.rpc.Code;
+
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 class TransactionThread extends Thread
 {
@@ -187,15 +191,20 @@ class TransactionThread extends Thread
 				catch (InterruptedException e)
 				{
 					Thread.currentThread().interrupt();
-					throw new SQLException((commit ? "Commit failed: " : "Rollback failed: ") + e.getLocalizedMessage(),
-							e);
+					throw new CloudSpannerSQLException(
+							(commit ? "Commit failed: " : "Rollback failed: ") + e.getMessage(), Code.ABORTED, e);
 				}
 			}
 		}
 		if (status == TransactionStatus.FAIL && exception != null)
 		{
-			throw new SQLException((commit ? "Commit failed: " : "Rollback failed: ") + exception.getLocalizedMessage(),
-					exception);
+			Code code = Code.UNKNOWN;
+			if (exception instanceof CloudSpannerSQLException)
+				code = ((CloudSpannerSQLException) exception).getCode();
+			if (exception instanceof SpannerException)
+				code = Code.forNumber(((SpannerException) exception).getCode());
+			throw new CloudSpannerSQLException(
+					(commit ? "Commit failed: " : "Rollback failed: ") + exception.getMessage(), code, exception);
 		}
 	}
 

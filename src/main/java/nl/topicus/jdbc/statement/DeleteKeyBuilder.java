@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.cloud.spanner.Key;
+import com.google.rpc.Code;
 
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 public class DeleteKeyBuilder
 {
@@ -42,8 +44,10 @@ public class DeleteKeyBuilder
 			Object value = keyValues.get(key);
 			if (value == null)
 			{
-				throw new SQLException("No value supplied for key column " + key
-						+ ". All key columns must be specified in the WHERE-clause of a DELETE-statement.");
+				throw new CloudSpannerSQLException(
+						"No value supplied for key column " + key
+								+ ". All key columns must be specified in the WHERE-clause of a DELETE-statement.",
+						Code.INVALID_ARGUMENT);
 			}
 			builder.appendObject(value);
 		}

@@ -41,12 +41,14 @@ import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.Op;
 import com.google.cloud.spanner.Value;
+import com.google.rpc.Code;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import nl.topicus.jdbc.CloudSpannerArray;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.test.util.CloudSpannerTestObjects;
 
@@ -856,7 +858,7 @@ public class CloudSpannerPreparedStatementTest
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Could not parse SQL statement", e);
+			throw new CloudSpannerSQLException("Could not parse SQL statement", Code.INVALID_ARGUMENT, e);
 		}
 		Assert.assertNotNull(statement);
 		Assert.assertEquals(CreateTable.class, statement.getClass());

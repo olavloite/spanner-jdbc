@@ -12,6 +12,7 @@ import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
 import com.google.cloud.spanner.ReadContext;
+import com.google.rpc.Code;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -34,6 +35,7 @@ import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.statement.AbstractTablePartWorker.DMLOperation;
 
@@ -69,7 +71,9 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException
 	{
-		throw new SQLException("The executeQuery(String sql)-method may not be called on a PreparedStatement");
+		throw new CloudSpannerSQLException(
+				"The executeQuery(String sql)-method may not be called on a PreparedStatement",
+				Code.FAILED_PRECONDITION);
 	}
 
 	@Override
@@ -82,7 +86,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException | TokenMgrError e)
 		{
-			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
+			throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
+					Code.INVALID_ARGUMENT, e);
 		}
 		if (statement instanceof Select)
 		{
@@ -93,7 +98,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				return new CloudSpannerResultSet(this, rs);
 			}
 		}
-		throw new SQLException("SQL statement not suitable for executeQuery. Expected SELECT-statement.");
+		throw new CloudSpannerSQLException("SQL statement not suitable for executeQuery. Expected SELECT-statement.",
+				Code.INVALID_ARGUMENT);
 	}
 
 	private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement)
@@ -242,11 +248,14 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			if (getConnection().isReadOnly())
 			{
-				throw new SQLException("The connection is in read-only mode. Mutations are not allowed.");
+				throw new CloudSpannerSQLException("The connection is in read-only mode. Mutations are not allowed.",
+						Code.FAILED_PRECONDITION);
 			}
 			if (isDDLStatement(sql))
 			{
-				throw new SQLException("Cannot create mutation for DDL statement. Expected INSERT, UPDATE or DELETE");
+				throw new CloudSpannerSQLException(
+						"Cannot create mutation for DDL statement. Expected INSERT, UPDATE or DELETE",
+						Code.INVALID_ARGUMENT);
 			}
 			Statement statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			if (statement instanceof Insert)
@@ -260,11 +269,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				Update updateStatement = (Update) statement;
 				if (updateStatement.getSelect() != null)
-					throw new SQLException(
-							"UPDATE statement using SELECT is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE");
+					throw new CloudSpannerSQLException(
+							"UPDATE statement using SELECT is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE",
+							Code.INVALID_ARGUMENT);
 				if (updateStatement.getTables().size() > 1)
-					throw new SQLException(
-							"UPDATE statement using multiple tables is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE");
+					throw new CloudSpannerSQLException(
+							"UPDATE statement using multiple tables is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE",
+							Code.INVALID_ARGUMENT);
 
 				if (isSingleRowWhereClause(
 						getConnection().getTable(unquoteIdentifier(updateStatement.getTables().get(0).getName())),
@@ -286,13 +297,15 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			}
 			else
 			{
-				throw new SQLFeatureNotSupportedException(
-						"Unrecognized or unsupported SQL-statment: Expected one of INSERT, UPDATE or DELETE. Please note that batching of prepared statements is not supported for SELECT-statements.");
+				throw new CloudSpannerSQLException(
+						"Unrecognized or unsupported SQL-statment: Expected one of INSERT, UPDATE or DELETE. Please note that batching of prepared statements is not supported for SELECT-statements.",
+						Code.INVALID_ARGUMENT);
 			}
 		}
 		catch (JSQLParserException | IllegalArgumentException | TokenMgrError e)
 		{
-			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
+			throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
+					Code.INVALID_ARGUMENT, e);
 		}
 	}
 
@@ -332,11 +345,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		ItemsList items = insert.getItemsList();
 		if (!(items instanceof ExpressionList))
 		{
-			throw new SQLException("Insert statement must specify a list of values");
+			throw new CloudSpannerSQLException("Insert statement must specify a list of values", Code.INVALID_ARGUMENT);
 		}
 		if (insert.getColumns() == null || insert.getColumns().isEmpty())
 		{
-			throw new SQLException("Insert statement must specify a list of column names");
+			throw new CloudSpannerSQLException("Insert statement must specify a list of column names",
+					Code.INVALID_ARGUMENT);
 		}
 		List<Expression> expressions = ((ExpressionList) items).getExpressions();
 		String table = unquoteIdentifier(insert.getTable().getFullyQualifiedName());
@@ -378,9 +392,10 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	private Mutation createUpdateMutation(Update update) throws SQLException
 	{
 		if (update.getTables().isEmpty())
-			throw new SQLException("No table found in update statement");
+			throw new CloudSpannerSQLException("No table found in update statement", Code.INVALID_ARGUMENT);
 		if (update.getTables().size() > 1)
-			throw new SQLException("Update statements for multiple tables at once are not supported");
+			throw new CloudSpannerSQLException("Update statements for multiple tables at once are not supported",
+					Code.INVALID_ARGUMENT);
 		String table = unquoteIdentifier(update.getTables().get(0).getFullyQualifiedName());
 		getParameterStore().setTable(table);
 		List<Expression> expressions = update.getExpressions();
@@ -436,7 +451,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			where.accept(whereClauseVisitor);
 			if (!whereClauseVisitor.isValid())
 			{
-				throw new SQLException(INVALID_WHERE_CLAUSE_DELETE_MESSAGE);
+				throw new CloudSpannerSQLException(INVALID_WHERE_CLAUSE_DELETE_MESSAGE, Code.INVALID_ARGUMENT);
 			}
 		}
 	}
@@ -484,7 +499,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			where.accept(whereClauseVisitor);
 			if (!whereClauseVisitor.isValid())
 			{
-				throw new SQLException(INVALID_WHERE_CLAUSE_UPDATE_MESSAGE);
+				throw new CloudSpannerSQLException(INVALID_WHERE_CLAUSE_UPDATE_MESSAGE, Code.INVALID_ARGUMENT);
 			}
 		}
 		else
@@ -517,7 +532,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			}
 			catch (JSQLParserException | TokenMgrError e)
 			{
-				throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
+				throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
+						Code.INVALID_ARGUMENT, e);
 			}
 		}
 		if (!ddl && statement instanceof Select)
@@ -542,7 +558,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			if (isDDLStatement(sql))
 			{
-				throw new SQLException("Cannot get parameter meta data for DDL statement");
+				throw new CloudSpannerSQLException("Cannot get parameter meta data for DDL statement",
+						Code.INVALID_ARGUMENT);
 			}
 			Statement statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			if (statement instanceof Insert || statement instanceof Update || statement instanceof Delete)
@@ -560,7 +577,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		catch (JSQLParserException | TokenMgrError e)
 		{
-			throw new SQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(), e);
+			throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
+					Code.INVALID_ARGUMENT, e);
 		}
 		return new CloudSpannerParameterMetaData(this);
 	}
@@ -570,7 +588,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		Select select = insert.getSelect();
 		if (select == null)
 		{
-			throw new SQLException("Insert statement must contain a select statement");
+			throw new CloudSpannerSQLException("Insert statement must contain a select statement",
+					Code.INVALID_ARGUMENT);
 		}
 		boolean isDuplicate = insert.isUseDuplicate();
 		InsertWorker.DMLOperation mode;
@@ -587,7 +606,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		if (delete.getTable() == null || (delete.getTables() != null && delete.getTables().size() > 0))
 		{
-			throw new SQLException("DELETE statement must contain only one table");
+			throw new CloudSpannerSQLException("DELETE statement must contain only one table", Code.INVALID_ARGUMENT);
 		}
 		return new DeleteWorker(getConnection(), delete, getConnection().isAllowExtendedMode());
 	}

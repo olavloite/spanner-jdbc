@@ -18,6 +18,10 @@ import javax.sql.ConnectionEventListener;
 import javax.sql.PooledConnection;
 import javax.sql.StatementEventListener;
 
+import com.google.rpc.Code;
+
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+
 /**
  * Implementation of the PooledConnection interface. This implementation is
  * based on the implementation of PostgreSQL.
@@ -108,17 +112,15 @@ public class CloudSpannerPooledConnection implements PooledConnection
 		if (last != null)
 		{
 			last.close();
-			if (!con.isClosed())
+			if (!con.isClosed() && !con.getAutoCommit())
 			{
-				if (!con.getAutoCommit())
+				try
 				{
-					try
-					{
-						con.rollback();
-					}
-					catch (SQLException ignored)
-					{
-					}
+					con.rollback();
+				}
+				catch (SQLException ignored)
+				{
+					// ignore
 				}
 			}
 		}
@@ -151,7 +153,8 @@ public class CloudSpannerPooledConnection implements PooledConnection
 		{
 			// Before throwing the exception, let's notify the registered
 			// listeners about the error
-			SQLException sqlException = new SQLException("This PooledConnection has already been closed.");
+			SQLException sqlException = new CloudSpannerSQLException("This PooledConnection has already been closed.",
+					Code.FAILED_PRECONDITION);
 			fireConnectionFatalError(sqlException);
 			throw sqlException;
 		}
@@ -391,9 +394,9 @@ public class CloudSpannerPooledConnection implements PooledConnection
 			}
 			if (con == null || con.isClosed())
 			{
-				throw new SQLException(automatic
+				throw new CloudSpannerSQLException(automatic
 						? "Connection has been closed automatically because a new connection was opened for the same PooledConnection or the PooledConnection has been closed."
-						: "Connection has been closed.");
+						: "Connection has been closed.", Code.FAILED_PRECONDITION);
 			}
 
 			// From here on in, we invoke via reflection, catch exceptions,
@@ -527,7 +530,7 @@ public class CloudSpannerPooledConnection implements PooledConnection
 			}
 			if (st == null || st.isClosed())
 			{
-				throw new SQLException("Statement has been closed.");
+				throw new CloudSpannerSQLException("Statement has been closed.", Code.FAILED_PRECONDITION);
 			}
 			if (methodName.equals("getConnection"))
 			{

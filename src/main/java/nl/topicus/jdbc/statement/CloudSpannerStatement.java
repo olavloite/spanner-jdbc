@@ -7,6 +7,7 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.ReadContext;
+import com.google.rpc.Code;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -14,6 +15,7 @@ import net.sf.jsqlparser.parser.TokenMgrError;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 /**
@@ -62,7 +64,9 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 			}
 			catch (JSQLParserException | TokenMgrError e)
 			{
-				throw new SQLException("Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(), e);
+				throw new CloudSpannerSQLException(
+						"Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(),
+						Code.INVALID_ARGUMENT, e);
 			}
 		}
 		if (!ddl && statement instanceof Select)

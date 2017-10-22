@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.rpc.Code;
+
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+
 /**
  * Implementation of java.sql.Array for Google Cloud Spanner
  * 
@@ -32,7 +36,7 @@ public class CloudSpannerArray implements Array
 				return new CloudSpannerArray(type, elements);
 			}
 		}
-		throw new SQLException("Data type " + typeName + " is unknown");
+		throw new CloudSpannerSQLException("Data type " + typeName + " is unknown", Code.INVALID_ARGUMENT);
 	}
 
 	public static CloudSpannerArray createArray(CloudSpannerDataType type, List<? extends Object> elements)
@@ -50,10 +54,10 @@ public class CloudSpannerArray implements Array
 		}
 		catch (Exception e)
 		{
-			throw new SQLException(
+			throw new CloudSpannerSQLException(
 					"Could not copy array elements. Make sure the supplied array only contains elements of class "
 							+ type.getJavaClass().getName(),
-					e);
+					Code.UNKNOWN, e);
 		}
 	}
 
@@ -68,7 +72,7 @@ public class CloudSpannerArray implements Array
 	{
 		if (data == null)
 		{
-			throw new SQLException(FREE_EXCEPTION);
+			throw new CloudSpannerSQLException(FREE_EXCEPTION, Code.FAILED_PRECONDITION);
 		}
 	}
 

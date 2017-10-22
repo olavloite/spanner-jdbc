@@ -10,14 +10,17 @@ import java.util.stream.Collectors;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.ReadContext;
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
+import com.google.rpc.Code;
 
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 /**
  * 
@@ -100,8 +103,9 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		{
 			String invalidCols = updateColumns.stream().filter(x -> keyColumns.contains(x))
 					.collect(Collectors.joining());
-			throw new SQLException(
-					"UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) " + invalidCols);
+			throw new CloudSpannerSQLException(
+					"UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) " + invalidCols,
+					Code.INVALID_ARGUMENT);
 		}
 
 		StringBuilder res = new StringBuilder();
@@ -151,7 +155,8 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	{
 		if (connection.isReadOnly())
 		{
-			throw new SQLException("Connection is in read-only mode. Mutations are not allowed");
+			throw new CloudSpannerSQLException("Connection is in read-only mode. Mutations are not allowed",
+					Code.FAILED_PRECONDITION);
 		}
 		if (mutations.isWorker())
 		{
@@ -160,7 +165,10 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 			{
 				if (result.getException() instanceof SQLException)
 					throw (SQLException) result.getException();
-				throw new SQLException(result.getException());
+				if (result.getException() instanceof SpannerException)
+					throw new CloudSpannerSQLException((SpannerException) result.getException());
+				throw new CloudSpannerSQLException(result.getException().getMessage(), Code.UNKNOWN,
+						result.getException());
 			}
 		}
 		else
@@ -202,7 +210,7 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	protected void checkClosed() throws SQLException
 	{
 		if (isClosed())
-			throw new SQLException("Statement is closed");
+			throw new CloudSpannerSQLException("Statement is closed", Code.FAILED_PRECONDITION);
 	}
 
 	@Override

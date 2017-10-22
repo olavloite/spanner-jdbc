@@ -9,6 +9,8 @@ import java.sql.Wrapper;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
 
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+
 public abstract class AbstractCloudSpannerWrapper implements Wrapper
 {
 
@@ -90,7 +92,7 @@ public abstract class AbstractCloudSpannerWrapper implements Wrapper
 		{
 			return iface.cast(this);
 		}
-		throw new SQLException("Cannot unwrap to " + iface.getName());
+		throw new CloudSpannerSQLException("Cannot unwrap to " + iface.getName(), com.google.rpc.Code.INVALID_ARGUMENT);
 	}
 
 }

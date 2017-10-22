@@ -16,6 +16,9 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+import com.google.rpc.Code;
+
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 
 /**
@@ -32,7 +35,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	{
 		if (isClosed())
 		{
-			throw new SQLException(CONNECTION_CLOSED);
+			throw new CloudSpannerSQLException(CONNECTION_CLOSED, Code.FAILED_PRECONDITION);
 		}
 	}
 

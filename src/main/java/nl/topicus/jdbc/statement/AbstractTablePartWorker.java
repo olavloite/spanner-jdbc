@@ -8,10 +8,14 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.google.cloud.spanner.SpannerException;
+import com.google.rpc.Code;
+
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 public abstract class AbstractTablePartWorker implements Callable<ConversionResult>
 {
@@ -129,14 +133,25 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 				connection.setAutoCommit(true);
 			}
 		}
+		catch (SpannerException e)
+		{
+			throw new CloudSpannerSQLException(e);
+		}
+		catch (CloudSpannerSQLException e)
+		{
+			throw e;
+		}
 		catch (Exception e)
+		{
+			throw new CloudSpannerSQLException(e.getMessage(), Code.UNKNOWN, e);
+		}
+		finally
 		{
 			if (wasAutocommit && !isExtendedMode)
 			{
 				connection.rollback();
 				connection.setAutoCommit(true);
 			}
-			throw new SQLException(e.getMessage(), e);
 		}
 
 	}

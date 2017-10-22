@@ -13,8 +13,10 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.google.cloud.spanner.Spanner;
+import com.google.rpc.Code;
 
 import nl.topicus.jdbc.CloudSpannerConnection.CloudSpannerDatabaseSpecification;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 public class CloudSpannerDriver implements Driver
 {
@@ -98,12 +100,14 @@ public class CloudSpannerDriver implements Driver
 						}
 						catch (NumberFormatException e)
 						{
-							throw new SQLException("Invalid value for " + conPart + ": "
-									+ conPart.substring(ALLOW_EXTENDED_MODE.length()), e);
+							throw new CloudSpannerSQLException(
+									"Invalid value for " + conPart + ": "
+											+ conPart.substring(ALLOW_EXTENDED_MODE.length()),
+									Code.INVALID_ARGUMENT, e);
 						}
 					}
 					else
-						throw new SQLException("Unknown URL parameter " + conPart);
+						throw new CloudSpannerSQLException("Unknown URL parameter " + conPart, Code.INVALID_ARGUMENT);
 				}
 			}
 			return res;
@@ -141,9 +145,9 @@ public class CloudSpannerDriver implements Driver
 				}
 				catch (NumberFormatException e)
 				{
-					throw new SQLException(
+					throw new CloudSpannerSQLException(
 							"Invalid value for " + ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
-							e);
+							Code.INVALID_ARGUMENT, e);
 				}
 				if (!logLevelSet)
 					setLogLevel(OFF);

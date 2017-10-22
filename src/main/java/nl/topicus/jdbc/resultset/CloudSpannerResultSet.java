@@ -23,6 +23,7 @@ import com.google.cloud.spanner.Type.Code;
 
 import nl.topicus.jdbc.CloudSpannerArray;
 import nl.topicus.jdbc.CloudSpannerDataType;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
@@ -65,19 +66,19 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	private void ensureAfterFirst() throws SQLException
 	{
 		if (beforeFirst)
-			throw new SQLException("Before first record");
+			throw new CloudSpannerSQLException("Before first record", com.google.rpc.Code.FAILED_PRECONDITION);
 	}
 
 	private void ensureBeforeLast() throws SQLException
 	{
 		if (afterLast)
-			throw new SQLException("After last record");
+			throw new CloudSpannerSQLException("After last record", com.google.rpc.Code.FAILED_PRECONDITION);
 	}
 
 	private void ensureOpen() throws SQLException
 	{
 		if (closed)
-			throw new SQLException("Resultset is closed");
+			throw new CloudSpannerSQLException("Resultset is closed", com.google.rpc.Code.FAILED_PRECONDITION);
 	}
 
 	@Override
@@ -248,7 +249,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		}
 		catch (IllegalArgumentException e)
 		{
-			throw new SQLException("Column not found: " + columnLabel, e);
+			throw new CloudSpannerSQLException("Column not found: " + columnLabel, com.google.rpc.Code.INVALID_ARGUMENT,
+					e);
 		}
 	}
 
@@ -416,7 +418,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			return getTimestamp(columnIndex);
 		if (type.getCode() == Code.ARRAY)
 			return getArray(columnIndex);
-		throw new SQLException("Unknown type: " + type.toString());
+		throw new CloudSpannerSQLException("Unknown type: " + type.toString(), com.google.rpc.Code.INVALID_ARGUMENT);
 	}
 
 	@Override
@@ -424,7 +426,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	{
 		Type type = resultSet.getColumnType(columnLabel);
 		if (type.getCode() != Code.ARRAY)
-			throw new SQLException("Column with label " + columnLabel + " does not contain an array");
+			throw new CloudSpannerSQLException("Column with label " + columnLabel + " does not contain an array",
+					com.google.rpc.Code.INVALID_ARGUMENT);
 		return getArray(resultSet.getColumnIndex(columnLabel) + 1);
 	}
 
@@ -435,7 +438,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			return null;
 		Type type = resultSet.getColumnType(columnIndex - 1);
 		if (type.getCode() != Code.ARRAY)
-			throw new SQLException("Column with index " + columnIndex + " does not contain an array");
+			throw new CloudSpannerSQLException("Column with index " + columnIndex + " does not contain an array",
+					com.google.rpc.Code.INVALID_ARGUMENT);
 		CloudSpannerDataType dataType = CloudSpannerDataType.getType(type.getArrayElementType().getCode());
 		List<? extends Object> elements = dataType.getArrayElements(resultSet, columnIndex - 1);
 

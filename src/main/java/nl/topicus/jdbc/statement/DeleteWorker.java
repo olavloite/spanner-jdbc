@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.rpc.Code;
+
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Table;
@@ -12,6 +14,7 @@ import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 public class DeleteWorker extends AbstractTablePartWorker
 {
@@ -41,7 +44,8 @@ public class DeleteWorker extends AbstractTablePartWorker
 		}
 		catch (JSQLParserException e)
 		{
-			throw new SQLException("Could not parse generated SELECT statement: " + sql);
+			throw new CloudSpannerSQLException("Could not parse generated SELECT statement: " + sql,
+					Code.INVALID_ARGUMENT);
 		}
 	}
 
