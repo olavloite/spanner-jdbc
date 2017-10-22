@@ -32,6 +32,18 @@ Include the following if you want the thick jar version that includes all (shade
 &lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
+Add the following to get the sources of the shaded jar.
+
+<div class="highlight highlight-text-xml"><pre>
+&lt;<span class="pl-ent">dependency</span>&gt;
+ 	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
+    	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.19&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">classifier</span>&gt;shaded-sources&lt;/<span class="pl-ent">classifier</span>&gt;
+&lt;/<span class="pl-ent">dependency</span>&gt;
+</pre></div>
+
+
 Include this if you want the light-weight jar.
 
 <div class="highlight highlight-text-xml"><pre>
