@@ -2,20 +2,29 @@ package nl.topicus.jdbc.resultset;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Time;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
+import org.mockito.internal.stubbing.answers.Returns;
 
 import com.google.cloud.ByteArray;
 import com.google.cloud.Date;
@@ -24,12 +33,16 @@ import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.StructField;
 
+import nl.topicus.jdbc.CloudSpannerArray;
+import nl.topicus.jdbc.CloudSpannerDataType;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @Category(UnitTest.class)
 public class CloudSpannerResultSetTest
 {
+	static final String UNKNOWN_COLUMN = "UNKNOWN_COLUMN";
+
 	static final String STRING_COL_NULL = "STRING_COL_NULL";
 
 	static final String STRING_COL_NOT_NULL = "STRING_COL_NOT_NULL";
@@ -93,6 +106,17 @@ public class CloudSpannerResultSetTest
 	static final int TIME_COLINDEX_NULL = 15;
 
 	static final int TIME_COLINDEX_NOTNULL = 16;
+
+	static final String ARRAY_COL_NULL = "ARRAY_COL_NULL";
+
+	static final String ARRAY_COL_NOT_NULL = "ARRAY_COL_NOT_NULL";
+
+	static final int ARRAY_COLINDEX_NULL = 17;
+
+	static final int ARRAY_COLINDEX_NOTNULL = 18;
+
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	private CloudSpannerResultSet subject;
 
@@ -164,18 +188,18 @@ public class CloudSpannerResultSetTest
 		when(res.getColumnType(LONG_COLINDEX_NULL - 1)).thenReturn(Type.int64());
 		when(res.getColumnType(LONG_COLINDEX_NOTNULL - 1)).thenReturn(Type.int64());
 
-		when(res.getDate(DATE_COL_NULL)).thenReturn(null);
-		when(res.isNull(DATE_COL_NULL)).thenReturn(true);
-		when(res.getDate(DATE_COL_NOT_NULL)).thenReturn(Date.fromYearMonthDay(2017, 9, 10));
-		when(res.isNull(DATE_COL_NOT_NULL)).thenReturn(false);
-		when(res.getDate(DATE_COLINDEX_NULL - 1)).thenReturn(null);
-		when(res.isNull(DATE_COLINDEX_NULL - 1)).thenReturn(true);
-		when(res.getDate(DATE_COLINDEX_NOTNULL - 1)).thenReturn(Date.fromYearMonthDay(2017, 9, 11));
-		when(res.isNull(DATE_COLINDEX_NOTNULL - 1)).thenReturn(false);
-		when(res.getColumnType(DATE_COL_NULL)).thenReturn(Type.date());
-		when(res.getColumnType(DATE_COL_NOT_NULL)).thenReturn(Type.date());
-		when(res.getColumnType(DATE_COLINDEX_NULL - 1)).thenReturn(Type.date());
-		when(res.getColumnType(DATE_COLINDEX_NOTNULL - 1)).thenReturn(Type.date());
+		when(res.getDate(DATE_COL_NULL)).thenAnswer(new Returns(null));
+		when(res.isNull(DATE_COL_NULL)).thenAnswer(new Returns(true));
+		when(res.getDate(DATE_COL_NOT_NULL)).thenAnswer(new Returns(Date.fromYearMonthDay(2017, 9, 10)));
+		when(res.isNull(DATE_COL_NOT_NULL)).thenAnswer(new Returns(false));
+		when(res.getDate(DATE_COLINDEX_NULL - 1)).thenAnswer(new Returns(null));
+		when(res.isNull(DATE_COLINDEX_NULL - 1)).thenAnswer(new Returns(true));
+		when(res.getDate(DATE_COLINDEX_NOTNULL - 1)).thenAnswer(new Returns(Date.fromYearMonthDay(2017, 9, 10)));
+		when(res.isNull(DATE_COLINDEX_NOTNULL - 1)).thenAnswer(new Returns(false));
+		when(res.getColumnType(DATE_COL_NULL)).thenAnswer(new Returns(Type.date()));
+		when(res.getColumnType(DATE_COL_NOT_NULL)).thenAnswer(new Returns(Type.date()));
+		when(res.getColumnType(DATE_COLINDEX_NULL - 1)).thenAnswer(new Returns(Type.date()));
+		when(res.getColumnType(DATE_COLINDEX_NOTNULL - 1)).thenAnswer(new Returns(Type.date()));
 
 		Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 		cal1.clear();
@@ -215,7 +239,24 @@ public class CloudSpannerResultSetTest
 		when(res.getColumnType(TIME_COLINDEX_NULL - 1)).thenReturn(Type.timestamp());
 		when(res.getColumnType(TIME_COLINDEX_NOTNULL - 1)).thenReturn(Type.timestamp());
 
-		when(res.getColumnIndex(STRING_COL_NOT_NULL)).thenReturn(1);
+		when(res.getLongList(ARRAY_COL_NULL)).thenAnswer(new Returns(null));
+		when(res.isNull(ARRAY_COL_NULL)).thenAnswer(new Returns(true));
+		when(res.getLongList(ARRAY_COL_NOT_NULL)).thenAnswer(new Returns(Arrays.asList(1L, 2L, 3L)));
+		when(res.isNull(ARRAY_COL_NOT_NULL)).thenAnswer(new Returns(false));
+		when(res.getLongList(ARRAY_COLINDEX_NULL - 1)).thenAnswer(new Returns(null));
+		when(res.isNull(ARRAY_COLINDEX_NULL - 1)).thenAnswer(new Returns(true));
+		when(res.getLongList(ARRAY_COLINDEX_NOTNULL - 1)).thenAnswer(new Returns(Arrays.asList(1L, 2L, 3L)));
+		when(res.isNull(ARRAY_COLINDEX_NOTNULL - 1)).thenAnswer(new Returns(false));
+		when(res.getColumnType(ARRAY_COL_NULL)).thenAnswer(new Returns(Type.array(Type.int64())));
+		when(res.getColumnType(ARRAY_COL_NOT_NULL)).thenAnswer(new Returns(Type.array(Type.int64())));
+		when(res.getColumnType(ARRAY_COLINDEX_NULL - 1)).thenAnswer(new Returns(Type.array(Type.int64())));
+		when(res.getColumnType(ARRAY_COLINDEX_NOTNULL - 1)).thenAnswer(new Returns(Type.array(Type.int64())));
+
+		when(res.getColumnIndex(STRING_COL_NOT_NULL)).thenAnswer(new Returns(1));
+		when(res.getColumnIndex(UNKNOWN_COLUMN)).thenThrow(IllegalArgumentException.class);
+		when(res.getColumnIndex(DATE_COL_NOT_NULL)).thenAnswer(new Returns(DATE_COLINDEX_NOTNULL - 1));
+		when(res.getColumnIndex(ARRAY_COL_NOT_NULL)).thenAnswer(new Returns(ARRAY_COLINDEX_NOTNULL - 1));
+		when(res.getColumnIndex(ARRAY_COL_NULL)).thenAnswer(new Returns(ARRAY_COLINDEX_NULL - 1));
 
 		when(res.getType()).thenReturn(Type.struct(StructField.of(STRING_COL_NULL, Type.string()),
 				StructField.of(STRING_COL_NOT_NULL, Type.string()), StructField.of(BOOLEAN_COL_NULL, Type.bool()),
@@ -343,7 +384,7 @@ public class CloudSpannerResultSetTest
 		assertNotNull(subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL, 2));
 		assertEquals(BigDecimal.valueOf(2.12d), subject.getBigDecimal(DOUBLE_COLINDEX_NOTNULL, 2));
 		assertEquals(false, subject.wasNull());
-		assertNull(subject.getBigDecimal(DOUBLE_COLINDEX_NULL));
+		assertNull(subject.getBigDecimal(DOUBLE_COLINDEX_NULL, 2));
 		assertTrue(subject.wasNull());
 	}
 
@@ -362,7 +403,7 @@ public class CloudSpannerResultSetTest
 	public void testGetDateIndex() throws SQLException
 	{
 		assertNotNull(subject.getDate(DATE_COLINDEX_NOTNULL));
-		assertEquals(new java.sql.Date(2017 - 1900, 8, 11), subject.getDate(DATE_COLINDEX_NOTNULL));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getDate(DATE_COLINDEX_NOTNULL));
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getDate(DATE_COLINDEX_NULL));
 		assertTrue(subject.wasNull());
@@ -539,14 +580,14 @@ public class CloudSpannerResultSetTest
 	{
 		Calendar cal = Calendar.getInstance();
 		assertNotNull(subject.getDate(DATE_COLINDEX_NOTNULL, cal));
-		assertEquals(new java.sql.Date(2017 - 1900, 8, 11), subject.getDate(DATE_COLINDEX_NOTNULL, cal));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getDate(DATE_COLINDEX_NOTNULL, cal));
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getDate(DATE_COLINDEX_NULL, cal));
 		assertTrue(subject.wasNull());
 
 		Calendar calGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 		Calendar expected = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-		expected.set(2017, 8, 11, 0, 0, 0);
+		expected.set(2017, 8, 10, 0, 0, 0);
 		expected.clear(Calendar.MILLISECOND);
 		assertEquals(new java.sql.Date(expected.getTimeInMillis()), subject.getDate(DATE_COLINDEX_NOTNULL, calGMT));
 	}
@@ -614,203 +655,253 @@ public class CloudSpannerResultSetTest
 		assertNull(subject.getTimestamp(TIMESTAMP_COLINDEX_NULL, cal));
 		assertTrue(subject.wasNull());
 	}
-	//
-	// @Test
-	// public Timestamp getTimestamp(String columnLabel, Calendar cal) throws
-	// SQLException
-	// {
-	// return isNull(columnLabel) ? null
-	// :
-	// CloudSpannerConversionUtil.toSqlTimestamp(resultSet.getTimestamp(columnLabel));
-	// }
-	//
-	// @Test
-	// public boolean isClosed() throws SQLException
-	// {
-	// return closed;
-	// }
-	//
-	// @Test
-	// public byte getByte(int columnIndex) throws SQLException
-	// {
-	// return isNull(columnIndex) ? 0 : (byte) resultSet.getLong(columnIndex -
-	// 1);
-	// }
-	//
-	// @Test
-	// public short getShort(int columnIndex) throws SQLException
-	// {
-	// return isNull(columnIndex) ? 0 : (short) resultSet.getLong(columnIndex -
-	// 1);
-	// }
-	//
-	// @Test
-	// public int getInt(int columnIndex) throws SQLException
-	// {
-	// return isNull(columnIndex) ? 0 : (int) resultSet.getLong(columnIndex -
-	// 1);
-	// }
-	//
-	// @Test
-	// public float getFloat(int columnIndex) throws SQLException
-	// {
-	// return isNull(columnIndex) ? 0 : (float) resultSet.getDouble(columnIndex
-	// - 1);
-	// }
-	//
-	// @Test
-	// public byte getByte(String columnLabel) throws SQLException
-	// {
-	// return isNull(columnLabel) ? 0 : (byte) resultSet.getLong(columnLabel);
-	// }
-	//
-	// @Test
-	// public short getShort(String columnLabel) throws SQLException
-	// {
-	// return isNull(columnLabel) ? 0 : (short) resultSet.getLong(columnLabel);
-	// }
-	//
-	// @Test
-	// public int getInt(String columnLabel) throws SQLException
-	// {
-	// return isNull(columnLabel) ? 0 : (int) resultSet.getLong(columnLabel);
-	// }
-	//
-	// @Test
-	// public float getFloat(String columnLabel) throws SQLException
-	// {
-	// return isNull(columnLabel) ? 0 : (float)
-	// resultSet.getDouble(columnLabel);
-	// }
-	//
-	// @Test
-	// public Object getObject(String columnLabel) throws SQLException
-	// {
-	// Type type = resultSet.getColumnType(columnLabel);
-	// return isNull(columnLabel) ? null : getObject(type, columnLabel);
-	// }
-	//
-	// @Test
-	// public Object getObject(int columnIndex) throws SQLException
-	// {
-	// Type type = resultSet.getColumnType(columnIndex - 1);
-	// return isNull(columnIndex) ? null : getObject(type, columnIndex);
-	// }
-	//
-	// private Object getObject(Type type, String columnLabel) throws
-	// SQLException
-	// {
-	// return getObject(type, resultSet.getColumnIndex(columnLabel) + 1);
-	// }
-	//
-	// private Object getObject(Type type, int columnIndex) throws SQLException
-	// {
-	// if (type == Type.bool())
-	// return getBoolean(columnIndex);
-	// if (type == Type.bytes())
-	// return getBytes(columnIndex);
-	// if (type == Type.date())
-	// return getDate(columnIndex);
-	// if (type == Type.float64())
-	// return getDouble(columnIndex);
-	// if (type == Type.int64())
-	// return getLong(columnIndex);
-	// if (type == Type.string())
-	// return getString(columnIndex);
-	// if (type == Type.timestamp())
-	// return getTimestamp(columnIndex);
-	// if (type.getCode() == Code.ARRAY)
-	// return getArray(columnIndex);
-	// throw new SQLException("Unknown type: " + type.toString());
-	// }
-	//
-	// @Test
-	// public Array getArray(String columnLabel) throws SQLException
-	// {
-	// Type type = resultSet.getColumnType(columnLabel);
-	// if (type.getCode() != Code.ARRAY)
-	// throw new SQLException("Column with label " + columnLabel + " does not
-	// contain an array");
-	// return getArray(resultSet.getColumnIndex(columnLabel) + 1);
-	// }
-	//
-	// @Test
-	// public Array getArray(int columnIndex) throws SQLException
-	// {
-	// if (isNull(columnIndex))
-	// return null;
-	// Type type = resultSet.getColumnType(columnIndex - 1);
-	// if (type.getCode() != Code.ARRAY)
-	// throw new SQLException("Column with index " + columnIndex + " does not
-	// contain an array");
-	// CloudSpannerDataType dataType =
-	// CloudSpannerDataType.getType(type.getArrayElementType().getCode());
-	// List<? extends Object> elements = dataType.getArrayElements(resultSet,
-	// columnIndex - 1);
-	//
-	// return CloudSpannerArray.createArray(dataType, elements);
-	// }
-	//
-	// @Test
-	// public SQLWarning getWarnings() throws SQLException
-	// {
-	// ensureOpen();
-	// return null;
-	// }
-	//
-	// @Test
-	// public void clearWarnings() throws SQLException
-	// {
-	// ensureOpen();
-	// }
-	//
-	// @Test
-	// public boolean isBeforeFirst() throws SQLException
-	// {
-	// ensureOpen();
-	// return beforeFirst;
-	// }
-	//
-	// @Test
-	// public boolean isAfterLast() throws SQLException
-	// {
-	// ensureOpen();
-	// return afterLast;
-	// }
-	//
-	// @Test
-	// public Reader getCharacterStream(int columnIndex) throws SQLException
-	// {
-	// String val = getString(columnIndex);
-	// return val == null ? null : new StringReader(val);
-	// }
-	//
-	// @Test
-	// public Reader getCharacterStream(String columnLabel) throws SQLException
-	// {
-	// String val = getString(columnLabel);
-	// return val == null ? null : new StringReader(val);
-	// }
-	//
-	// private InputStream getInputStream(String val, Charset charset)
-	// {
-	// if (val == null)
-	// return null;
-	// byte[] b = val.getBytes(charset);
-	// return new ByteArrayInputStream(b);
-	// }
-	//
-	// @Test
-	// public InputStream getAsciiStream(int columnIndex) throws SQLException
-	// {
-	// return getInputStream(getString(columnIndex), StandardCharsets.US_ASCII);
-	// }
-	//
-	// @Test
-	// public InputStream getUnicodeStream(int columnIndex) throws SQLException
-	// {
-	// return getInputStream(getString(columnIndex), StandardCharsets.UTF_16LE);
-	// }
+
+	@Test
+	public void testGetTimestampLabelCalendar() throws SQLException
+	{
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		Calendar expected = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+		expected.clear();
+		expected.set(2017, 8, 10, 8, 15, 59);
+
+		assertNotNull(subject.getTimestamp(TIMESTAMP_COL_NOT_NULL, cal));
+		assertEquals(new java.sql.Timestamp(expected.getTimeInMillis()),
+				subject.getTimestamp(TIMESTAMP_COL_NOT_NULL, cal));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getTimestamp(TIMESTAMP_COL_NULL, cal));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testIsClosed() throws SQLException
+	{
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
+				getMockResultSet()))
+		{
+			assertFalse(rs.isClosed());
+			rs.close();
+			assertTrue(rs.isClosed());
+		}
+	}
+
+	@Test
+	public void testGetByteIndex() throws SQLException
+	{
+		assertNotNull(subject.getByte(LONG_COLINDEX_NOTNULL));
+		assertEquals(2, subject.getByte(LONG_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertEquals(0, subject.getByte(LONG_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetShortIndex() throws SQLException
+	{
+		assertNotNull(subject.getShort(LONG_COLINDEX_NOTNULL));
+		assertEquals(2, subject.getShort(LONG_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertEquals(0, subject.getShort(LONG_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetIntIndex() throws SQLException
+	{
+		assertNotNull(subject.getInt(LONG_COLINDEX_NOTNULL));
+		assertEquals(2, subject.getInt(LONG_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertEquals(0, subject.getInt(LONG_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetFloatIndex() throws SQLException
+	{
+		assertNotNull(subject.getFloat(DOUBLE_COLINDEX_NOTNULL));
+		assertEquals(2.123456789f, subject.getFloat(DOUBLE_COLINDEX_NOTNULL), 0f);
+		assertEquals(false, subject.wasNull());
+		assertEquals(0d, subject.getFloat(DOUBLE_COLINDEX_NULL), 0f);
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetByteLabel() throws SQLException
+	{
+		assertNotNull(subject.getByte(LONG_COL_NOT_NULL));
+		assertEquals(1, subject.getByte(LONG_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertEquals(0, subject.getByte(LONG_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetShortLabel() throws SQLException
+	{
+		assertNotNull(subject.getShort(LONG_COL_NOT_NULL));
+		assertEquals(1, subject.getShort(LONG_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertEquals(0, subject.getShort(LONG_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetIntLabel() throws SQLException
+	{
+		assertNotNull(subject.getInt(LONG_COL_NOT_NULL));
+		assertEquals(1, subject.getInt(LONG_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertEquals(0, subject.getInt(LONG_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetFloatLabel() throws SQLException
+	{
+		assertNotNull(subject.getFloat(DOUBLE_COL_NOT_NULL));
+		assertEquals(1.123456789f, subject.getFloat(DOUBLE_COL_NOT_NULL), 0f);
+		assertEquals(false, subject.wasNull());
+		assertEquals(0f, subject.getFloat(DOUBLE_COL_NULL), 0f);
+		assertTrue(subject.wasNull());
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetObjectLabel() throws SQLException
+	{
+		assertNotNull(subject.getObject(DATE_COL_NOT_NULL));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getObject(DATE_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getObject(DATE_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetObjectIndex() throws SQLException
+	{
+		assertNotNull(subject.getObject(DATE_COLINDEX_NOTNULL));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getObject(DATE_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getObject(DATE_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetArrayLabel() throws SQLException
+	{
+		assertNotNull(subject.getArray(ARRAY_COL_NOT_NULL));
+		assertEquals(CloudSpannerArray.createArray(CloudSpannerDataType.INT64, Arrays.asList(1L, 2L, 3L)),
+				subject.getArray(ARRAY_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getArray(ARRAY_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetArrayIndex() throws SQLException
+	{
+		assertNotNull(subject.getArray(ARRAY_COLINDEX_NOTNULL));
+		assertEquals(CloudSpannerArray.createArray(CloudSpannerDataType.INT64, Arrays.asList(1L, 2L, 3L)),
+				subject.getArray(ARRAY_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getArray(ARRAY_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetWarnings() throws SQLException
+	{
+		assertNull(subject.getWarnings());
+	}
+
+	@Test
+	public void testClearWarnings() throws SQLException
+	{
+		subject.clearWarnings();
+	}
+
+	@Test
+	public void testIsBeforeFirst() throws SQLException
+	{
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
+				getMockResultSet()))
+		{
+			assertTrue(rs.isBeforeFirst());
+			rs.next();
+			assertFalse(rs.isBeforeFirst());
+		}
+	}
+
+	@Test
+	public void testIsAfterLast() throws SQLException
+	{
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
+				getMockResultSet()))
+		{
+			assertFalse(rs.isAfterLast());
+			while (rs.next())
+			{
+				// do nothing
+			}
+			assertTrue(rs.isAfterLast());
+		}
+	}
+
+	@Test
+	public void testGetCharacterStreamIndex() throws SQLException, IOException
+	{
+		assertNotNull(subject.getCharacterStream(STRING_COLINDEX_NOTNULL));
+		Reader actual = subject.getCharacterStream(STRING_COLINDEX_NOTNULL);
+		char[] cbuf = new char[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("BAR", new String(cbuf, 0, len));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getCharacterStream(STRING_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetCharacterStreamLabel() throws SQLException, IOException
+	{
+		assertNotNull(subject.getCharacterStream(STRING_COL_NOT_NULL));
+		Reader actual = subject.getCharacterStream(STRING_COL_NOT_NULL);
+		char[] cbuf = new char[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("FOO", new String(cbuf, 0, len));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getCharacterStream(STRING_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetAsciiStreamIndex() throws SQLException, IOException
+	{
+		assertNotNull(subject.getAsciiStream(STRING_COLINDEX_NOTNULL));
+		InputStream actual = subject.getAsciiStream(STRING_COLINDEX_NOTNULL);
+		byte[] cbuf = new byte[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("BAR", new String(cbuf, 0, len, StandardCharsets.US_ASCII));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getAsciiStream(STRING_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetUnicodeStreamIndex() throws SQLException, IOException
+	{
+		assertNotNull(subject.getUnicodeStream(STRING_COLINDEX_NOTNULL));
+		InputStream actual = subject.getUnicodeStream(STRING_COLINDEX_NOTNULL);
+		byte[] cbuf = new byte[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("BAR", new String(cbuf, 0, len, StandardCharsets.UTF_16LE));
+		assertEquals(6, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getUnicodeStream(STRING_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
 	//
 	// @Test
 	// public InputStream getBinaryStream(int columnIndex) throws SQLException
@@ -864,4 +955,40 @@ public class CloudSpannerResultSetTest
 	// return getCharacterStream(columnLabel);
 	// }
 
+	@Test
+	public void testGetBeforeNext() throws SQLException
+	{
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
+				getMockResultSet()))
+		{
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("Before first record");
+			rs.getBigDecimal(LONG_COLINDEX_NOTNULL);
+		}
+	}
+
+	@Test
+	public void testGetAfterLast() throws SQLException
+	{
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
+				getMockResultSet()))
+		{
+			while (rs.next())
+			{
+				// do nothing
+			}
+			thrown.expect(SQLException.class);
+			thrown.expectMessage("After last record");
+			rs.getBigDecimal(LONG_COLINDEX_NOTNULL);
+		}
+	}
+
+	@Test
+	public void testFindIllegalColumnName() throws SQLException
+	{
+		thrown.expect(SQLException.class);
+		thrown.expectMessage("Column not found");
+		int index = subject.findColumn(UNKNOWN_COLUMN);
+		assertEquals(0, index);
+	}
 }
