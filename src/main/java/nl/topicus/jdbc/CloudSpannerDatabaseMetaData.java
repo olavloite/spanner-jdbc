@@ -661,7 +661,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean doesMaxRowSizeIncludeBlobs() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override
