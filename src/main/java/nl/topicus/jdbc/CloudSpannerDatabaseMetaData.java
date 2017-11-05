@@ -667,7 +667,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public int getMaxStatementLength() throws SQLException
 	{
-		return 0;
+		return 1000000;
 	}
 
 	@Override
