@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
@@ -194,12 +195,37 @@ public class CloudSpannerPooledConnectionTest
 	}
 
 	@Test
+	public void testPreparedStatementObjectMethods() throws SQLException
+	{
+		CloudSpannerPooledConnection subject = createConnection();
+		Connection connection = subject.getConnection();
+		PreparedStatement ps = connection.prepareStatement("SELECT * FROM FOO");
+		assertTrue(ps.toString().contains("Pooled statement wrapping physical statement "));
+		assertEquals(System.identityHashCode(ps), ps.hashCode());
+		assertTrue(ps.equals(ps));
+		assertTrue(ps.getClass().toString().contains("Proxy"));
+	}
+
+	@Test
 	public void testPrepareStatement() throws SQLException
 	{
 		CloudSpannerPooledConnection subject = createConnection();
 		Connection connection = subject.getConnection();
 		PreparedStatement statement = connection.prepareStatement("SELECT COL1, COL2, COL3 FROM FOO");
 		assertFalse(statement.isClosed());
+
+		Connection statementConnection = statement.getConnection();
+		assertEquals(connection, statementConnection);
+
+		assertEquals(ResultSet.TYPE_FORWARD_ONLY, statement.getResultSetType());
+		try
+		{
+			statement.cancel();
+		}
+		catch (SQLException e)
+		{
+		}
+
 		statement.close();
 		assertTrue(statement.isClosed());
 	}
@@ -222,6 +248,14 @@ public class CloudSpannerPooledConnectionTest
 		Connection connection = subject.getConnection();
 		thrown.expect(SQLFeatureNotSupportedException.class);
 		connection.prepareCall("");
+	}
+
+	@Test
+	public void testGetParentLogger() throws SQLException
+	{
+		CloudSpannerPooledConnection subject = createConnection();
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		subject.getParentLogger();
 	}
 
 }
