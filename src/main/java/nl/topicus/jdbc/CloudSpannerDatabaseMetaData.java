@@ -721,13 +721,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsDataManipulationTransactionsOnly() throws SQLException
 	{
-		return true;
+		return false;
 	}
 
 	@Override
 	public boolean dataDefinitionCausesTransactionCommit() throws SQLException
 	{
-		return true;
+		return false;
 	}
 
 	@Override
