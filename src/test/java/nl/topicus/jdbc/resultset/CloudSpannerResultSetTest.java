@@ -902,58 +902,62 @@ public class CloudSpannerResultSetTest
 		assertNull(subject.getUnicodeStream(STRING_COLINDEX_NULL));
 		assertTrue(subject.wasNull());
 	}
-	//
-	// @Test
-	// public InputStream getBinaryStream(int columnIndex) throws SQLException
-	// {
-	// byte[] val = getBytes(columnIndex);
-	// return val == null ? null : new ByteArrayInputStream(val);
-	// }
-	//
-	// @Test
-	// public InputStream getAsciiStream(String columnLabel) throws SQLException
-	// {
-	// return getInputStream(getString(columnLabel), StandardCharsets.US_ASCII);
-	// }
-	//
-	// @Test
-	// public InputStream getUnicodeStream(String columnLabel) throws
-	// SQLException
-	// {
-	// return getInputStream(getString(columnLabel), StandardCharsets.UTF_16LE);
-	// }
-	//
-	// @Test
-	// public InputStream getBinaryStream(String columnLabel) throws
-	// SQLException
-	// {
-	// byte[] val = getBytes(columnLabel);
-	// return val == null ? null : new ByteArrayInputStream(val);
-	// }
-	//
-	// @Test
-	// public String getNString(int columnIndex) throws SQLException
-	// {
-	// return getString(columnIndex);
-	// }
-	//
-	// @Test
-	// public String getNString(String columnLabel) throws SQLException
-	// {
-	// return getString(columnLabel);
-	// }
-	//
-	// @Test
-	// public Reader getNCharacterStream(int columnIndex) throws SQLException
-	// {
-	// return getCharacterStream(columnIndex);
-	// }
-	//
-	// @Test
-	// public Reader getNCharacterStream(String columnLabel) throws SQLException
-	// {
-	// return getCharacterStream(columnLabel);
-	// }
+
+	@Test
+	public void testGetBinaryStreamIndex() throws SQLException, IOException
+	{
+		assertNotNull(subject.getBinaryStream(BYTES_COLINDEX_NOTNULL));
+		InputStream actual = subject.getBinaryStream(BYTES_COLINDEX_NOTNULL);
+		byte[] cbuf = new byte[3];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertArrayEquals(ByteArray.copyFrom("BAR").toByteArray(), cbuf);
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getUnicodeStream(BYTES_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetAsciiStreamLabel() throws SQLException, IOException
+	{
+		assertNotNull(subject.getAsciiStream(STRING_COL_NOT_NULL));
+		InputStream actual = subject.getAsciiStream(STRING_COL_NOT_NULL);
+		byte[] cbuf = new byte[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("FOO", new String(cbuf, 0, len, StandardCharsets.US_ASCII));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getAsciiStream(STRING_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetUnicodeStreamLabel() throws SQLException, IOException
+	{
+		assertNotNull(subject.getUnicodeStream(STRING_COL_NOT_NULL));
+		InputStream actual = subject.getUnicodeStream(STRING_COL_NOT_NULL);
+		byte[] cbuf = new byte[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("FOO", new String(cbuf, 0, len, StandardCharsets.UTF_16LE));
+		assertEquals(6, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getUnicodeStream(STRING_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetBinaryStreamLabel() throws SQLException, IOException
+	{
+		assertNotNull(subject.getBinaryStream(BYTES_COL_NOT_NULL));
+		InputStream actual = subject.getBinaryStream(BYTES_COL_NOT_NULL);
+		byte[] cbuf = new byte[3];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertArrayEquals(ByteArray.copyFrom("FOO").toByteArray(), cbuf);
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getUnicodeStream(BYTES_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
 
 	@Test
 	public void testGetBeforeNext() throws SQLException
