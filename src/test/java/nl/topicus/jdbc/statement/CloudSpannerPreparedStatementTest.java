@@ -405,6 +405,24 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
+		public void testUpdateStatementWithNullValue() throws SQLException
+		{
+			Mutations mutations = getMutations("UPDATE FOO SET COL1=1, COL2=2 WHERE COL1=NULL");
+			Assert.assertTrue(mutations.isWorker());
+			Assert.assertNotNull(mutations.getWorker());
+			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+		}
+
+		@Test
+		public void testUpdateStatementWithConcat() throws SQLException
+		{
+			Mutations mutations = getMutations("UPDATE FOO SET COL1=1, COL2=2 WHERE COL1='FOO' || 'BAR'");
+			Assert.assertTrue(mutations.isWorker());
+			Assert.assertNotNull(mutations.getWorker());
+			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+		}
+
+		@Test
 		public void testUpdateStatementWithWhereClause() throws SQLException
 		{
 			Mutation updateMutation = getMutation("UPDATE FOO SET COL1=1, COL2=2 WHERE ID=1");
@@ -821,6 +839,16 @@ public class CloudSpannerPreparedStatementTest
 			String sql = "SELECT * FROM FOO WHERE ID=?";
 			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
 			ps.setLong(1, 1000L);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
+		public void testSelectWithNullValue() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT * FROM FOO WHERE COL1 IS NULL";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
 			try (ResultSet rs = ps.executeQuery())
 			{
 			}
