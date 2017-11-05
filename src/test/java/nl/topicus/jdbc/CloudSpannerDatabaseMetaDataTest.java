@@ -462,7 +462,7 @@ public class CloudSpannerDatabaseMetaDataTest
 	@Test
 	public void testSupportsCatalogsInDataManipulation() throws SQLException
 	{
-		assertEquals(false, testSubject.supportsSchemasInProcedureCalls());
+		assertEquals(false, testSubject.supportsCatalogsInDataManipulation());
 	}
 
 	@Test
