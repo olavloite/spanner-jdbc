@@ -556,13 +556,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsOpenStatementsAcrossCommit() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean supportsOpenStatementsAcrossRollback() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override
