@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 
@@ -104,6 +105,10 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 		else if (Timestamp.class.isAssignableFrom(value.getClass()))
 		{
 			return Types.TIMESTAMP;
+		}
+		else if (Time.class.isAssignableFrom(value.getClass()))
+		{
+			return Types.TIME;
 		}
 		else if (String.class.isAssignableFrom(value.getClass()))
 		{
