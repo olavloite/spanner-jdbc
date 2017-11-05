@@ -7,8 +7,12 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
 
 import org.junit.Test;
@@ -150,6 +154,32 @@ public class CloudSpannerParameterMetaDataTest
 			ParameterMetaData metadata = ps.getParameterMetaData();
 			assertEquals(Types.OTHER, metadata.getParameterType(1));
 			assertEquals(Types.OTHER, metadata.getParameterType(2));
+			ps.setBoolean(1, Boolean.TRUE);
+			assertEquals(Types.BOOLEAN, metadata.getParameterType(1));
+			ps.setByte(1, (byte) 1);
+			assertEquals(Types.TINYINT, metadata.getParameterType(1));
+			ps.setShort(1, (short) 1);
+			assertEquals(Types.SMALLINT, metadata.getParameterType(1));
+			ps.setInt(1, 1);
+			assertEquals(Types.INTEGER, metadata.getParameterType(1));
+			ps.setLong(1, 1l);
+			assertEquals(Types.BIGINT, metadata.getParameterType(1));
+			ps.setBigDecimal(1, BigDecimal.ONE);
+			assertEquals(Types.DECIMAL, metadata.getParameterType(1));
+			ps.setFloat(1, 1f);
+			assertEquals(Types.FLOAT, metadata.getParameterType(1));
+			ps.setDouble(1, 1d);
+			assertEquals(Types.DOUBLE, metadata.getParameterType(1));
+			ps.setDate(1, new Date(1000l));
+			assertEquals(Types.DATE, metadata.getParameterType(1));
+			ps.setTimestamp(1, new Timestamp(1000l));
+			assertEquals(Types.TIMESTAMP, metadata.getParameterType(1));
+			ps.setTime(1, new Time(1000l));
+			assertEquals(Types.TIME, metadata.getParameterType(1));
+			ps.setString(1, "FOO");
+			assertEquals(Types.NVARCHAR, metadata.getParameterType(1));
+			ps.setBytes(1, "FOO".getBytes());
+			assertEquals(Types.BINARY, metadata.getParameterType(1));
 		}
 		try (CloudSpannerPreparedStatement ps = createInsertStatement())
 		{
