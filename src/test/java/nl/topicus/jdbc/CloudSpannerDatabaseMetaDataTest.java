@@ -1,9 +1,11 @@
 package nl.topicus.jdbc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -511,5 +513,242 @@ public class CloudSpannerDatabaseMetaDataTest
 	public void testSupportsStoredProcedures() throws SQLException
 	{
 		assertEquals(false, testSubject.supportsStoredProcedures());
+	}
+
+	@Test
+	public void testSupportsSubqueriesInComparisons() throws SQLException
+	{
+		assertTrue(testSubject.supportsSubqueriesInComparisons());
+	}
+
+	@Test
+	public void testSupportsSubqueriesInExists() throws SQLException
+	{
+		assertTrue(testSubject.supportsSubqueriesInExists());
+	}
+
+	@Test
+	public void testSupportsSubqueriesInIns() throws SQLException
+	{
+		assertTrue(testSubject.supportsSubqueriesInIns());
+	}
+
+	@Test
+	public void testSupportsSubqueriesInQuantifieds() throws SQLException
+	{
+		assertTrue(testSubject.supportsSubqueriesInQuantifieds());
+	}
+
+	@Test
+	public void testSupportsCorrelatedSubqueries() throws SQLException
+	{
+		assertTrue(testSubject.supportsCorrelatedSubqueries());
+	}
+
+	@Test
+	public void testSupportsUnion() throws SQLException
+	{
+		assertTrue(testSubject.supportsUnion());
+	}
+
+	@Test
+	public void testSupportsUnionAll() throws SQLException
+	{
+		assertTrue(testSubject.supportsUnionAll());
+	}
+
+	@Test
+	public void testSupportsOpenCursorsAcrossCommit() throws SQLException
+	{
+		assertFalse(testSubject.supportsOpenCursorsAcrossCommit());
+	}
+
+	@Test
+	public void testSupportsOpenCursorsAcrossRollback() throws SQLException
+	{
+		assertFalse(testSubject.supportsOpenCursorsAcrossRollback());
+	}
+
+	@Test
+	public void testSupportsOpenStatementsAcrossCommit() throws SQLException
+	{
+		assertTrue(testSubject.supportsOpenStatementsAcrossCommit());
+	}
+
+	@Test
+	public void testSupportsOpenStatementsAcrossRollback() throws SQLException
+	{
+		assertTrue(testSubject.supportsOpenStatementsAcrossRollback());
+	}
+
+	@Test
+	public void testGetMaxBinaryLiteralLength() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxBinaryLiteralLength());
+	}
+
+	@Test
+	public void testGetMaxCharLiteralLength() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxCharLiteralLength());
+	}
+
+	@Test
+	public void testGetMaxColumnNameLength() throws SQLException
+	{
+		assertEquals(128, testSubject.getMaxColumnNameLength());
+	}
+
+	@Test
+	public void testGetMaxColumnsInGroupBy() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxColumnsInGroupBy());
+	}
+
+	@Test
+	public void testGetMaxColumnsInIndex() throws SQLException
+	{
+		assertEquals(16, testSubject.getMaxColumnsInIndex());
+	}
+
+	@Test
+	public void testGetMaxColumnsInOrderBy() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxColumnsInOrderBy());
+	}
+
+	@Test
+	public void testGetMaxColumnsInSelect() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxColumnsInSelect());
+	}
+
+	@Test
+	public void testGetMaxColumnsInTable() throws SQLException
+	{
+		assertEquals(1024, testSubject.getMaxColumnsInTable());
+	}
+
+	@Test
+	public void testGetMaxConnections() throws SQLException
+	{
+		assertEquals(10000, testSubject.getMaxConnections());
+	}
+
+	@Test
+	public void testGetMaxCursorNameLength() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxCursorNameLength());
+	}
+
+	@Test
+	public void testGetMaxIndexLength() throws SQLException
+	{
+		assertEquals(8000, testSubject.getMaxIndexLength());
+	}
+
+	@Test
+	public void testGetMaxSchemaNameLength() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxSchemaNameLength());
+	}
+
+	@Test
+	public void testGetMaxProcedureNameLength() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxProcedureNameLength());
+	}
+
+	@Test
+	public void testGetMaxCatalogNameLength() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxCatalogNameLength());
+	}
+
+	@Test
+	public void testGetMaxRowSize() throws SQLException
+	{
+		assertEquals(1024 * 10000000, testSubject.getMaxRowSize());
+	}
+
+	@Test
+	public void testGoesMaxRowSizeIncludeBlobs() throws SQLException
+	{
+		assertTrue(testSubject.doesMaxRowSizeIncludeBlobs());
+	}
+
+	@Test
+	public void testGetMaxStatementLength() throws SQLException
+	{
+		assertEquals(1000000, testSubject.getMaxStatementLength());
+	}
+
+	@Test
+	public void testGetMaxStatements() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxStatements());
+	}
+
+	@Test
+	public void testGetMaxTableNameLength() throws SQLException
+	{
+		assertEquals(128, testSubject.getMaxTableNameLength());
+	}
+
+	@Test
+	public void testGetMaxTablesInSelect() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxTablesInSelect());
+	}
+
+	@Test
+	public void testGetMaxUserNameLength() throws SQLException
+	{
+		assertEquals(0, testSubject.getMaxUserNameLength());
+	}
+
+	@Test
+	public void testGetDefaultTransactionIsolation() throws SQLException
+	{
+		assertEquals(Connection.TRANSACTION_SERIALIZABLE, testSubject.getDefaultTransactionIsolation());
+	}
+
+	@Test
+	public void testSupportsTransactions() throws SQLException
+	{
+		assertTrue(testSubject.supportsTransactions());
+	}
+
+	@Test
+	public void testSupportsTransactionIsolationLevel() throws SQLException
+	{
+		assertFalse(testSubject.supportsTransactionIsolationLevel(Connection.TRANSACTION_READ_UNCOMMITTED));
+		assertFalse(testSubject.supportsTransactionIsolationLevel(Connection.TRANSACTION_READ_COMMITTED));
+		assertFalse(testSubject.supportsTransactionIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ));
+		assertTrue(testSubject.supportsTransactionIsolationLevel(Connection.TRANSACTION_SERIALIZABLE));
+	}
+
+	@Test
+	public void testSupportsDataDefinitionAndDataManipulationTransactions() throws SQLException
+	{
+		assertFalse(testSubject.supportsDataDefinitionAndDataManipulationTransactions());
+	}
+
+	@Test
+	public void testSupportsDataManipulationTransactionsOnly() throws SQLException
+	{
+		assertFalse(testSubject.supportsDataManipulationTransactionsOnly());
+	}
+
+	@Test
+	public void testDataDefinitionCausesTransactionCommit() throws SQLException
+	{
+		assertFalse(testSubject.dataDefinitionCausesTransactionCommit());
+	}
+
+	@Test
+	public void testDataDefinitionIgnoredInTransactions() throws SQLException
+	{
+		assertFalse(testSubject.dataDefinitionIgnoredInTransactions());
 	}
 }

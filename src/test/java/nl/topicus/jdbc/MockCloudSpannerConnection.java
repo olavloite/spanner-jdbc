@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import java.sql.SQLException;
 
 import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.Returns;
 
 import nl.topicus.jdbc.CloudSpannerDriver.ConnectionProperties;
 
@@ -16,8 +17,9 @@ public class MockCloudSpannerConnection
 	{
 		ConnectionProperties properties = ConnectionProperties.parse(url);
 		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
-		when(connection.getUrl()).thenReturn(url);
-		when(connection.getProductName()).thenReturn(properties.productName);
+		when(connection.getUrl()).thenAnswer(new Returns(url));
+		when(connection.getProductName()).thenAnswer(new Returns(properties.productName));
+		when(connection.getNodeCount()).thenAnswer(new Returns(1));
 		return connection;
 	}
 
