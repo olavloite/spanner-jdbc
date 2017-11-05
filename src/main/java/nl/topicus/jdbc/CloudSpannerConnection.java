@@ -29,6 +29,7 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
+import com.google.cloud.spanner.Instance;
 import com.google.cloud.spanner.Operation;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerException;
@@ -523,6 +524,23 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	{
 		checkClosed();
 		this.typeMap = map;
+	}
+
+	public int getNodeCount() throws SQLException
+	{
+		try
+		{
+			if (database != null && database.instance != null)
+			{
+				Instance instance = getSpanner().getInstanceAdminClient().getInstance(database.instance);
+				return instance == null ? 0 : instance.getNodeCount();
+			}
+			return 0;
+		}
+		catch (SpannerException e)
+		{
+			throw new CloudSpannerSQLException(e);
+		}
 	}
 
 }
