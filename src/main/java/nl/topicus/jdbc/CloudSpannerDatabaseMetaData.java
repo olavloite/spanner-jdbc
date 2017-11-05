@@ -613,10 +613,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		return 1024;
 	}
 
+	/**
+	 * Limit is 10,000 per database per node
+	 */
 	@Override
 	public int getMaxConnections() throws SQLException
 	{
-		return 0;
+		return connection.getNodeCount() * 10000;
 	}
 
 	@Override
@@ -628,7 +631,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public int getMaxIndexLength() throws SQLException
 	{
-		return 0;
+		return 8000;
 	}
 
 	@Override
@@ -652,7 +655,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public int getMaxRowSize() throws SQLException
 	{
-		return 0;
+		return 1024 * 10000000;
 	}
 
 	@Override
