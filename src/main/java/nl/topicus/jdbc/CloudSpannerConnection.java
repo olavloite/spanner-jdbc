@@ -319,6 +319,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public void close() throws SQLException
 	{
+		if (closed)
+			return;
 		transaction.rollback();
 		closed = true;
 		driver.closeConnection(this);
