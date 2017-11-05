@@ -592,7 +592,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public int getMaxColumnsInIndex() throws SQLException
 	{
-		return 0;
+		return 16;
 	}
 
 	@Override
