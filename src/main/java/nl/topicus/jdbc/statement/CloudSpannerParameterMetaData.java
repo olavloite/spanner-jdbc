@@ -73,6 +73,10 @@ public class CloudSpannerParameterMetaData extends AbstractCloudSpannerWrapper i
 		{
 			return Types.TINYINT;
 		}
+		else if (Short.class.isAssignableFrom(value.getClass()))
+		{
+			return Types.SMALLINT;
+		}
 		else if (Integer.class.isAssignableFrom(value.getClass()))
 		{
 			return Types.INTEGER;
