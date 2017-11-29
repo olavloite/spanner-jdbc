@@ -14,8 +14,10 @@ import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TransactionContext;
+import com.google.rpc.Code;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 /**
  * An abstraction of transactions on Google Cloud Spanner JDBC connections.
@@ -52,6 +54,11 @@ public class CloudSpannerTransaction implements TransactionContext
 	public boolean isRunning()
 	{
 		return readOnlyTransaction != null || transactionThread != null;
+	}
+
+	public boolean hasBufferedMutations()
+	{
+		return transactionThread != null && transactionThread.hasBufferedMutations();
 	}
 
 	public void begin() throws SQLException
@@ -125,7 +132,52 @@ public class CloudSpannerTransaction implements TransactionContext
 			transactionThread = null;
 			readOnlyTransaction = null;
 		}
+	}
 
+	@FunctionalInterface
+	private static interface TransactionAction
+	{
+		public void apply(String xid) throws SQLException;
+	}
+
+	public void prepareTransaction(String xid) throws SQLException
+	{
+		checkTransaction();
+		preparedTransactionAction(xid, transactionThread::prepareTransaction);
+	}
+
+	public void commitPreparedTransaction(String xid) throws SQLException
+	{
+		checkTransaction();
+		preparedTransactionAction(xid, transactionThread::commitPreparedTransaction);
+	}
+
+	public void rollbackPreparedTransaction(String xid) throws SQLException
+	{
+		checkTransaction();
+		preparedTransactionAction(xid, transactionThread::rollbackPreparedTransaction);
+	}
+
+	private void preparedTransactionAction(String xid, TransactionAction action) throws SQLException
+	{
+		try
+		{
+			if (connection.isReadOnly())
+			{
+				throw new CloudSpannerSQLException(
+						"Connection is in read-only mode and cannot be used for prepared transactions",
+						Code.FAILED_PRECONDITION);
+			}
+			else
+			{
+				action.apply(xid);
+			}
+		}
+		finally
+		{
+			transactionThread = null;
+			readOnlyTransaction = null;
+		}
 	}
 
 	private void checkTransaction()

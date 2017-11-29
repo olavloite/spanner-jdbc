@@ -543,4 +543,37 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 	}
 
+	/**
+	 * Prepare the current transaction by writing the mutations to the
+	 * XA_TRANSACTIONS table instead of persisting them in the actual tables.
+	 * 
+	 * @param xid
+	 *            The id of the prepared transaction
+	 */
+	public void prepareTransaction(String xid) throws SQLException
+	{
+		transaction.prepareTransaction(xid);
+	}
+
+	/**
+	 * Commit a previously prepared transaction.
+	 * 
+	 * @param xid
+	 * @throws SQLException
+	 */
+	public void commitPreparedTransaction(String xid) throws SQLException
+	{
+		transaction.commitPreparedTransaction(xid);
+	}
+
+	/**
+	 * Rollback a previously prepared transaction.
+	 * 
+	 * @param xid
+	 */
+	public void rollbackPreparedTransaction(String xid) throws SQLException
+	{
+		transaction.rollbackPreparedTransaction(xid);
+	}
+
 }

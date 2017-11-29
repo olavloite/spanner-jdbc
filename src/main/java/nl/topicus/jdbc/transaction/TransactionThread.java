@@ -2,11 +2,15 @@ package nl.topicus.jdbc.transaction;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
@@ -38,6 +42,11 @@ class TransactionThread extends Thread
 		NOT_STARTED, RUNNING, SUCCESS, FAIL;
 	}
 
+	private enum TransactionStopStatement
+	{
+		COMMIT, ROLLBACK, PREPARE, COMMIT_PREPARED, ROLLBACK_PREPARED;
+	}
+
 	private final Object monitor = new Object();
 
 	private DatabaseClient dbClient;
@@ -52,7 +61,15 @@ class TransactionThread extends Thread
 
 	private Exception exception;
 
-	private boolean commit;
+	private TransactionStopStatement stopStatement = null;
+
+	/**
+	 * The XA transaction id to be prepared/committed/rolled back
+	 */
+	private String xid;
+
+	private final Set<String> stopStatementStrings = new HashSet<>(
+			Arrays.asList(TransactionStopStatement.values()).stream().map(x -> x.name()).collect(Collectors.toList()));
 
 	private List<Mutation> mutations = new ArrayList<>(40);
 
@@ -69,7 +86,6 @@ class TransactionThread extends Thread
 	@Override
 	public void run()
 	{
-		status = TransactionStatus.RUNNING;
 		TransactionRunner runner = dbClient.readWriteTransaction();
 		synchronized (monitor)
 		{
@@ -81,6 +97,7 @@ class TransactionThread extends Thread
 					@Override
 					public TransactionStatus run(TransactionContext transaction) throws Exception
 					{
+						status = TransactionStatus.RUNNING;
 						while (!stop)
 						{
 							try
@@ -88,7 +105,8 @@ class TransactionThread extends Thread
 								Statement statement = statements.poll(5, TimeUnit.SECONDS);
 								if (statement != null)
 								{
-									if (!(statement.getSql().equals("commit") || statement.getSql().equals("rollback")))
+									String sql = statement.getSql();
+									if (!stopStatementStrings.contains(sql))
 									{
 										resultSets.put(transaction.executeQuery(statement));
 									}
@@ -110,11 +128,23 @@ class TransactionThread extends Thread
 							}
 						}
 
-						if (commit)
+						switch (stopStatement)
 						{
+						case COMMIT:
 							transaction.buffer(mutations);
+							break;
+						case ROLLBACK:
+							break;
+						case PREPARE:
+							XATransaction.prepareMutations(transaction, xid, mutations);
+							break;
+						case COMMIT_PREPARED:
+							XATransaction.commitPrepared(transaction, xid);
+							break;
+						case ROLLBACK_PREPARED:
+							XATransaction.rollbackPrepared(transaction, xid);
+							break;
 						}
-						stopped = true;
 						return TransactionStatus.SUCCESS;
 					}
 				});
@@ -127,6 +157,7 @@ class TransactionThread extends Thread
 			}
 			finally
 			{
+				stopped = true;
 				monitor.notifyAll();
 			}
 		}
@@ -146,6 +177,11 @@ class TransactionThread extends Thread
 		}
 	}
 
+	boolean hasBufferedMutations()
+	{
+		return !mutations.isEmpty();
+	}
+
 	void buffer(Mutation mutation)
 	{
 		if (mutation == null)
@@ -162,24 +198,56 @@ class TransactionThread extends Thread
 
 	Timestamp commit() throws SQLException
 	{
-		stopTransaction(true);
+		stopTransaction(TransactionStopStatement.COMMIT);
 		return commitTimestamp;
 	}
 
 	void rollback() throws SQLException
 	{
-		stopTransaction(false);
+		stopTransaction(TransactionStopStatement.ROLLBACK);
 	}
 
-	private void stopTransaction(boolean commit) throws SQLException
+	void prepareTransaction(String xid) throws SQLException
+	{
+		this.xid = xid;
+		stopTransaction(TransactionStopStatement.PREPARE);
+	}
+
+	void commitPreparedTransaction(String xid) throws SQLException
+	{
+		this.xid = xid;
+		stopTransaction(TransactionStopStatement.COMMIT_PREPARED);
+	}
+
+	void rollbackPreparedTransaction(String xid) throws SQLException
+	{
+		this.xid = xid;
+		stopTransaction(TransactionStopStatement.ROLLBACK_PREPARED);
+	}
+
+	private void stopTransaction(TransactionStopStatement statement) throws SQLException
 	{
 		if (status == TransactionStatus.FAIL || status == TransactionStatus.SUCCESS)
 			return;
+		while (status == TransactionStatus.NOT_STARTED)
+		{
+			try
+			{
+				Thread.sleep(1);
+			}
+			catch (InterruptedException e)
+			{
+				Thread.currentThread().interrupt();
+				throw new CloudSpannerSQLException(statement.toString() + " failed: " + e.getMessage(), Code.ABORTED,
+						e);
+			}
+		}
 
-		this.commit = commit;
+		this.stopStatement = statement;
 		stop = true;
-		// Add a null object in order to get the transaction thread to proceed
-		statements.add(Statement.of(commit ? "commit" : "rollback"));
+		// Add a statement object in order to get the transaction thread to
+		// proceed
+		statements.add(Statement.of(statement.name()));
 		synchronized (monitor)
 		{
 			while (!stopped || status == TransactionStatus.NOT_STARTED || status == TransactionStatus.RUNNING)
@@ -191,8 +259,8 @@ class TransactionThread extends Thread
 				catch (InterruptedException e)
 				{
 					Thread.currentThread().interrupt();
-					throw new CloudSpannerSQLException(
-							(commit ? "Commit failed: " : "Rollback failed: ") + e.getMessage(), Code.ABORTED, e);
+					throw new CloudSpannerSQLException(statement.toString() + " failed: " + e.getMessage(),
+							Code.ABORTED, e);
 				}
 			}
 		}
@@ -203,8 +271,8 @@ class TransactionThread extends Thread
 				code = ((CloudSpannerSQLException) exception).getCode();
 			if (exception instanceof SpannerException)
 				code = Code.forNumber(((SpannerException) exception).getCode());
-			throw new CloudSpannerSQLException(
-					(commit ? "Commit failed: " : "Rollback failed: ") + exception.getMessage(), code, exception);
+			throw new CloudSpannerSQLException(statement.toString() + " failed: " + exception.getMessage(), code,
+					exception);
 		}
 	}
 

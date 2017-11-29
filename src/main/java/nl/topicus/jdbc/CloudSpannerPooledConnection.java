@@ -52,7 +52,7 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
  * 
  * @author loite
  */
-public class CloudSpannerPooledConnection implements PooledConnection
+public class CloudSpannerPooledConnection implements PooledConnection, AutoCloseable
 {
 	private final List<ConnectionEventListener> listeners = new LinkedList<>();
 	private Connection con;
