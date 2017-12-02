@@ -492,7 +492,8 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 				// backed refuses to process new queries. Hopefully not a
 				// problem
 				// in practise.
-				try (ResultSet rs = stmt.executeQuery("SELECT DISTINCT XID FROM XA_TRANSACTIONS"))
+				try (ResultSet rs = stmt
+						.executeQuery("SELECT DISTINCT " + XA_XID_COLUMN + " FROM " + XA_PREPARED_MUTATIONS_TABLE))
 				{
 					LinkedList<Xid> l = new LinkedList<>();
 					while (rs.next())
