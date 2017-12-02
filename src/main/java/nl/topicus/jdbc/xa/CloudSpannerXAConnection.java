@@ -129,25 +129,29 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		if (checkedTableExistence)
 			return;
 		boolean createTable = false;
-		PreparedStatement statement = conn.prepareStatement(CHECK_TABLE_EXISTENCE);
-		statement.setString(1, XA_PREPARED_MUTATIONS_TABLE);
-		try (ResultSet rs = statement.executeQuery())
+		try (PreparedStatement statement = conn.prepareStatement(CHECK_TABLE_EXISTENCE))
 		{
-			if (!rs.next())
+			statement.setString(1, XA_PREPARED_MUTATIONS_TABLE);
+			try (ResultSet rs = statement.executeQuery())
 			{
-				createTable = true;
+				if (!rs.next())
+				{
+					createTable = true;
+				}
 			}
-		}
-		if (createTable)
-			createTable(conn);
+			if (createTable)
+				createTable(conn);
 
-		checkedTableExistence = true;
+			checkedTableExistence = true;
+		}
 	}
 
 	private static synchronized void createTable(Connection conn) throws SQLException
 	{
-		PreparedStatement statement = conn.prepareStatement(CREATE_TABLE);
-		statement.executeUpdate();
+		try (PreparedStatement statement = conn.prepareStatement(CREATE_TABLE))
+		{
+			statement.executeUpdate();
+		}
 	}
 
 	/****
@@ -478,20 +482,18 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		}
 		else
 		{
-			try
+			try (Statement stmt = conn.createStatement())
 			{
-				Statement stmt = conn.createStatement();
-				try
+				// If this connection is simultaneously used for a
+				// transaction,
+				// this query gets executed inside that transaction. It's
+				// OK,
+				// except if the transaction is in abort-only state and the
+				// backed refuses to process new queries. Hopefully not a
+				// problem
+				// in practise.
+				try (ResultSet rs = stmt.executeQuery("SELECT DISTINCT XID FROM XA_TRANSACTIONS"))
 				{
-					// If this connection is simultaneously used for a
-					// transaction,
-					// this query gets executed inside that transaction. It's
-					// OK,
-					// except if the transaction is in abort-only state and the
-					// backed refuses to process new queries. Hopefully not a
-					// problem
-					// in practise.
-					ResultSet rs = stmt.executeQuery("SELECT DISTINCT XID FROM XA_TRANSACTIONS");
 					LinkedList<Xid> l = new LinkedList<>();
 					while (rs.next())
 					{
@@ -501,13 +503,7 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 							l.add(recoveredXid);
 						}
 					}
-					rs.close();
-
 					return l.toArray(new Xid[l.size()]);
-				}
-				finally
-				{
-					stmt.close();
 				}
 			}
 			catch (CloudSpannerSQLException ex)
