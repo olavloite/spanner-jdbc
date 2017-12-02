@@ -54,7 +54,7 @@ Include this if you want the light-weight jar.
 &lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
-You can also use the 'thick-jar'-version with third-party tools such as SQuirreL, SQL Workbench, DbVisualizer or Safe FME. This jar contains all the necessary (shaded) dependencies for the driver. Have a look at this site for more information on how to use the driver with different tools and frameworks: http://www.googlecloudspanner.com/
+You can also use the 'thick-jar'-version with third-party tools such as SQuirreL, SQL Workbench, DbVisualizer, DBeaver or Safe FME. This jar contains all the necessary (shaded) dependencies for the driver. Have a look at this site for more information on how to use the driver with different tools and frameworks: http://www.googlecloudspanner.com/
 
 The thick-jar version can also be found here: https://github.com/olavloite/spanner-jdbc/releases
 
