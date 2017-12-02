@@ -27,6 +27,11 @@ public class XATester
 {
 	private static final Logger log = Logger.getLogger(XATester.class.getName());
 
+	private enum CommitMode
+	{
+		None, OnePhase, TwoPhase;
+	}
+
 	public void testXA(String projectId, String instanceId, String database, String pvtKeyPath) throws SQLException
 	{
 		log.info("Starting XA tests");
@@ -39,8 +44,11 @@ public class XATester
 
 		try (CloudSpannerXAConnection xaConnection = ds.getXAConnection())
 		{
-			testXATransaction(xaConnection);
+			testXATransaction(xaConnection, CommitMode.TwoPhase);
 			testXARollback(xaConnection);
+			deleteTestRow(xaConnection);
+			testXARecover(xaConnection);
+			deleteTestRow(xaConnection);
 		}
 		catch (Exception e)
 		{
@@ -49,7 +57,14 @@ public class XATester
 		log.info("Finished XA tests");
 	}
 
-	private void testXATransaction(CloudSpannerXAConnection xaConnection) throws SQLException, XAException
+	private void deleteTestRow(CloudSpannerXAConnection xaConnection) throws XAException, SQLException
+	{
+		Xid xid = prepareDeleteRow(xaConnection);
+		xaConnection.commit(xid, false);
+	}
+
+	private void testXATransaction(CloudSpannerXAConnection xaConnection, CommitMode mode)
+			throws SQLException, XAException
 	{
 		log.info("Starting XA simple transaction test");
 		Random rnd = new Random();
@@ -63,21 +78,43 @@ public class XATester
 		statement.executeUpdate();
 		xaConnection.end(xid, XAResource.TMSUCCESS);
 		xaConnection.prepare(xid);
-		xaConnection.commit(xid, false);
-
-		boolean found = false;
-		try (ResultSet rs = connection.createStatement().executeQuery("select * from test where id=1000000"))
+		if (mode != CommitMode.None)
 		{
-			if (rs.next())
-				found = true;
+			xaConnection.commit(xid, mode == CommitMode.OnePhase);
 		}
-		Assert.assertTrue(found);
+
+		if (mode != CommitMode.None)
+		{
+			boolean found = false;
+			try (ResultSet rs = connection.createStatement().executeQuery("select * from test where id=1000000"))
+			{
+				if (rs.next())
+					found = true;
+			}
+			Assert.assertTrue(found);
+		}
 		log.info("Finished XA simple transaction test");
 	}
 
 	private void testXARollback(CloudSpannerXAConnection xaConnection) throws SQLException, XAException
 	{
 		log.info("Starting XA rollback transaction test");
+		Xid xid = prepareDeleteRow(xaConnection);
+		xaConnection.rollback(xid);
+
+		boolean found = false;
+		try (ResultSet rs = xaConnection.getConnection().createStatement()
+				.executeQuery("select * from test where id=1000000"))
+		{
+			if (rs.next())
+				found = true;
+		}
+		Assert.assertTrue(found);
+		log.info("Finished XA rollback transaction test");
+	}
+
+	private Xid prepareDeleteRow(CloudSpannerXAConnection xaConnection) throws SQLException, XAException
+	{
 		Random rnd = new Random();
 		Connection connection = xaConnection.getConnection();
 		int id = rnd.nextInt();
@@ -88,16 +125,26 @@ public class XATester
 		statement.executeUpdate();
 		xaConnection.end(xid, XAResource.TMSUCCESS);
 		xaConnection.prepare(xid);
-		xaConnection.rollback(xid);
 
+		return xid;
+	}
+
+	private void testXARecover(CloudSpannerXAConnection xaConnection) throws SQLException, XAException
+	{
+		log.info("Started XA recover transaction test");
+		testXATransaction(xaConnection, CommitMode.None);
+		Xid[] xids = xaConnection.recover(XAResource.TMSTARTRSCAN);
+		Assert.assertEquals(1, xids.length);
+		xaConnection.commit(xids[0], false);
 		boolean found = false;
-		try (ResultSet rs = connection.createStatement().executeQuery("select * from test where id=1000000"))
+		try (ResultSet rs = xaConnection.getConnection().createStatement()
+				.executeQuery("select * from test where id=1000000"))
 		{
 			if (rs.next())
 				found = true;
 		}
 		Assert.assertTrue(found);
-		log.info("Finished XA rollback transaction test");
+		log.info("Finished XA recover transaction test");
 	}
 
 	private void setParameterValues(PreparedStatement statement, long id) throws SQLException
