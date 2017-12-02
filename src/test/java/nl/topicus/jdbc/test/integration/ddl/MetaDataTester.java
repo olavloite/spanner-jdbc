@@ -28,7 +28,7 @@ public class MetaDataTester
 	private static final String[][] COLUMNS = {
 			{ "ID", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" },
 			{ "ID", "CHILDID", "DESCRIPTION" },
-			{ "ID", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" },
+			{ "Id", "UUID", "active", "Amount", "Description", "Created_Date", "Last_Updated" },
 			{ "ID", "ID2", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" } };
 
 	private static final int[][] COLUMN_TYPES = {
@@ -42,7 +42,7 @@ public class MetaDataTester
 	static
 	{
 		INDEX_COLUMNS.put("TEST.PRIMARY_KEY", new String[] { "ID" });
-		INDEX_COLUMNS.put("TEST_QUOTED.PRIMARY_KEY", new String[] { "ID" });
+		INDEX_COLUMNS.put("TEST_QUOTED.PRIMARY_KEY", new String[] { "Id" });
 		INDEX_COLUMNS.put("TESTCHILD.PRIMARY_KEY", new String[] { "ID", "CHILDID" });
 		INDEX_COLUMNS.put("TEST.IDX_TEST_UUID", new String[] { "UUID" });
 		INDEX_COLUMNS.put("TESTCHILD.IDX_TESTCHILD_DESCRIPTION", new String[] { "DESCRIPTION" });
