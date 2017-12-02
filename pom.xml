@@ -339,6 +339,100 @@
 				</plugins>
 			</build>
 		</profile>
+		
+		<profile>
+			<id>single-jar</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<version>3.0.0</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>shade</goal>
+								</goals>
+								<configuration>
+									<createSourcesJar>true</createSourcesJar>
+									<shadeSourcesContent>true</shadeSourcesContent>
+									<shadedArtifactAttached>true</shadedArtifactAttached>
+									<shadedArtifactId>spanner-jdbc-with-dependencies</shadedArtifactId>
+									<promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+									<createDependencyReducedPom>true</createDependencyReducedPom>
+									<dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+									<artifactSet>
+										<includes>
+											<include>*:*</include>
+										</includes>
+										<excludes>
+											<exclude>java:*</exclude>
+											<exclude>junit:*</exclude>
+										</excludes>
+									</artifactSet>
+									<transformers>
+										<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+									</transformers>
+									<relocations>
+										<relocation>
+											<pattern>javax.annotation.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.annotation.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.inject.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.inject.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.jdo.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.jdo.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.annotation.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.annotation.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.servlet.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.servlet.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>javax.transaction.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.javax.transaction.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>com.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.com.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>net.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.net.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>io.netty.internal</pattern>
+											<shadedPattern>io.netty.internal</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>io.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.io.</shadedPattern>
+										</relocation>
+										<!-- <relocation> <pattern>google.</pattern> <shadedPattern>nl.topicus.jdbc.shaded.google.</shadedPattern> 
+											</relocation> -->
+										<relocation>
+											<pattern>autovalue.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.autovalue.</shadedPattern>
+										</relocation>
+										<relocation>
+											<pattern>org.</pattern>
+											<shadedPattern>nl.topicus.jdbc.shaded.org.</shadedPattern>
+										</relocation>
+									</relocations>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 
 </project>
