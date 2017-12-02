@@ -500,18 +500,16 @@ public class CloudSpannerPreparedStatementTest
 		@Test
 		public void testInsertOnDuplicateKeyStatementWithDiffentUpdateValues() throws SQLException
 		{
-			assertSingleInsert(
-					getMutation(
-							"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='three', COL3=0xbb"),
+			assertSingleInsert(getMutation(
+					"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='three', COL3=0xbb"),
 					Mutation.Op.INSERT_OR_UPDATE);
 		}
 
 		@Test
 		public void testInsertOnDuplicateKeyStatementWithEqualUpdateValues() throws SQLException
 		{
-			assertSingleInsert(
-					getMutation(
-							"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='two', COL3=0xaa"),
+			assertSingleInsert(getMutation(
+					"INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa) ON DUPLICATE KEY UPDATE COL2='two', COL3=0xaa"),
 					Mutation.Op.INSERT_OR_UPDATE);
 		}
 
@@ -664,6 +662,30 @@ public class CloudSpannerPreparedStatementTest
 		{
 			CloudSpannerPreparedStatementTest
 					.testCreateTableStatement("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
+		}
+
+		@Test
+		public void testFormatDDLStatement() throws NoSuchMethodException, SecurityException, IllegalAccessException,
+				IllegalArgumentException, InvocationTargetException
+		{
+			CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(null, null, null);
+			Method method = CloudSpannerPreparedStatement.class.getDeclaredMethod("formatDDLStatement", String.class);
+			method.setAccessible(true);
+			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+					method.invoke(ps, "CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)"));
+			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+					method.invoke(ps, "CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
+			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+					method.invoke(ps, "CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
+			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+					method.invoke(ps, "CREATE TABLE TEST\n\t(ID INT64,   PRIMARY  KEY  (ID) )"));
+			Assert.assertEquals("CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)",
+					method.invoke(ps, "CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)"));
+			Assert.assertEquals("CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)",
+					method.invoke(ps, "CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)"));
+			String sql = "CREATE TABLE TestTableViaDBeaver(\n" + "TestId INT64 NOT NULL,\n" + "Foo STRING(10)\n"
+					+ ") PRIMARY KEY (TestId);";
+			Assert.assertEquals(sql, method.invoke(ps, sql));
 		}
 	}
 

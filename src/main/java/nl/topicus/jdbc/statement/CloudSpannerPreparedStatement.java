@@ -319,25 +319,27 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	 */
 	private String formatDDLStatement(String sql)
 	{
-		String res = sql.trim().toUpperCase();
-		String[] parts = res.split("\\s+");
+		String result = sql;
+		String generated = sql.trim().toUpperCase();
+		String[] parts = generated.split("\\s+");
 		if (parts.length >= 2)
 		{
 			String sqlWithSingleSpaces = String.join(" ", parts);
 			if (sqlWithSingleSpaces.startsWith("CREATE TABLE"))
 			{
-				int primaryKeyIndex = res.indexOf(", PRIMARY KEY (");
+				int primaryKeyIndex = sqlWithSingleSpaces.indexOf(", PRIMARY KEY (");
 				if (primaryKeyIndex > -1)
 				{
-					int endPrimaryKeyIndex = res.indexOf(')', primaryKeyIndex);
-					String primaryKeySpec = res.substring(primaryKeyIndex + 2, endPrimaryKeyIndex + 1);
-					res = res.replace(", " + primaryKeySpec, "");
-					res = res + " " + primaryKeySpec;
+					int endPrimaryKeyIndex = sqlWithSingleSpaces.indexOf(')', primaryKeyIndex);
+					String primaryKeySpec = sqlWithSingleSpaces.substring(primaryKeyIndex + 2, endPrimaryKeyIndex + 1);
+					sqlWithSingleSpaces = sqlWithSingleSpaces.replace(", " + primaryKeySpec, "");
+					sqlWithSingleSpaces = sqlWithSingleSpaces + " " + primaryKeySpec;
+					result = sqlWithSingleSpaces.replaceAll("\\s+\\)", ")");
 				}
 			}
 		}
 
-		return res;
+		return result;
 	}
 
 	private Mutation createInsertMutation(Insert insert) throws SQLException
