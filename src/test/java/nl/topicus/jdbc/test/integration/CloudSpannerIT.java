@@ -36,6 +36,7 @@ import nl.topicus.jdbc.test.category.IntegrationTest;
 import nl.topicus.jdbc.test.integration.ddl.MetaDataTester;
 import nl.topicus.jdbc.test.integration.ddl.TableDDLTester;
 import nl.topicus.jdbc.test.integration.dml.DMLTester;
+import nl.topicus.jdbc.test.integration.xa.XATester;
 
 @Category(IntegrationTest.class)
 public class CloudSpannerIT
@@ -141,6 +142,9 @@ public class CloudSpannerIT
 			// Test select statements
 			SelectStatementsTester selectTester = new SelectStatementsTester(connection);
 			selectTester.runSelectTests();
+			// Test XA transactions
+			XATester xaTester = new XATester();
+			xaTester.testXA(projectId, instanceId, DATABASE_ID, credentialsPath);
 
 			// Test drop statements
 			tableDDLTester.runDropTests();
