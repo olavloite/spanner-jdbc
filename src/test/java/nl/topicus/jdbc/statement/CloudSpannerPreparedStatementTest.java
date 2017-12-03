@@ -686,6 +686,9 @@ public class CloudSpannerPreparedStatementTest
 			String sql = "CREATE TABLE TestTableViaDBeaver(\n" + "TestId INT64 NOT NULL,\n" + "Foo STRING(10)\n"
 					+ ") PRIMARY KEY (TestId);";
 			Assert.assertEquals(sql, method.invoke(ps, sql));
+
+			Assert.assertEquals("CREATE TABLE Account (id INT64 NOT NULL, name STRING(100)) primary key (id)",
+					method.invoke(ps, "CREATE TABLE Account (id INT64 NOT NULL, name STRING(100), primary key (id))"));
 		}
 	}
 
@@ -807,6 +810,26 @@ public class CloudSpannerPreparedStatementTest
 	{
 		@Rule
 		public ExpectedException thrown = ExpectedException.none();
+
+		@Test
+		public void testRemoveSingleLineComment() throws SQLException
+		{
+			String sql = "-- test adding not null column\nCREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			String sqlWithoutComments = ps.removeComments(sql);
+			Assert.assertEquals("CREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)",
+					sqlWithoutComments);
+		}
+
+		@Test
+		public void testRemoveMultiLineComment() throws SQLException
+		{
+			String sql = "/* test adding not null column */\nCREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			String sqlWithoutComments = ps.removeComments(sql);
+			Assert.assertEquals("CREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)",
+					sqlWithoutComments);
+		}
 
 		@Test
 		public void testExecuteQuerySQL() throws SQLException, MalformedURLException
