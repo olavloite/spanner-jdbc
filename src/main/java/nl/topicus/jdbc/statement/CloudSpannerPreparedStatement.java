@@ -320,14 +320,14 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	private String formatDDLStatement(String sql)
 	{
 		String result = sql;
-		String generated = sql.trim().toUpperCase();
+		String generated = sql.trim();
 		String[] parts = generated.split("\\s+");
-		if (parts.length >= 2)
+		if (parts.length > 2)
 		{
-			String sqlWithSingleSpaces = String.join(" ", parts);
-			if (sqlWithSingleSpaces.startsWith("CREATE TABLE"))
+			if (parts[0].equalsIgnoreCase("create") && parts[1].equalsIgnoreCase("table"))
 			{
-				int primaryKeyIndex = sqlWithSingleSpaces.indexOf(", PRIMARY KEY (");
+				String sqlWithSingleSpaces = String.join(" ", parts);
+				int primaryKeyIndex = sqlWithSingleSpaces.toUpperCase().indexOf(", PRIMARY KEY (");
 				if (primaryKeyIndex > -1)
 				{
 					int endPrimaryKeyIndex = sqlWithSingleSpaces.indexOf(')', primaryKeyIndex);
