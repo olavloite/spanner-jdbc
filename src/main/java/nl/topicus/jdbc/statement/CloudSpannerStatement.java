@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.regex.Pattern;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.ReadContext;
@@ -28,6 +29,8 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	protected ResultSet lastResultSet = null;
 
 	protected int lastUpdateCount = -1;
+
+	private Pattern commentPattern = Pattern.compile("//.*|/\\*((.|\\n)(?!=*/))+\\*/|--.*(?=\\n)", Pattern.DOTALL);
 
 	public CloudSpannerStatement(CloudSpannerConnection connection, DatabaseClient dbClient)
 	{
@@ -94,7 +97,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	 */
 	protected boolean isDDLStatement(String sql)
 	{
-		String ddl = sql.trim();
+		String ddl = removeComments(sql);
 		ddl = ddl.substring(0, Math.min(8, ddl.length())).toUpperCase();
 		for (String statement : DDL_STATEMENTS)
 		{
@@ -105,9 +108,14 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		return false;
 	}
 
+	protected String removeComments(String sql)
+	{
+		return commentPattern.matcher(sql).replaceAll("").trim();
+	}
+
 	protected boolean isSelectStatement(String sql)
 	{
-		String select = sql.trim();
+		String select = removeComments(sql);
 		select = select.substring(0, Math.min(6, select.length())).toUpperCase();
 		if (select.startsWith("SELECT"))
 			return true;
