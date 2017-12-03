@@ -1,7 +1,6 @@
 language: java
 before_install:
-- openssl aes-256-cbc -K $encrypted_a65cce263ea6_key -iv $encrypted_a65cce263ea6_iv
-  -in cloudspanner-key.json.enc -out cloudspanner-key.json -d
+- openssl aes-256-cbc -K $encrypted_941275d00872_key -iv $encrypted_941275d00872_iv -in cloudspanner-key.json.enc -out cloudspanner-key.json -d
     
 
 install: true
