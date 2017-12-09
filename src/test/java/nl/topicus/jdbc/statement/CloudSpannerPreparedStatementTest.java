@@ -453,6 +453,19 @@ public class CloudSpannerPreparedStatementTest
 			thrown.expectMessage("UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) ");
 			getMutation("UPDATE FOO SET COL1=1, ID=2 WHERE COL2=5");
 		}
+
+		@Test
+		public void testUpdateStatementWithComment() throws SQLException
+		{
+			for (String sql : new String[] { "/* UPDATE TWO COLUMNS*/\nUPDATE FOO SET COL1=1, COL2=2",
+					"--SINGLE LINE COMMENT\nUPDATE FOO SET COL1=1, COL2=2" })
+			{
+				Mutations mutations = getMutations(sql);
+				Assert.assertTrue(mutations.isWorker());
+				Assert.assertNotNull(mutations.getWorker());
+				Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+			}
+		}
 	}
 
 	public static class InsertStatementTests
@@ -689,6 +702,15 @@ public class CloudSpannerPreparedStatementTest
 
 			Assert.assertEquals("CREATE TABLE Account (id INT64 NOT NULL, name STRING(100)) primary key (id)",
 					method.invoke(ps, "CREATE TABLE Account (id INT64 NOT NULL, name STRING(100), primary key (id))"));
+		}
+
+		@Test
+		public void testCommentedCreateTableStatement() throws SQLException
+		{
+			CloudSpannerPreparedStatementTest.testCreateTableStatement(
+					"/* CREATE A TEST TABLE */\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
+			CloudSpannerPreparedStatementTest.testCreateTableStatement(
+					"-- CREATE A TEST TABLE\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
 		}
 	}
 

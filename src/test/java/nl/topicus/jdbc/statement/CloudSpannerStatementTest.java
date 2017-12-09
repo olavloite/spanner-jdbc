@@ -40,22 +40,26 @@ public class CloudSpannerStatementTest
 	@Test
 	public void testSelect() throws SQLException
 	{
-		String sql = "SELECT * FROM FOO";
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		boolean isResultSet = statement.execute(sql);
-		Assert.assertTrue(isResultSet);
-		ResultSet rs = statement.getResultSet();
-		Assert.assertNotNull(rs);
-		boolean moreResults = statement.getMoreResults();
-		Assert.assertFalse(moreResults);
-		Assert.assertTrue(rs.isClosed());
-		Assert.assertEquals(-1, statement.getUpdateCount());
+		String[] queries = new String[] { "SELECT * FROM FOO", "/* SELECT STATEMENT FOR TABLE FOO*/\nSELECT * FROM FOO",
+				"--SINGLE LINE COMMENT \nSELECT * FROM FOO" };
+		for (String sql : queries)
+		{
+			CloudSpannerConnection connection = createConnection();
+			CloudSpannerStatement statement = connection.createStatement();
+			boolean isResultSet = statement.execute(sql);
+			Assert.assertTrue(isResultSet);
+			ResultSet rs = statement.getResultSet();
+			Assert.assertNotNull(rs);
+			boolean moreResults = statement.getMoreResults();
+			Assert.assertFalse(moreResults);
+			Assert.assertTrue(rs.isClosed());
+			Assert.assertEquals(-1, statement.getUpdateCount());
 
-		ResultSet rs2 = statement.executeQuery("SELECT * FROM FOO");
-		Assert.assertNotNull(rs2);
-		Assert.assertFalse(statement.getMoreResults(Statement.KEEP_CURRENT_RESULT));
-		Assert.assertFalse(rs2.isClosed());
+			ResultSet rs2 = statement.executeQuery(sql);
+			Assert.assertNotNull(rs2);
+			Assert.assertFalse(statement.getMoreResults(Statement.KEEP_CURRENT_RESULT));
+			Assert.assertFalse(rs2.isClosed());
+		}
 	}
 
 	@Test
