@@ -108,10 +108,10 @@ public class CloudSpannerIT
 		{
 			// Clean up test instance and test database.
 			log.info("Cleaning up database");
-			if (CREATE_INSTANCE)
-				cleanUpInstance();
 			if (CREATE_DATABASE)
 				cleanUpDatabase();
+			if (CREATE_INSTANCE)
+				cleanUpInstance();
 			spanner.close();
 			log.info("Clean up completed");
 		}
