@@ -39,10 +39,10 @@ public class CloudSpannerParameterMetaDataTest
 
 	private CloudSpannerPreparedStatement createInsertStatement() throws SQLException
 	{
-		return createInsertStatement("INSERT INTO FOO (COL1, COL2, COL3) VALUES (?, ?, ?)");
+		return createStatement("INSERT INTO FOO (COL1, COL2, COL3) VALUES (?, ?, ?)");
 	}
 
-	private CloudSpannerPreparedStatement createInsertStatement(String sql) throws SQLException
+	private CloudSpannerPreparedStatement createStatement(String sql) throws SQLException
 	{
 		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
 		CloudSpannerDatabaseMetaData metadata = mock(CloudSpannerDatabaseMetaData.class);
@@ -270,10 +270,13 @@ public class CloudSpannerParameterMetaDataTest
 	@Test
 	public void testGetParameterMetaDataUpdateStatement() throws SQLException
 	{
-		String sqlStatement = "UPDATE `MY_TABLE` SET `MY_NUM` = ?, `MY_STRING` = ? WHERE `MY_ID` = ?";
-		CloudSpannerPreparedStatement preparedStatement = createInsertStatement(sqlStatement);
+		String sqlStatement = "UPDATE `FOO` SET `COL1` = ?, `COL2` = ? WHERE `COL3` = ?";
+		CloudSpannerPreparedStatement preparedStatement = createStatement(sqlStatement);
 		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
 		assertNotNull(metadata);
+		assertEquals(Types.BIGINT, metadata.getParameterType(1));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(2));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(3));
 	}
 
 }
