@@ -184,7 +184,7 @@
           </plugin>
           <plugin>
             <artifactId>maven-shade-plugin</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.0</version>
             <executions>
               <execution>
                 <phase>package</phase>
@@ -215,26 +215,6 @@
                     <relocation>
                       <pattern>javax.annotation.</pattern>
                       <shadedPattern>nl.topicus.jdbc.shaded.javax.annotation.</shadedPattern>
-                    </relocation>
-                    <relocation>
-                      <pattern>javax.inject.</pattern>
-                      <shadedPattern>nl.topicus.jdbc.shaded.javax.inject.</shadedPattern>
-                    </relocation>
-                    <relocation>
-                      <pattern>javax.jdo.</pattern>
-                      <shadedPattern>nl.topicus.jdbc.shaded.javax.jdo.</shadedPattern>
-                    </relocation>
-                    <relocation>
-                      <pattern>javax.annotation.</pattern>
-                      <shadedPattern>nl.topicus.jdbc.shaded.javax.annotation.</shadedPattern>
-                    </relocation>
-                    <relocation>
-                      <pattern>javax.servlet.</pattern>
-                      <shadedPattern>nl.topicus.jdbc.shaded.javax.servlet.</shadedPattern>
-                    </relocation>
-                    <relocation>
-                      <pattern>javax.transaction.</pattern>
-                      <shadedPattern>nl.topicus.jdbc.shaded.javax.transaction.</shadedPattern>
                     </relocation>
                     <relocation>
                       <pattern>com.</pattern>
