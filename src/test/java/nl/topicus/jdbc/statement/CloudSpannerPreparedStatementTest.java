@@ -702,6 +702,12 @@ public class CloudSpannerPreparedStatementTest
 
 			Assert.assertEquals("CREATE TABLE Account (id INT64 NOT NULL, name STRING(100)) primary key (id)",
 					method.invoke(ps, "CREATE TABLE Account (id INT64 NOT NULL, name STRING(100), primary key (id))"));
+			Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)", method.invoke(
+					ps,
+					"/* CREATE A TEST TABLE */\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
+			Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)", method.invoke(
+					ps,
+					"-- CREATE A TEST TABLE \nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
 		}
 
 		@Test
