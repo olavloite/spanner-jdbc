@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -77,6 +79,8 @@ public class MetaDataTester
 		runIndexMetaDataTests();
 		log.info("Starting other meta data tests");
 		runOtherMetaDataTests();
+		log.info("Starting parameter meta data tests");
+		runParameterMetaDataTests();
 		log.info("Finished meta data tests");
 	}
 
@@ -216,6 +220,25 @@ public class MetaDataTester
 			try (ResultSet rs = metadata.getVersionColumns("", "", table))
 			{
 			}
+		}
+	}
+
+	private void runParameterMetaDataTests() throws SQLException
+	{
+		for (String sql : new String[] {
+				"UPDATE `TEST` SET `UUID`=?, `ACTIVE`=?, `AMOUNT`=?, `DESCRIPTION`=?, `CREATED_DATE`=?, `LAST_UPDATED`=? WHERE `ID` = ?",
+				"UPDATE `TEST` SET `UUID`=?, `ACTIVE`=?, `AMOUNT`=?, `DESCRIPTION`=?, `CREATED_DATE`=?, `LAST_UPDATED`=? WHERE `ID` > ?" })
+		{
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			ParameterMetaData metadata = preparedStatement.getParameterMetaData();
+			Assert.assertEquals(7, metadata.getParameterCount());
+			Assert.assertEquals(Types.BINARY, metadata.getParameterType(1));
+			Assert.assertEquals(Types.BOOLEAN, metadata.getParameterType(2));
+			Assert.assertEquals(Types.DOUBLE, metadata.getParameterType(3));
+			Assert.assertEquals(Types.NVARCHAR, metadata.getParameterType(4));
+			Assert.assertEquals(Types.DATE, metadata.getParameterType(5));
+			Assert.assertEquals(Types.TIMESTAMP, metadata.getParameterType(6));
+			Assert.assertEquals(Types.BIGINT, metadata.getParameterType(7));
 		}
 	}
 

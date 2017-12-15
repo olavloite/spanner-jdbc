@@ -39,7 +39,11 @@ public class CloudSpannerParameterMetaDataTest
 
 	private CloudSpannerPreparedStatement createInsertStatement() throws SQLException
 	{
-		String sql = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (?, ?, ?)";
+		return createInsertStatement("INSERT INTO FOO (COL1, COL2, COL3) VALUES (?, ?, ?)");
+	}
+
+	private CloudSpannerPreparedStatement createInsertStatement(String sql) throws SQLException
+	{
 		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
 		CloudSpannerDatabaseMetaData metadata = mock(CloudSpannerDatabaseMetaData.class);
 		CloudSpannerResultSet columns = mock(CloudSpannerResultSet.class);
@@ -261,6 +265,15 @@ public class CloudSpannerParameterMetaDataTest
 			assertNotEquals("", str);
 			assertEquals(-1, str.indexOf("Error while fetching parameter metadata"));
 		}
+	}
+
+	@Test
+	public void testGetParameterMetaDataUpdateStatement() throws SQLException
+	{
+		String sqlStatement = "UPDATE `MY_TABLE` SET `MY_NUM` = ?, `MY_STRING` = ? WHERE `MY_ID` = ?";
+		CloudSpannerPreparedStatement preparedStatement = createInsertStatement(sqlStatement);
+		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
+		assertNotNull(metadata);
 	}
 
 }

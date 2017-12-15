@@ -11,6 +11,8 @@ public class SingleRowWhereClauseValidator
 
 	private Map<String, Object> keyValues = new HashMap<>();
 
+	private Map<String, Boolean> keyValuesSet = new HashMap<>();
+
 	private String currentColumn = null;
 
 	public SingleRowWhereClauseValidator(TableKeyMetaData table)
@@ -28,6 +30,7 @@ public class SingleRowWhereClauseValidator
 		if (currentColumn == null)
 			throw new IllegalArgumentException("No column set");
 		keyValues.put(currentColumn, value);
+		keyValuesSet.put(currentColumn, Boolean.TRUE);
 		currentColumn = null;
 	}
 
@@ -35,8 +38,8 @@ public class SingleRowWhereClauseValidator
 	{
 		for (String key : table.getKeyColumns())
 		{
-			Object value = keyValues.get(key);
-			if (value == null)
+			Boolean set = keyValuesSet.get(key);
+			if (set == null || !set.booleanValue())
 			{
 				return false;
 			}

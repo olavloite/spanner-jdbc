@@ -466,6 +466,16 @@ public class CloudSpannerPreparedStatementTest
 				Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
 			}
 		}
+
+		@Test
+		public void testUpdateStatementWithQuotedColumns() throws SQLException
+		{
+			String sql = "UPDATE `FOO` SET `COL1` = ? WHERE `ID` > ?";
+			Mutations mutations = getMutations(sql);
+			Assert.assertTrue(mutations.isWorker());
+			Assert.assertNotNull(mutations.getWorker());
+			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+		}
 	}
 
 	public static class InsertStatementTests

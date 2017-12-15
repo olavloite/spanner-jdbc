@@ -33,7 +33,6 @@ import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
-import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
@@ -239,10 +238,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private Mutations createMutations(String sql) throws SQLException
 	{
-		return createMutations(sql, false);
+		return createMutations(sql, false, false);
 	}
 
-	private Mutations createMutations(String sql, boolean forceUpdate) throws SQLException
+	private Mutations createMutations(String sql, boolean forceUpdate, boolean generateParameterMetaData)
+			throws SQLException
 	{
 		try
 		{
@@ -261,7 +261,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			if (statement instanceof Insert)
 			{
 				Insert insertStatement = (Insert) statement;
-				if (insertStatement.getSelect() == null)
+				if (generateParameterMetaData || insertStatement.getSelect() == null)
 					return new Mutations(createInsertMutation(insertStatement));
 				return new Mutations(createInsertWithSelectStatement(insertStatement, forceUpdate));
 			}
@@ -277,21 +277,22 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 							"UPDATE statement using multiple tables is not supported. Try to re-write the statement as an INSERT INTO ... SELECT A, B, C FROM TABLE WHERE ... ON DUPLICATE KEY UPDATE",
 							Code.INVALID_ARGUMENT);
 
-				if (isSingleRowWhereClause(
+				if (generateParameterMetaData || isSingleRowWhereClause(
 						getConnection().getTable(unquoteIdentifier(updateStatement.getTables().get(0).getName())),
 						updateStatement.getWhere()))
-					return new Mutations(createUpdateMutation(updateStatement));
+					return new Mutations(createUpdateMutation(updateStatement, generateParameterMetaData));
 				// Translate into an 'INSERT ... SELECT ... ON DUPLICATE KEY
 				// UPDATE'-statement
 				String insertSQL = createInsertSelectOnDuplicateKeyUpdateStatement(updateStatement);
-				return createMutations(insertSQL, true);
+				return createMutations(insertSQL, true, false);
 			}
 			else if (statement instanceof Delete)
 			{
 				Delete deleteStatement = (Delete) statement;
-				if (deleteStatement.getWhere() == null || isSingleRowWhereClause(
-						getConnection().getTable(unquoteIdentifier(deleteStatement.getTable().getName())),
-						deleteStatement.getWhere()))
+				if (generateParameterMetaData || deleteStatement.getWhere() == null
+						|| isSingleRowWhereClause(
+								getConnection().getTable(unquoteIdentifier(deleteStatement.getTable().getName())),
+								deleteStatement.getWhere()))
 					return new Mutations(createDeleteMutation(deleteStatement));
 				return new Mutations(createDeleteWorker(deleteStatement));
 			}
@@ -393,7 +394,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return builder.build();
 	}
 
-	private Mutation createUpdateMutation(Update update) throws SQLException
+	private Mutation createUpdateMutation(Update update, boolean generateParameterMetaData) throws SQLException
 	{
 		if (update.getTables().isEmpty())
 			throw new CloudSpannerSQLException("No table found in update statement", Code.INVALID_ARGUMENT);
@@ -412,7 +413,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 					builder.set(columnName), columnName));
 			index++;
 		}
-		visitUpdateWhereClause(update.getWhere(), builder);
+		visitUpdateWhereClause(update.getWhere(), builder, generateParameterMetaData);
 
 		return builder.build();
 	}
@@ -484,7 +485,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return false;
 	}
 
-	private void visitUpdateWhereClause(Expression where, WriteBuilder builder) throws SQLException
+	private void visitUpdateWhereClause(Expression where, WriteBuilder builder, boolean generateParameterMetaData)
+			throws SQLException
 	{
 		if (where != null)
 		{
@@ -501,7 +503,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 			};
 			where.accept(whereClauseVisitor);
-			if (!whereClauseVisitor.isValid())
+			if (!generateParameterMetaData && !whereClauseVisitor.isValid())
 			{
 				throw new CloudSpannerSQLException(INVALID_WHERE_CLAUSE_UPDATE_MESSAGE, Code.INVALID_ARGUMENT);
 			}
@@ -510,11 +512,6 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new SQLException(INVALID_WHERE_CLAUSE_UPDATE_MESSAGE);
 		}
-	}
-
-	private static String unquoteIdentifier(String identifier)
-	{
-		return CloudSpannerDriver.unquoteIdentifier(identifier);
 	}
 
 	private int executeDDL(String ddl) throws SQLException
@@ -570,7 +567,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				// Create mutation, but don't do anything with it. This
 				// initializes column names of the parameter store.
-				createMutations(sql);
+				createMutations(sql, false, true);
 			}
 			else if (statement instanceof Select)
 			{

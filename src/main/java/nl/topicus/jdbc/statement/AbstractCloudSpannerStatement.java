@@ -87,7 +87,7 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	 */
 	protected String createInsertSelectOnDuplicateKeyUpdateStatement(Update update) throws SQLException
 	{
-		String tableName = update.getTables().get(0).getName();
+		String tableName = unquoteIdentifier(update.getTables().get(0).getName());
 		TableKeyMetaData table = getConnection().getTable(tableName);
 		List<String> keyColumns = table.getKeyColumns();
 		List<String> updateColumns = update.getColumns().stream().map(x -> x.getColumnName())
@@ -125,6 +125,11 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	protected String quoteIdentifier(String identifier)
 	{
 		return CloudSpannerDriver.quoteIdentifier(identifier);
+	}
+
+	protected String unquoteIdentifier(String identifier)
+	{
+		return CloudSpannerDriver.unquoteIdentifier(identifier);
 	}
 
 	public boolean isForceSingleUseReadContext()
