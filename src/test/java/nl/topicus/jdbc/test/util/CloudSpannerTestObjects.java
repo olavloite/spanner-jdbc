@@ -1,5 +1,6 @@
 package nl.topicus.jdbc.test.util;
 
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -14,10 +15,12 @@ import org.mockito.stubbing.Answer;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
+import nl.topicus.jdbc.Logger;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
+import nl.topicus.jdbc.xa.CloudSpannerXAConnection;
 
 public class CloudSpannerTestObjects
 {
@@ -48,8 +51,31 @@ public class CloudSpannerTestObjects
 		Mockito.when(connection
 				.getTable(Mockito.matches(Pattern.compile("BAR", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE))))
 				.thenAnswer(new Returns(tableBar));
+		Mockito.when(connection.getLogger()).thenAnswer(new Returns(new Logger()));
+
+		mockXAMethods(connection);
 
 		return connection;
+	}
+
+	private static void mockXAMethods(CloudSpannerConnection connection) throws SQLException
+	{
+		String checkTable = null;
+		try
+		{
+			Field field = CloudSpannerXAConnection.class.getDeclaredField("CHECK_TABLE_EXISTENCE");
+			field.setAccessible(true);
+			checkTable = (String) field.get(null);
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
+		CloudSpannerPreparedStatement ps = Mockito.mock(CloudSpannerPreparedStatement.class);
+		CloudSpannerResultSet rs = Mockito.mock(CloudSpannerResultSet.class);
+		Mockito.when(rs.next()).thenReturn(true, false);
+		Mockito.when(connection.prepareStatement(checkTable)).thenAnswer(new Returns(ps));
+		Mockito.when(ps.executeQuery()).thenAnswer(new Returns(rs));
 	}
 
 	private static CloudSpannerDatabaseMetaData createMetaData() throws SQLException
