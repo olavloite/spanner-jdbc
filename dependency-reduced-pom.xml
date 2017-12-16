@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>nl.topicus</groupId>
-  <artifactId>spanner-jdbc-with-dependencies</artifactId>
+  <artifactId>spanner-jdbc</artifactId>
   <name>spanner-jdbc</name>
   <version>0.20-SNAPSHOT</version>
   <description>JDBC Driver for Google Cloud Spanner</description>
@@ -194,11 +194,9 @@
                 <configuration>
                   <createSourcesJar>true</createSourcesJar>
                   <shadeSourcesContent>true</shadeSourcesContent>
-                  <shadedArtifactAttached>true</shadedArtifactAttached>
-                  <shadedArtifactId>spanner-jdbc-with-dependencies</shadedArtifactId>
-                  <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+                  <shadedArtifactAttached>false</shadedArtifactAttached>
                   <createDependencyReducedPom>true</createDependencyReducedPom>
-                  <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                  <shadedArtifactId>${project.artifactId}-with-dependencies</shadedArtifactId>
                   <artifactSet>
                     <includes>
                       <include>*:*</include>
@@ -266,7 +264,6 @@
                   <shadeSourcesContent>true</shadeSourcesContent>
                   <shadedArtifactAttached>false</shadedArtifactAttached>
                   <createDependencyReducedPom>true</createDependencyReducedPom>
-                  <shadedArtifactId>spanner-jdbc-with-dependencies</shadedArtifactId>
                   <artifactSet>
                     <includes>
                       <include>*:*</include>
