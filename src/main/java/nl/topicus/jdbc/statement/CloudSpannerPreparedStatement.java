@@ -143,20 +143,23 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			@Override
 			public void visit(PlainSelect plainSelect)
 			{
-				plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
+				if (plainSelect.getFromItem() != null)
 				{
-					private int tableCount = 0;
-
-					@Override
-					public void visit(Table table)
+					plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
 					{
-						tableCount++;
-						if (tableCount == 1)
-							getParameterStore().setTable(unquoteIdentifier(table.getFullyQualifiedName()));
-						else
-							getParameterStore().setTable(null);
-					}
-				});
+						private int tableCount = 0;
+
+						@Override
+						public void visit(Table table)
+						{
+							tableCount++;
+							if (tableCount == 1)
+								getParameterStore().setTable(unquoteIdentifier(table.getFullyQualifiedName()));
+							else
+								getParameterStore().setTable(null);
+						}
+					});
+				}
 				setWhereParameters(plainSelect.getWhere(), builder);
 				if (plainSelect.getLimit() != null)
 				{

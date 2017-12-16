@@ -850,6 +850,16 @@ public class CloudSpannerPreparedStatementTest
 		public ExpectedException thrown = ExpectedException.none();
 
 		@Test
+		public void testSelect1() throws SQLException
+		{
+			String sql = "SELECT 1";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
 		public void testRemoveSingleLineComment() throws SQLException
 		{
 			String sql = "-- test adding not null column\nCREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)";
