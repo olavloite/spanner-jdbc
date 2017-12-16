@@ -19,7 +19,7 @@ This driver supports a number of unsupported features of the official JDBC drive
 
 The driver ofcourse also supports normal SELECT-statements, including parameters. Example usage and tutorials can be found on http://www.googlecloudspanner.com/.
 
-Releases are available on Maven Central. Current release is version 0.19.
+Releases are available on Maven Central. Current release is version 0.20.
 
 Include the following if you want the thick jar version that includes all (shaded) dependencies. This is the recommended version unless you know that the transitive dependencies of the small jar will not conflict with the rest of your project.
 
@@ -27,30 +27,7 @@ Include the following if you want the thick jar version that includes all (shade
 &lt;<span class="pl-ent">dependency</span>&gt;
  	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
     	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.19&lt;/<span class="pl-ent">version</span>&gt;
-    	&lt;<span class="pl-ent">classifier</span>&gt;shaded&lt;/<span class="pl-ent">classifier</span>&gt;
-&lt;/<span class="pl-ent">dependency</span>&gt;
-</pre></div>
-
-Add the following to get the sources of the shaded jar.
-
-<div class="highlight highlight-text-xml"><pre>
-&lt;<span class="pl-ent">dependency</span>&gt;
- 	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
-    	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.19&lt;/<span class="pl-ent">version</span>&gt;
-    	&lt;<span class="pl-ent">classifier</span>&gt;shaded-sources&lt;/<span class="pl-ent">classifier</span>&gt;
-&lt;/<span class="pl-ent">dependency</span>&gt;
-</pre></div>
-
-
-Include this if you want the light-weight jar.
-
-<div class="highlight highlight-text-xml"><pre>
-&lt;<span class="pl-ent">dependency</span>&gt;
- 	&lt;<span class="pl-ent">groupId</span>&gt;nl.topicus&lt;/<span class="pl-ent">groupId</span>&gt;
-    	&lt;<span class="pl-ent">artifactId</span>&gt;spanner-jdbc&lt;/<span class="pl-ent">artifactId</span>&gt;
-    	&lt;<span class="pl-ent">version</span>&gt;0.19&lt;/<span class="pl-ent">version</span>&gt;
+    	&lt;<span class="pl-ent">version</span>&gt;0.20&lt;/<span class="pl-ent">version</span>&gt;
 &lt;/<span class="pl-ent">dependency</span>&gt;
 </pre></div>
 
@@ -63,6 +40,7 @@ This driver does allow DML operations, although also limited because of the unde
 * Inserts can only insert one row at a time
 * Updates and deletes must include a where-clause specifying the primary key (and nothing else). E.g. 'WHERE ID=?'.
 * As of version 0.16 and newer the driver also supports bulk INSERT/UPDATE/DELETE-statements. Please note that the underlying limitations of Google Cloud Spanner transactions still apply: https://cloud.google.com/spanner/quotas. This means a maximum of 20,000 mutations and 100MB of data in one transaction. You can get the driver to automatically bypass these quotas by setting the connection property AllowExtendedMode=true (see the Wiki-pages of this driver: https://github.com/olavloite/spanner-jdbc/wiki/URL-and-Connection-Properties).
+* As of version 0.20 and newer the driver has support for distributed transactions (XADatasource and XAResource).
 
 Example of bulk INSERT:  
 INSERT INTO TABLE1  
