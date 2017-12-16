@@ -251,6 +251,21 @@ public class MetaDataTester
 			Assert.assertEquals(types[delIndex], pmd.getParameterType(1));
 			delIndex++;
 		}
+		for (String sql : new String[] {
+				"INSERT INTO `TEST` (`UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID`) VALUES (?, ?, ?, ?, ?, ?, ?)",
+				"INSERT INTO `TEST` (`UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID`) SELECT `UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID` FROM FOO WHERE `UUID`=? AND `ACTIVE`=? AND `AMOUNT`=? AND `DESCRIPTION`=? AND `CREATED_DATE`=? AND `LAST_UPDATED`=? AND `ID` > ?" })
+		{
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			ParameterMetaData metadata = preparedStatement.getParameterMetaData();
+			Assert.assertEquals(7, metadata.getParameterCount());
+			Assert.assertEquals(Types.BINARY, metadata.getParameterType(1));
+			Assert.assertEquals(Types.BOOLEAN, metadata.getParameterType(2));
+			Assert.assertEquals(Types.DOUBLE, metadata.getParameterType(3));
+			Assert.assertEquals(Types.NVARCHAR, metadata.getParameterType(4));
+			Assert.assertEquals(Types.DATE, metadata.getParameterType(5));
+			Assert.assertEquals(Types.TIMESTAMP, metadata.getParameterType(6));
+			Assert.assertEquals(Types.BIGINT, metadata.getParameterType(7));
+		}
 	}
 
 }

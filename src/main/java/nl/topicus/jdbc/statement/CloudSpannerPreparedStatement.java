@@ -23,9 +23,11 @@ import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.parser.TokenMgrError;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.select.FromItemVisitorAdapter;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
@@ -141,6 +143,20 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			@Override
 			public void visit(PlainSelect plainSelect)
 			{
+				plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
+				{
+					private int tableCount = 0;
+
+					@Override
+					public void visit(Table table)
+					{
+						tableCount++;
+						if (tableCount == 1)
+							getParameterStore().setTable(unquoteIdentifier(table.getFullyQualifiedName()));
+						else
+							getParameterStore().setTable(null);
+					}
+				});
 				setWhereParameters(plainSelect.getWhere(), builder);
 				if (plainSelect.getLimit() != null)
 				{
@@ -163,12 +179,20 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			where.accept(new ExpressionVisitorAdapter()
 			{
+				private String currentCol = null;
+
+				@Override
+				public void visit(Column col)
+				{
+					currentCol = unquoteIdentifier(col.getFullyQualifiedName());
+				}
 
 				@Override
 				public void visit(JdbcParameter parameter)
 				{
 					parameter.accept(new ValueBinderExpressionVisitorAdapter<>(getParameterStore(),
-							builder.bind("p" + parameter.getIndex()), null));
+							builder.bind("p" + parameter.getIndex()), currentCol));
+					currentCol = null;
 				}
 
 				@Override
@@ -262,7 +286,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				Insert insertStatement = (Insert) statement;
 				if (generateParameterMetaData || insertStatement.getSelect() == null)
-					return new Mutations(createInsertMutation(insertStatement));
+					return new Mutations(createInsertMutation(insertStatement, generateParameterMetaData));
 				return new Mutations(createInsertWithSelectStatement(insertStatement, forceUpdate));
 			}
 			else if (statement instanceof Update)
@@ -345,9 +369,15 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return result;
 	}
 
-	private Mutation createInsertMutation(Insert insert) throws SQLException
+	private Mutation createInsertMutation(Insert insert, boolean generateParameterMetaData) throws SQLException
 	{
 		ItemsList items = insert.getItemsList();
+		if (generateParameterMetaData && items == null && insert.getSelect() != null)
+		{
+			// Just initialize the parameter meta data of the select statement
+			createSelectBuilder(insert.getSelect());
+			return null;
+		}
 		if (!(items instanceof ExpressionList))
 		{
 			throw new CloudSpannerSQLException("Insert statement must specify a list of values", Code.INVALID_ARGUMENT);

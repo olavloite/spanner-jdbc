@@ -18,6 +18,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -37,8 +38,7 @@ public class CloudSpannerParameterMetaDataTest
 	private CloudSpannerPreparedStatement createSelectStatement() throws SQLException
 	{
 		String sql = "SELECT COL1, COL2, COL3 FROM FOO WHERE COL1<? AND COL4=?";
-		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
-		return new CloudSpannerPreparedStatement(sql, connection, null);
+		return createStatement(sql);
 	}
 
 	private CloudSpannerPreparedStatement createInsertStatement() throws SQLException
@@ -68,7 +68,7 @@ public class CloudSpannerParameterMetaDataTest
 		TableKeyMetaData table = mock(TableKeyMetaData.class);
 		when(table.getKeyColumns()).thenReturn(Arrays.asList("COL1"));
 		when(connection.getTable("FOO")).thenReturn(table);
-		when(connection.getMetaData()).thenReturn(metadata);
+		when(connection.getMetaData()).thenAnswer(new Returns(metadata));
 		when(metadata.getColumns(null, null, "FOO", null)).thenReturn(columns);
 		final ColumnsNextAnswer next = new ColumnsNextAnswer();
 		when(columns.next()).thenAnswer(next);
@@ -135,7 +135,7 @@ public class CloudSpannerParameterMetaDataTest
 		try (CloudSpannerPreparedStatement ps = createSelectStatement())
 		{
 			ParameterMetaData metadata = ps.getParameterMetaData();
-			assertEquals(ParameterMetaData.parameterNullableUnknown, metadata.isNullable(1));
+			assertEquals(ParameterMetaData.parameterNoNulls, metadata.isNullable(1));
 			assertEquals(ParameterMetaData.parameterNullableUnknown, metadata.isNullable(2));
 		}
 		try (CloudSpannerPreparedStatement ps = createInsertStatement())
@@ -153,10 +153,10 @@ public class CloudSpannerParameterMetaDataTest
 		try (CloudSpannerPreparedStatement ps = createSelectStatement())
 		{
 			ParameterMetaData metadata = ps.getParameterMetaData();
-			assertEquals(false, metadata.isSigned(1));
-			assertEquals(false, metadata.isSigned(2));
-			ps.setLong(1, 1000l);
 			assertEquals(true, metadata.isSigned(1));
+			assertEquals(false, metadata.isSigned(2));
+			ps.setLong(2, 1000l);
+			assertEquals(true, metadata.isSigned(2));
 		}
 		try (CloudSpannerPreparedStatement ps = createInsertStatement())
 		{
@@ -175,7 +175,7 @@ public class CloudSpannerParameterMetaDataTest
 		try (CloudSpannerPreparedStatement ps = createSelectStatement())
 		{
 			ParameterMetaData metadata = ps.getParameterMetaData();
-			assertEquals(0, metadata.getPrecision(1));
+			assertEquals(8, metadata.getPrecision(1));
 			assertEquals(0, metadata.getPrecision(2));
 		}
 		try (CloudSpannerPreparedStatement ps = createInsertStatement())
@@ -211,7 +211,7 @@ public class CloudSpannerParameterMetaDataTest
 		try (CloudSpannerPreparedStatement ps = createSelectStatement())
 		{
 			ParameterMetaData metadata = ps.getParameterMetaData();
-			assertEquals(Types.OTHER, metadata.getParameterType(1));
+			assertEquals(Types.BIGINT, metadata.getParameterType(1));
 			assertEquals(Types.OTHER, metadata.getParameterType(2));
 			ps.setBoolean(1, Boolean.TRUE);
 			assertEquals(Types.BOOLEAN, metadata.getParameterType(1));
@@ -255,7 +255,7 @@ public class CloudSpannerParameterMetaDataTest
 		try (CloudSpannerPreparedStatement ps = createSelectStatement())
 		{
 			ParameterMetaData metadata = ps.getParameterMetaData();
-			assertEquals(TYPE_NAME_OTHER, metadata.getParameterTypeName(1));
+			assertEquals("INT64", metadata.getParameterTypeName(1));
 			assertEquals(TYPE_NAME_OTHER, metadata.getParameterTypeName(2));
 		}
 		try (CloudSpannerPreparedStatement ps = createInsertStatement())
@@ -273,7 +273,7 @@ public class CloudSpannerParameterMetaDataTest
 		try (CloudSpannerPreparedStatement ps = createSelectStatement())
 		{
 			ParameterMetaData metadata = ps.getParameterMetaData();
-			assertNull(metadata.getParameterClassName(1));
+			assertEquals(Long.class.getName(), metadata.getParameterClassName(1));
 			assertNull(metadata.getParameterClassName(2));
 		}
 		try (CloudSpannerPreparedStatement ps = createInsertStatement())
@@ -352,6 +352,44 @@ public class CloudSpannerParameterMetaDataTest
 		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
 		assertNotNull(metadata);
 		assertEquals(Types.NVARCHAR, metadata.getParameterType(1));
+	}
+
+	@Test
+	public void testGetParameterMetaDataInsertStatement() throws SQLException
+	{
+		CloudSpannerPreparedStatement preparedStatement = createInsertStatement();
+		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
+		assertNotNull(metadata);
+		assertEquals(3, metadata.getParameterCount());
+		assertEquals(Types.BIGINT, metadata.getParameterType(1));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(2));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(3));
+	}
+
+	@Test
+	public void testGetParameterMetaDataBulkInsertStatement() throws SQLException
+	{
+		CloudSpannerPreparedStatement preparedStatement = createStatement(
+				"INSERT INTO FOO (COL1, COL2, COL3) SELECT 1, 'Two', 'Three' FROM FOO WHERE COL1=? AND COL2=? AND COL3 LIKE ?");
+		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
+		assertNotNull(metadata);
+		assertEquals(3, metadata.getParameterCount());
+		assertEquals(Types.BIGINT, metadata.getParameterType(1));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(2));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(3));
+	}
+
+	@Test
+	public void testGetParameterMetaDataSelectStatement() throws SQLException
+	{
+		CloudSpannerPreparedStatement preparedStatement = createStatement(
+				"SELECT * FROM FOO WHERE COL1=? AND COL2=? AND COL3 LIKE ?");
+		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
+		assertNotNull(metadata);
+		assertEquals(3, metadata.getParameterCount());
+		assertEquals(Types.BIGINT, metadata.getParameterType(1));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(2));
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(3));
 	}
 
 }
