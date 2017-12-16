@@ -14,14 +14,18 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.google.cloud.spanner.Type;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
+import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.test.category.UnitTest;
 
@@ -42,19 +46,70 @@ public class CloudSpannerParameterMetaDataTest
 		return createStatement("INSERT INTO FOO (COL1, COL2, COL3) VALUES (?, ?, ?)");
 	}
 
+	private static class ColumnsNextAnswer implements Answer<Boolean>
+	{
+		int nextCalled = 0;
+
+		@Override
+		public Boolean answer(InvocationOnMock invocation) throws Throwable
+		{
+			nextCalled++;
+			if (nextCalled > 3)
+				return false;
+			return true;
+		}
+	}
+
 	private CloudSpannerPreparedStatement createStatement(String sql) throws SQLException
 	{
 		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
 		CloudSpannerDatabaseMetaData metadata = mock(CloudSpannerDatabaseMetaData.class);
 		CloudSpannerResultSet columns = mock(CloudSpannerResultSet.class);
+		TableKeyMetaData table = mock(TableKeyMetaData.class);
+		when(table.getKeyColumns()).thenReturn(Arrays.asList("COL1"));
+		when(connection.getTable("FOO")).thenReturn(table);
 		when(connection.getMetaData()).thenReturn(metadata);
 		when(metadata.getColumns(null, null, "FOO", null)).thenReturn(columns);
-		when(columns.next()).thenReturn(true, true, true, false);
-		when(columns.getString("COLUMN_NAME")).thenReturn("COL1", "COL2", "COL3");
-		when(columns.getInt("COLUMN_SIZE")).thenReturn(8, 50, 100);
-		when(columns.getInt("DATA_TYPE")).thenReturn(Types.BIGINT, Types.NVARCHAR, Types.NVARCHAR);
-		when(columns.getInt("NULLABLE")).thenReturn(ParameterMetaData.parameterNoNulls,
-				ParameterMetaData.parameterNoNulls, ParameterMetaData.parameterNullable);
+		final ColumnsNextAnswer next = new ColumnsNextAnswer();
+		when(columns.next()).thenAnswer(next);
+
+		when(columns.getString("COLUMN_NAME")).thenAnswer(new Answer<String>()
+		{
+
+			@Override
+			public String answer(InvocationOnMock invocation) throws Throwable
+			{
+				return Arrays.asList("COL1", "COL2", "COL3").get(next.nextCalled - 1);
+			}
+		});
+		when(columns.getInt("COLUMN_SIZE")).thenAnswer(new Answer<Integer>()
+		{
+
+			@Override
+			public Integer answer(InvocationOnMock invocation) throws Throwable
+			{
+				return Arrays.asList(8, 50, 100).get(next.nextCalled - 1);
+			}
+		});
+		when(columns.getInt("DATA_TYPE")).thenAnswer(new Answer<Integer>()
+		{
+
+			@Override
+			public Integer answer(InvocationOnMock invocation) throws Throwable
+			{
+				return Arrays.asList(Types.BIGINT, Types.NVARCHAR, Types.NVARCHAR).get(next.nextCalled - 1);
+			}
+		});
+		when(columns.getInt("NULLABLE")).thenAnswer(new Answer<Integer>()
+		{
+
+			@Override
+			public Integer answer(InvocationOnMock invocation) throws Throwable
+			{
+				return Arrays.asList(ParameterMetaData.parameterNoNulls, ParameterMetaData.parameterNoNulls,
+						ParameterMetaData.parameterNullable).get(next.nextCalled - 1);
+			}
+		});
 
 		return new CloudSpannerPreparedStatement(sql, connection, null);
 	}
@@ -277,6 +332,26 @@ public class CloudSpannerParameterMetaDataTest
 		assertEquals(Types.BIGINT, metadata.getParameterType(1));
 		assertEquals(Types.NVARCHAR, metadata.getParameterType(2));
 		assertEquals(Types.NVARCHAR, metadata.getParameterType(3));
+	}
+
+	@Test
+	public void testGetParameterMetaDataDeleteStatement() throws SQLException
+	{
+		String sqlStatement = "DELETE FROM `FOO` WHERE `COL1` = ?";
+		CloudSpannerPreparedStatement preparedStatement = createStatement(sqlStatement);
+		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
+		assertNotNull(metadata);
+		assertEquals(Types.BIGINT, metadata.getParameterType(1));
+	}
+
+	@Test
+	public void testGetParameterMetaDataBulkDeleteStatement() throws SQLException
+	{
+		String sqlStatement = "DELETE FROM `FOO` WHERE `COL3` > ?";
+		CloudSpannerPreparedStatement preparedStatement = createStatement(sqlStatement);
+		CloudSpannerParameterMetaData metadata = preparedStatement.getParameterMetaData();
+		assertNotNull(metadata);
+		assertEquals(Types.NVARCHAR, metadata.getParameterType(1));
 	}
 
 }

@@ -293,7 +293,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 						|| isSingleRowWhereClause(
 								getConnection().getTable(unquoteIdentifier(deleteStatement.getTable().getName())),
 								deleteStatement.getWhere()))
-					return new Mutations(createDeleteMutation(deleteStatement));
+					return new Mutations(createDeleteMutation(deleteStatement, generateParameterMetaData));
 				return new Mutations(createDeleteWorker(deleteStatement));
 			}
 			else
@@ -418,7 +418,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		return builder.build();
 	}
 
-	private Mutation createDeleteMutation(Delete delete) throws SQLException
+	private Mutation createDeleteMutation(Delete delete, boolean generateParameterMetaData) throws SQLException
 	{
 		String table = unquoteIdentifier(delete.getTable().getFullyQualifiedName());
 		getParameterStore().setTable(table);
@@ -431,13 +431,15 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		else
 		{
 			// Delete one
-			DeleteKeyBuilder keyBuilder = new DeleteKeyBuilder(getConnection().getTable(table));
-			visitDeleteWhereClause(where, keyBuilder);
+			DeleteKeyBuilder keyBuilder = new DeleteKeyBuilder(getConnection().getTable(table),
+					generateParameterMetaData);
+			visitDeleteWhereClause(where, keyBuilder, generateParameterMetaData);
 			return Mutation.delete(table, keyBuilder.getKeyBuilder().build());
 		}
 	}
 
-	private void visitDeleteWhereClause(Expression where, DeleteKeyBuilder keyBuilder) throws SQLException
+	private void visitDeleteWhereClause(Expression where, DeleteKeyBuilder keyBuilder,
+			boolean generateParameterMetaData) throws SQLException
 	{
 		if (where != null)
 		{
@@ -449,12 +451,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				{
 					String columnName = unquoteIdentifier(col.getFullyQualifiedName());
 					keyBuilder.set(columnName);
-					expression.accept(new KeyBuilderExpressionVisitorAdapter(getParameterStore(), keyBuilder));
+					expression.accept(
+							new KeyBuilderExpressionVisitorAdapter(getParameterStore(), columnName, keyBuilder));
 				}
 
 			};
 			where.accept(whereClauseVisitor);
-			if (!whereClauseVisitor.isValid())
+			if (!generateParameterMetaData && !whereClauseVisitor.isValid())
 			{
 				throw new CloudSpannerSQLException(INVALID_WHERE_CLAUSE_DELETE_MESSAGE, Code.INVALID_ARGUMENT);
 			}

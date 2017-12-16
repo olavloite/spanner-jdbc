@@ -240,6 +240,17 @@ public class MetaDataTester
 			Assert.assertEquals(Types.TIMESTAMP, metadata.getParameterType(6));
 			Assert.assertEquals(Types.BIGINT, metadata.getParameterType(7));
 		}
+		int delIndex = 0;
+		int[] types = new int[] { Types.BIGINT, Types.NVARCHAR };
+		for (String sql : new String[] { "DELETE FROM `TEST` WHERE `ID` = ?",
+				"DELETE FROM `TEST` WHERE `DESCRIPTION` LIKE ?" })
+		{
+			PreparedStatement statement = connection.prepareStatement(sql);
+			ParameterMetaData pmd = statement.getParameterMetaData();
+			Assert.assertEquals(1, pmd.getParameterCount());
+			Assert.assertEquals(types[delIndex], pmd.getParameterType(1));
+			delIndex++;
+		}
 	}
 
 }

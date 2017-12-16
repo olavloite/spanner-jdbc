@@ -4,9 +4,9 @@ class KeyBuilderExpressionVisitorAdapter extends AbstractSpannerExpressionVisito
 {
 	private DeleteKeyBuilder keyBuilder;
 
-	KeyBuilderExpressionVisitorAdapter(ParameterStore parameterStore, DeleteKeyBuilder keyBuilder)
+	KeyBuilderExpressionVisitorAdapter(ParameterStore parameterStore, String column, DeleteKeyBuilder keyBuilder)
 	{
-		super(parameterStore);
+		super(parameterStore, column);
 		this.keyBuilder = keyBuilder;
 	}
 

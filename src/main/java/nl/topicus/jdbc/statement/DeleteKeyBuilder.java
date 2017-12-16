@@ -14,13 +14,16 @@ public class DeleteKeyBuilder
 {
 	private final TableKeyMetaData table;
 
+	private final boolean generateParameterMetaData;
+
 	private Map<String, Object> keyValues = new HashMap<>();
 
 	private String currentColumn = null;
 
-	public DeleteKeyBuilder(TableKeyMetaData table)
+	public DeleteKeyBuilder(TableKeyMetaData table, boolean generateParameterMetaData)
 	{
 		this.table = table;
+		this.generateParameterMetaData = generateParameterMetaData;
 	}
 
 	public void set(String column)
@@ -42,7 +45,7 @@ public class DeleteKeyBuilder
 		for (String key : table.getKeyColumns())
 		{
 			Object value = keyValues.get(key);
-			if (value == null)
+			if (!generateParameterMetaData && value == null)
 			{
 				throw new CloudSpannerSQLException(
 						"No value supplied for key column " + key
