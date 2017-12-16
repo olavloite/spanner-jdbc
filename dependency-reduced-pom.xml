@@ -196,7 +196,6 @@
                   <shadeSourcesContent>true</shadeSourcesContent>
                   <shadedArtifactAttached>false</shadedArtifactAttached>
                   <createDependencyReducedPom>true</createDependencyReducedPom>
-                  <shadedArtifactId>${project.artifactId}-with-dependencies</shadedArtifactId>
                   <artifactSet>
                     <includes>
                       <include>*:*</include>
