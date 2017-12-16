@@ -253,7 +253,7 @@ public class MetaDataTester
 		}
 		for (String sql : new String[] {
 				"INSERT INTO `TEST` (`UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID`) VALUES (?, ?, ?, ?, ?, ?, ?)",
-				"INSERT INTO `TEST` (`UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID`) SELECT `UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID` FROM FOO WHERE `UUID`=? AND `ACTIVE`=? AND `AMOUNT`=? AND `DESCRIPTION`=? AND `CREATED_DATE`=? AND `LAST_UPDATED`=? AND `ID` > ?" })
+				"INSERT INTO `TEST` (`UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID`) SELECT `UUID`, `ACTIVE`, `AMOUNT`, `DESCRIPTION`, `CREATED_DATE`, `LAST_UPDATED`, `ID` FROM TEST WHERE `UUID`=? AND `ACTIVE`=? AND `AMOUNT`=? AND `DESCRIPTION`=? AND `CREATED_DATE`=? AND `LAST_UPDATED`=? AND `ID` > ?" })
 		{
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			ParameterMetaData metadata = preparedStatement.getParameterMetaData();
