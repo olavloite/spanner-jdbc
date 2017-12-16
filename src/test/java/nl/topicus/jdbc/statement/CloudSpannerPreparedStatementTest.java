@@ -985,9 +985,9 @@ public class CloudSpannerPreparedStatementTest
 			{
 				Statement statement = CCJSqlParserUtil.parse(ps.sanitizeSQL(sql));
 				Method createSelectBuilder = CloudSpannerPreparedStatement.class
-						.getDeclaredMethod("createSelectBuilder", Statement.class);
+						.getDeclaredMethod("createSelectBuilder", Statement.class, String.class);
 				createSelectBuilder.setAccessible(true);
-				res = (com.google.cloud.spanner.Statement.Builder) createSelectBuilder.invoke(ps, statement);
+				res = (com.google.cloud.spanner.Statement.Builder) createSelectBuilder.invoke(ps, statement, sql);
 			}
 			catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 					| JSQLParserException e)
