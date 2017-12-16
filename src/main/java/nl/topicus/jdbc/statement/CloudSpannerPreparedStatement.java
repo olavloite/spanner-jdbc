@@ -92,7 +92,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		if (statement instanceof Select)
 		{
-			com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement);
+			com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement, sql);
 			try (ReadContext context = getReadContext())
 			{
 				com.google.cloud.spanner.ResultSet rs = context.executeQuery(builder.build());
@@ -103,7 +103,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				Code.INVALID_ARGUMENT);
 	}
 
-	private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement)
+	private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement, String sql)
 	{
 		String namedSql = convertPositionalParametersToNamedParameters(sql);
 		com.google.cloud.spanner.Statement.Builder builder = com.google.cloud.spanner.Statement.newBuilder(namedSql);
@@ -138,42 +138,54 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private void setSelectParameters(SelectBody body, com.google.cloud.spanner.Statement.Builder builder)
 	{
-		body.accept(new SelectVisitorAdapter()
+		if (body instanceof PlainSelect)
 		{
-			@Override
-			public void visit(PlainSelect plainSelect)
+			setPlainSelectParameters((PlainSelect) body, builder);
+		}
+		else
+		{
+			body.accept(new SelectVisitorAdapter()
 			{
-				if (plainSelect.getFromItem() != null)
+				@Override
+				public void visit(PlainSelect plainSelect)
 				{
-					plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
-					{
-						private int tableCount = 0;
+					setPlainSelectParameters(plainSelect, builder);
+				}
+			});
+		}
+	}
 
-						@Override
-						public void visit(Table table)
-						{
-							tableCount++;
-							if (tableCount == 1)
-								getParameterStore().setTable(unquoteIdentifier(table.getFullyQualifiedName()));
-							else
-								getParameterStore().setTable(null);
-						}
-					});
-				}
-				setWhereParameters(plainSelect.getWhere(), builder);
-				if (plainSelect.getLimit() != null)
+	private void setPlainSelectParameters(PlainSelect plainSelect, com.google.cloud.spanner.Statement.Builder builder)
+	{
+		if (plainSelect.getFromItem() != null)
+		{
+			plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
+			{
+				private int tableCount = 0;
+
+				@Override
+				public void visit(Table table)
 				{
-					setWhereParameters(plainSelect.getLimit().getRowCount(), builder);
+					tableCount++;
+					if (tableCount == 1)
+						getParameterStore().setTable(unquoteIdentifier(table.getFullyQualifiedName()));
+					else
+						getParameterStore().setTable(null);
 				}
-				if (plainSelect.getOffset() != null && plainSelect.getOffset().isOffsetJdbcParameter())
-				{
-					ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<>(
-							getParameterStore(), builder.bind("p" + getParameterStore().getHighestIndex()), null);
-					binder.setValue(getParameterStore().getParameter(getParameterStore().getHighestIndex()));
-					getParameterStore().setType(getParameterStore().getHighestIndex(), Types.BIGINT);
-				}
-			}
-		});
+			});
+		}
+		setWhereParameters(plainSelect.getWhere(), builder);
+		if (plainSelect.getLimit() != null)
+		{
+			setWhereParameters(plainSelect.getLimit().getRowCount(), builder);
+		}
+		if (plainSelect.getOffset() != null && plainSelect.getOffset().isOffsetJdbcParameter())
+		{
+			ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<>(
+					getParameterStore(), builder.bind("p" + getParameterStore().getHighestIndex()), null);
+			binder.setValue(getParameterStore().getParameter(getParameterStore().getHighestIndex()));
+			getParameterStore().setType(getParameterStore().getHighestIndex(), Types.BIGINT);
+		}
 	}
 
 	private void setWhereParameters(Expression where, com.google.cloud.spanner.Statement.Builder builder)
@@ -378,7 +390,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		if (generateParameterMetaData && items == null && insert.getSelect() != null)
 		{
 			// Just initialize the parameter meta data of the select statement
-			createSelectBuilder(insert.getSelect());
+			createSelectBuilder(insert.getSelect(), insert.getSelect().toString());
 			return null;
 		}
 		if (!(items instanceof ExpressionList))
@@ -609,7 +621,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				// Create select builder, but don't do anything with it. This
 				// initializes column names of the parameter store.
-				createSelectBuilder(statement);
+				createSelectBuilder(statement, sql);
 			}
 		}
 		catch (JSQLParserException | TokenMgrError e)
