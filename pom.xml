@@ -264,11 +264,9 @@
 								<configuration>
 									<createSourcesJar>true</createSourcesJar>
 									<shadeSourcesContent>true</shadeSourcesContent>
-									<shadedArtifactAttached>true</shadedArtifactAttached>
-									<shadedArtifactId>spanner-jdbc-with-dependencies</shadedArtifactId>
-									<promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+									<shadedArtifactAttached>false</shadedArtifactAttached>
 									<createDependencyReducedPom>true</createDependencyReducedPom>
-									<dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+									<shadedArtifactId>${project.artifactId}-with-dependencies</shadedArtifactId>
 									<artifactSet>
 										<includes>
 											<include>*:*</include>
