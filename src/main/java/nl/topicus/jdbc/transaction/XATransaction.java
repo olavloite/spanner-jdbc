@@ -71,20 +71,25 @@ class XATransaction
 
 	private static void cleanupPrepared(TransactionContext transaction, String xid)
 	{
+		boolean foundRecords = false;
 		KeySet.Builder builder = KeySet.newBuilder();
 		try (ResultSet rs = transaction.executeQuery(getPreparedMutationsStatement(xid)))
 		{
 			while (rs.next())
 			{
+				foundRecords = true;
 				long number = rs.getLong(0);
 				builder.addKey(Key.of(xid, number));
 			}
 		}
-		Mutation delete = Mutation.delete(CloudSpannerXAConnection.XA_PREPARED_MUTATIONS_TABLE, builder.build());
-		transaction.buffer(delete);
+		if (foundRecords)
+		{
+			Mutation delete = Mutation.delete(CloudSpannerXAConnection.XA_PREPARED_MUTATIONS_TABLE, builder.build());
+			transaction.buffer(delete);
+		}
 	}
 
-	private static Statement getPreparedMutationsStatement(String xid)
+	static Statement getPreparedMutationsStatement(String xid)
 	{
 		return Statement.newBuilder(SELECT_MUTATIONS).bind("xid").to(xid).build();
 	}
