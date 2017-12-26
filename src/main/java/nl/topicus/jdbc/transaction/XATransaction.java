@@ -16,6 +16,7 @@ import com.google.cloud.spanner.Mutation.WriteBuilder;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.TransactionContext;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.rpc.Code;
 
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
@@ -94,7 +95,8 @@ class XATransaction
 		return Statement.newBuilder(SELECT_MUTATIONS).bind("xid").to(xid).build();
 	}
 
-	private static String serializeMutation(Mutation mutation) throws SQLException
+	@VisibleForTesting
+	static String serializeMutation(Mutation mutation) throws SQLException
 	{
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				ObjectOutputStream stream = new ObjectOutputStream(bos))
@@ -108,7 +110,8 @@ class XATransaction
 		}
 	}
 
-	private static Mutation deserializeMutation(String mutation) throws SQLException
+	@VisibleForTesting
+	static Mutation deserializeMutation(String mutation) throws SQLException
 	{
 		try (ByteArrayInputStream bis = new ByteArrayInputStream(Base64.getDecoder().decode(mutation));
 				ObjectInputStream input = new ObjectInputStream(bis))

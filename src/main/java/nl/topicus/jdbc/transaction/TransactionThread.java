@@ -37,7 +37,7 @@ class TransactionThread extends Thread
 		}
 	}
 
-	private enum TransactionStatus
+	enum TransactionStatus
 	{
 		NOT_STARTED, RUNNING, SUCCESS, FAIL;
 	}
@@ -274,6 +274,11 @@ class TransactionThread extends Thread
 			throw new CloudSpannerSQLException(statement.toString() + " failed: " + exception.getMessage(), code,
 					exception);
 		}
+	}
+
+	TransactionStatus getTransactionStatus()
+	{
+		return status;
 	}
 
 }
