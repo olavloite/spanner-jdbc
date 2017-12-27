@@ -17,6 +17,8 @@ public class MockCloudSpannerConnection
 	{
 		ConnectionProperties properties = ConnectionProperties.parse(url);
 		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
+		when(connection.getSimulateMajorVersion()).then(new Returns(null));
+		when(connection.getSimulateMinorVersion()).then(new Returns(null));
 		when(connection.getUrl()).thenAnswer(new Returns(url));
 		when(connection.getProductName()).thenAnswer(new Returns(properties.productName));
 		when(connection.getNodeCount()).thenAnswer(new Returns(1));

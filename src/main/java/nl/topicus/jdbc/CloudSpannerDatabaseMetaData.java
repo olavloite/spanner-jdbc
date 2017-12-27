@@ -781,7 +781,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException
 	{
-		String sql = "select CASE WHEN TABLE_CATALOG='' THEN NULL ELSE TABLE_CATALOG END AS TABLE_CAT, CASE WHEN TABLE_SCHEMA='' THEN NULL ELSE TABLE_SCHEMA END AS TABLE_SCHEM, TABLE_NAME, 'TABLE' AS TABLE_TYPE, NULL AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM, NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION "
+		String sql = CloudSpannerDatabaseMetaDataConstants.SELECT_TABLES_COLUMNS
 				+ CloudSpannerDatabaseMetaDataConstants.FROM_TABLES_T
 				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
 		if (catalog != null)
@@ -1150,13 +1150,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public int getDatabaseMajorVersion() throws SQLException
 	{
-		return 1;
+		return connection.getSimulateMajorVersion() == null ? 1 : connection.getSimulateMajorVersion();
 	}
 
 	@Override
 	public int getDatabaseMinorVersion() throws SQLException
 	{
-		return 0;
+		return connection.getSimulateMinorVersion() == null ? 0 : connection.getSimulateMinorVersion();
 	}
 
 	@Override

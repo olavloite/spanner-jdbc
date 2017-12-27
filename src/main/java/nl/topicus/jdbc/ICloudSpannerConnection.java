@@ -20,6 +20,10 @@ public interface ICloudSpannerConnection extends Connection
 
 	public void setSimulateProductName(String productName);
 
+	public void setSimulateMajorVersion(Integer majorVersion);
+
+	public void setSimulateMinorVersion(Integer minorVersion);
+
 	public Properties getSuppliedProperties();
 
 	public boolean isAllowExtendedMode();

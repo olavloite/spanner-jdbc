@@ -57,6 +57,8 @@ public class CloudSpannerDriver implements Driver
 		static final String OAUTH_ACCESS_TOKEN_URL_PART = "OAuthAccessToken=";
 
 		static final String SIMULATE_PRODUCT_NAME = "SimulateProductName=";
+		static final String SIMULATE_PRODUCT_MAJOR_VERSION = "SimulateProductMajorVersion=";
+		static final String SIMULATE_PRODUCT_MINOR_VERSION = "SimulateProductMinorVersion=";
 
 		static final String ALLOW_EXTENDED_MODE = "AllowExtendedMode=";
 
@@ -66,6 +68,8 @@ public class CloudSpannerDriver implements Driver
 		String keyFile = null;
 		String oauthToken = null;
 		String productName = null;
+		Integer majorVersion = null;
+		Integer minorVersion = null;
 		boolean allowExtendedMode = false;
 
 		static ConnectionProperties parse(String url) throws SQLException
@@ -92,6 +96,10 @@ public class CloudSpannerDriver implements Driver
 						res.oauthToken = conPart.substring(OAUTH_ACCESS_TOKEN_URL_PART.length());
 					else if (conPartLower.startsWith(SIMULATE_PRODUCT_NAME.toLowerCase()))
 						res.productName = conPart.substring(SIMULATE_PRODUCT_NAME.length());
+					else if (conPartLower.startsWith(SIMULATE_PRODUCT_MAJOR_VERSION.toLowerCase()))
+						res.majorVersion = parseInteger(conPart.substring(SIMULATE_PRODUCT_MAJOR_VERSION.length()));
+					else if (conPartLower.startsWith(SIMULATE_PRODUCT_MINOR_VERSION.toLowerCase()))
+						res.minorVersion = parseInteger(conPart.substring(SIMULATE_PRODUCT_MINOR_VERSION.length()));
 					else if (conPartLower.startsWith(ALLOW_EXTENDED_MODE.toLowerCase()))
 					{
 						try
@@ -111,6 +119,23 @@ public class CloudSpannerDriver implements Driver
 				}
 			}
 			return res;
+		}
+
+		private static Integer parseInteger(String val)
+		{
+			try
+			{
+				return Integer.valueOf(val);
+			}
+			catch (NumberFormatException e)
+			{
+			}
+			return null;
+		}
+
+		private static String defaultString(Integer val)
+		{
+			return val == null ? null : val.toString();
 		}
 
 		void setAdditionalConnectionProperties(Properties info) throws SQLException
@@ -137,6 +162,12 @@ public class CloudSpannerDriver implements Driver
 				productName = lowerCaseInfo.getProperty(
 						SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1).toLowerCase(),
 						productName);
+				majorVersion = parseInteger(lowerCaseInfo.getProperty(SIMULATE_PRODUCT_MAJOR_VERSION
+						.substring(0, SIMULATE_PRODUCT_MAJOR_VERSION.length() - 1).toLowerCase(),
+						defaultString(majorVersion)));
+				minorVersion = parseInteger(lowerCaseInfo.getProperty(SIMULATE_PRODUCT_MINOR_VERSION
+						.substring(0, SIMULATE_PRODUCT_MINOR_VERSION.length() - 1).toLowerCase(),
+						defaultString(minorVersion)));
 				try
 				{
 					allowExtendedMode = Boolean.valueOf(lowerCaseInfo.getProperty(
@@ -156,7 +187,7 @@ public class CloudSpannerDriver implements Driver
 
 		DriverPropertyInfo[] getPropertyInfo()
 		{
-			DriverPropertyInfo[] res = new DriverPropertyInfo[7];
+			DriverPropertyInfo[] res = new DriverPropertyInfo[9];
 			res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
 			res[0].description = "Google Cloud Project id";
 			res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
@@ -171,9 +202,17 @@ public class CloudSpannerDriver implements Driver
 			res[5] = new DriverPropertyInfo(SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1),
 					productName);
 			res[5].description = "Use this property to make the driver return a different database product name than Google Cloud Spanner, for example if you are using a framework like Spring that use this property to determine how to a generate data model for Spring Batch";
-			res[6] = new DriverPropertyInfo(ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
+			res[6] = new DriverPropertyInfo(
+					SIMULATE_PRODUCT_MAJOR_VERSION.substring(0, SIMULATE_PRODUCT_MAJOR_VERSION.length() - 1),
+					defaultString(majorVersion));
+			res[6].description = "Use this property to make the driver return a different major version number, for example if you are using a framework like Spring that use this property to determine how to a generate data model for Spring Batch";
+			res[7] = new DriverPropertyInfo(
+					SIMULATE_PRODUCT_MINOR_VERSION.substring(0, SIMULATE_PRODUCT_MINOR_VERSION.length() - 1),
+					defaultString(minorVersion));
+			res[7].description = "Use this property to make the driver return a different minor version number, for example if you are using a framework like Spring that use this property to determine how to a generate data model for Spring Batch";
+			res[8] = new DriverPropertyInfo(ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
 					String.valueOf(allowExtendedMode));
-			res[6].description = "Allow the driver to enter 'extended' mode for bulk operations. A value of false (default) indicates that the driver should never enter extended mode. If this property is set to true, the driver will execute all bulk DML-operations in a separate transaction when the number of records affected is greater than what will exceed the limitations of Cloud Spanner.";
+			res[8].description = "Allow the driver to enter 'extended' mode for bulk operations. A value of false (default) indicates that the driver should never enter extended mode. If this property is set to true, the driver will execute all bulk DML-operations in a separate transaction when the number of records affected is greater than what will exceed the limitations of Cloud Spanner.";
 
 			return res;
 		}
@@ -215,6 +254,8 @@ public class CloudSpannerDriver implements Driver
 		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, database, properties.keyFile,
 				properties.oauthToken, properties.allowExtendedMode, info);
 		connection.setSimulateProductName(properties.productName);
+		connection.setSimulateMajorVersion(properties.majorVersion);
+		connection.setSimulateMinorVersion(properties.minorVersion);
 		registerConnection(connection);
 
 		return connection;

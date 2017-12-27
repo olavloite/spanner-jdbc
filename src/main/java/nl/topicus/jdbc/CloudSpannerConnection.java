@@ -98,6 +98,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private final boolean allowExtendedMode;
 
 	private String simulateProductName;
+	private Integer simulateMajorVersion;
+	private Integer simulateMinorVersion;
 
 	private CloudSpannerTransaction transaction;
 
@@ -227,19 +229,63 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return spanner;
 	}
 
+	public String getSimulateProductName()
+	{
+		return simulateProductName;
+	}
+
 	@Override
 	public void setSimulateProductName(String productName)
 	{
 		this.simulateProductName = productName;
 	}
 
+	public Integer getSimulateMajorVersion()
+	{
+		return simulateMajorVersion;
+	}
+
+	@Override
+	public void setSimulateMajorVersion(Integer majorVersion)
+	{
+		this.simulateMajorVersion = majorVersion;
+	}
+
+	public Integer getSimulateMinorVersion()
+	{
+		return simulateMinorVersion;
+	}
+
+	@Override
+	public void setSimulateMinorVersion(Integer minorVersion)
+	{
+		this.simulateMinorVersion = minorVersion;
+	}
+
+	/**
+	 * Execute a DDL-statement on the database and wait for it to finish.
+	 * Calling this method will also automatically commit the currently running
+	 * transaction.
+	 * 
+	 * @param sql
+	 *            The DDL-statement to execute
+	 * @return Nothing
+	 * @throws SQLException
+	 *             If an error occurs during the execution of the statement.
+	 */
 	public Void executeDDL(String sql) throws SQLException
 	{
+		if (!getAutoCommit())
+			commit();
 		try
 		{
 			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
 					database.database, Arrays.asList(sql), null);
-			operation = operation.waitFor();
+			do
+			{
+				operation = operation.waitFor();
+			}
+			while (!operation.isDone());
 			return operation.getResult();
 		}
 		catch (SpannerException e)
