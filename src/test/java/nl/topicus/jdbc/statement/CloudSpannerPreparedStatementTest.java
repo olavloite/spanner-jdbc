@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.statement;
 
+import static org.mockito.Mockito.mock;
+
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.lang.reflect.Field;
@@ -39,6 +41,7 @@ import org.mockito.internal.stubbing.answers.Returns;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.ByteArray;
+import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.Op;
@@ -50,6 +53,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import nl.topicus.jdbc.CloudSpannerArray;
+import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.test.util.CloudSpannerTestObjects;
@@ -1046,7 +1050,8 @@ public class CloudSpannerPreparedStatementTest
 	private static boolean isDDLStatement(String sql) throws SQLException
 	{
 		boolean res = false;
-		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, null, null);
+		CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(sql, mock(CloudSpannerConnection.class),
+				mock(DatabaseClient.class));
 		try
 		{
 			Method isDDLStatement = CloudSpannerStatement.class.getDeclaredMethod("isDDLStatement", String.class);

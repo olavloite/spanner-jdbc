@@ -92,6 +92,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		if (statement instanceof Select)
 		{
+			determineForceSingleUseReadContext((Select) statement);
 			com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement, sql);
 			try (ReadContext context = getReadContext())
 			{

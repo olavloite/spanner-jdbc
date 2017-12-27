@@ -15,6 +15,11 @@ import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 import com.google.rpc.Code;
 
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.FromItemVisitorAdapter;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 import nl.topicus.jdbc.CloudSpannerConnection;
@@ -130,6 +135,45 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	protected String unquoteIdentifier(String identifier)
 	{
 		return CloudSpannerDriver.unquoteIdentifier(identifier);
+	}
+
+	/**
+	 * Determines whether the given sql statement must be executed in a single
+	 * use read context. This must be done for queries against the information
+	 * schema. This method sets the <code>forceSingleUseReadContext</code> to
+	 * true if necessary.
+	 * 
+	 * @param sql
+	 *            The sql statement to be examined.
+	 */
+	protected void determineForceSingleUseReadContext(Select select)
+	{
+		if (select.getSelectBody() != null)
+		{
+			select.getSelectBody().accept(new SelectVisitorAdapter()
+			{
+				@Override
+				public void visit(PlainSelect plainSelect)
+				{
+					if (plainSelect.getFromItem() != null)
+					{
+						plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
+						{
+							@Override
+							public void visit(Table table)
+							{
+								if (table.getSchemaName() != null
+										&& table.getSchemaName().equalsIgnoreCase("INFORMATION_SCHEMA"))
+								{
+									setForceSingleUseReadContext(true);
+								}
+							}
+						});
+					}
+				}
+
+			});
+		}
 	}
 
 	public boolean isForceSingleUseReadContext()
