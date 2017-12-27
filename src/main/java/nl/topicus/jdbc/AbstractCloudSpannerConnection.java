@@ -45,6 +45,12 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 		return null;
 	}
 
+	private String checkClosedAndReturnEmptyString() throws SQLException
+	{
+		checkClosed();
+		return "";
+	}
+
 	private <T> T checkClosedAndThrowUnsupportedException() throws SQLException
 	{
 		checkClosed();
@@ -61,7 +67,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public String getCatalog() throws SQLException
 	{
-		return checkClosedAndReturnNull();
+		return checkClosedAndReturnEmptyString();
 	}
 
 	@Override
@@ -209,7 +215,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public String getSchema() throws SQLException
 	{
-		return checkClosedAndReturnNull();
+		return checkClosedAndReturnEmptyString();
 	}
 
 	@Override

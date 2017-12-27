@@ -43,7 +43,7 @@ public class AbstractCloudSpannerConnectionTest
 		// default test
 		testSubject = createTestSubject();
 		result = testSubject.getCatalog();
-		Assert.assertNull(result);
+		Assert.assertEquals("", result);
 	}
 
 	@Test
@@ -295,7 +295,7 @@ public class AbstractCloudSpannerConnectionTest
 		// default test
 		testSubject = createTestSubject();
 		result = testSubject.getSchema();
-		Assert.assertNull(result);
+		Assert.assertEquals("", result);
 	}
 
 	@Test
