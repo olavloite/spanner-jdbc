@@ -165,13 +165,14 @@ public class CloudSpannerStatementTest
 				statement.getTokens("CREATE TABLE FOO (ID INT64)"));
 		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
 				statement.getTokens("\t\nCREATE TABLE\n\tFOO (ID INT64)   "));
-		Assert.assertArrayEquals(new String[] { "SET_DRIVER_PROPERTY", "AsyncDdlOperations", "=", "true" },
-				statement.getTokens("SET_DRIVER_PROPERTY AsyncDdlOperations=true"));
-		Assert.assertArrayEquals(new String[] { "SET_DRIVER_PROPERTY", "AsyncDdlOperations", "=", "true" },
-				statement.getTokens("\t\tSET_DRIVER_PROPERTY     AsyncDdlOperations\t=\ttrue"));
+		Assert.assertArrayEquals(new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true" },
+				statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true"));
+		Assert.assertArrayEquals(new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true" },
+				statement.getTokens("\t\tSET_CONNECTION_PROPERTY     AsyncDdlOperations\t=\ttrue"));
 		Assert.assertArrayEquals(
-				new String[] { "SET_DRIVER_PROPERTY", "AsyncDdlOperations", "=", "true", "AND AllowExtendedMode=true" },
-				statement.getTokens("SET_DRIVER_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
+				new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true",
+						"AND AllowExtendedMode=true" },
+				statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
 	}
 
 }
