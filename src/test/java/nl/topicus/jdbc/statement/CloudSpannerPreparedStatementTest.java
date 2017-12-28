@@ -692,36 +692,37 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
-		public void testFormatDDLStatement() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-				IllegalArgumentException, InvocationTargetException
+		public void testFormatDDLStatement() throws SQLException
 		{
-			CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement("FOO", null, null);
-			Method method = CloudSpannerPreparedStatement.class.getDeclaredMethod("formatDDLStatement", String.class);
-			method.setAccessible(true);
-			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-					method.invoke(ps, "CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)"));
-			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-					method.invoke(ps, "CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
-			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-					method.invoke(ps, "CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
-			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-					method.invoke(ps, "CREATE TABLE TEST\n\t(ID INT64,   PRIMARY  KEY  (ID) )"));
-			Assert.assertEquals("CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)",
-					method.invoke(ps, "CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)"));
-			Assert.assertEquals("CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)",
-					method.invoke(ps, "CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)"));
-			String sql = "CREATE TABLE TestTableViaDBeaver(\n" + "TestId INT64 NOT NULL,\n" + "Foo STRING(10)\n"
-					+ ") PRIMARY KEY (TestId);";
-			Assert.assertEquals(sql, method.invoke(ps, sql));
+			try (CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement("FOO", null, null))
+			{
+				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+						ps.formatDDLStatement("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)"));
+				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+						ps.formatDDLStatement("CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
+				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+						ps.formatDDLStatement("CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
+				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
+						ps.formatDDLStatement("CREATE TABLE TEST\n\t(ID INT64,   PRIMARY  KEY  (ID) )"));
+				Assert.assertEquals("CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)", ps
+						.formatDDLStatement("CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)"));
+				Assert.assertEquals("CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)",
+						ps.formatDDLStatement(
+								"CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)"));
+				String sql = "CREATE TABLE TestTableViaDBeaver(\n" + "TestId INT64 NOT NULL,\n" + "Foo STRING(10)\n"
+						+ ") PRIMARY KEY (TestId);";
+				Assert.assertEquals(sql, ps.formatDDLStatement(sql));
 
-			Assert.assertEquals("CREATE TABLE Account (id INT64 NOT NULL, name STRING(100)) primary key (id)",
-					method.invoke(ps, "CREATE TABLE Account (id INT64 NOT NULL, name STRING(100), primary key (id))"));
-			Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)", method.invoke(
-					ps,
-					"/* CREATE A TEST TABLE */\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
-			Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)", method.invoke(
-					ps,
-					"-- CREATE A TEST TABLE \nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
+				Assert.assertEquals("CREATE TABLE Account (id INT64 NOT NULL, name STRING(100)) primary key (id)",
+						ps.formatDDLStatement(
+								"CREATE TABLE Account (id INT64 NOT NULL, name STRING(100), primary key (id))"));
+				Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)",
+						ps.formatDDLStatement(
+								"/* CREATE A TEST TABLE */\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
+				Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)",
+						ps.formatDDLStatement(
+								"-- CREATE A TEST TABLE \nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
+			}
 		}
 
 		@Test

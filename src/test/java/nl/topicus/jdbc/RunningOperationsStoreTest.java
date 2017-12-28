@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,7 +69,7 @@ public class RunningOperationsStoreTest
 		for (int counter = 1; counter <= 2; counter++)
 		{
 			boolean exception = counter % 2 == 0;
-			subject.addOperation(sql, mockOperation(exception));
+			subject.addOperation(Arrays.asList(sql), mockOperation(exception));
 			try (ResultSet rs = subject.getOperations(mock(Statement.class)))
 			{
 				assertNotNull(rs);

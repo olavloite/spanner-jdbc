@@ -102,27 +102,6 @@ public class AbstractCloudSpannerStatementTest
 	}
 
 	@Test
-	public void testAddBatch() throws SQLException
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		subject.addBatch("SELECT * FROM FOO");
-	}
-
-	@Test
-	public void testClearBatch() throws SQLException
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		subject.clearBatch();
-	}
-
-	@Test
-	public void testExecuteBatch() throws SQLException
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		subject.executeBatch();
-	}
-
-	@Test
 	public void testGetGeneratedKeys() throws SQLException
 	{
 		thrown.expect(SQLFeatureNotSupportedException.class);

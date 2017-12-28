@@ -336,24 +336,6 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	}
 
 	@Override
-	public void addBatch(String sql) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public void clearBatch() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public int[] executeBatch() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public CloudSpannerConnection getConnection() throws SQLException
 	{
 		return connection;

@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -276,24 +275,25 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	}
 
 	/**
-	 * Execute a DDL-statement on the database and wait for it to finish.
-	 * Calling this method will also automatically commit the currently running
+	 * Execute one or more DDL-statements on the database and wait for it to
+	 * finish or return after syntax check (when running in async mode). Calling
+	 * this method will also automatically commit the currently running
 	 * transaction.
 	 * 
 	 * @param sql
-	 *            The DDL-statement to execute
+	 *            The DDL-statement(s) to execute
 	 * @return Nothing
 	 * @throws SQLException
 	 *             If an error occurs during the execution of the statement.
 	 */
-	public Void executeDDL(String sql) throws SQLException
+	public Void executeDDL(List<String> sql) throws SQLException
 	{
 		if (!getAutoCommit())
 			commit();
 		try
 		{
 			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
-					database.database, Arrays.asList(sql), null);
+					database.database, sql, null);
 			if (asyncDdlOperations)
 			{
 				operations.addOperation(sql, operation);
@@ -310,7 +310,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 		catch (SpannerException e)
 		{
-			throw new CloudSpannerSQLException("Could not execute DDL statement " + sql + ": " + e.getMessage(), e);
+			throw new CloudSpannerSQLException(
+					"Could not execute DDL statement(s) " + String.join("\n;\n", sql) + ": " + e.getMessage(), e);
 		}
 	}
 
@@ -320,6 +321,18 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public int clearFinishedDDLOperations()
 	{
 		return operations.clearFinishedOperations();
+	}
+
+	/**
+	 * Waits for all asynchronous DDL-operations that have been issued by this
+	 * connection to finish.
+	 * 
+	 * @throws SQLException
+	 * 
+	 */
+	public void waitForDdlOperations() throws SQLException
+	{
+		operations.waitForOperations();
 	}
 
 	/**
