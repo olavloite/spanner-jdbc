@@ -274,7 +274,9 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	 * on all space characters
 	 * 
 	 * @param sql
+	 *            The sql statement to break into parts
 	 * @param limit
+	 *            The maximum number of times the pattern should be applied
 	 * @return String array with all the parts of the sql statement
 	 */
 	protected String[] getTokens(String sql, int limit)

@@ -317,6 +317,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	/**
 	 * Clears the asynchronous DDL-operations that have finished.
+	 * 
+	 * @return The number of operations that were cleared
 	 */
 	public int clearFinishedDDLOperations()
 	{
@@ -328,6 +330,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * connection to finish.
 	 * 
 	 * @throws SQLException
+	 *             If a database exception occurs while waiting for the
+	 *             operations to finish
 	 * 
 	 */
 	public void waitForDdlOperations() throws SQLException
@@ -702,6 +706,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		this.typeMap = map;
 	}
 
+	/**
+	 * 
+	 * @return The number of nodes of this Cloud Spanner instance
+	 * @throws SQLException
+	 *             If an exception occurs when trying to get the number of nodes
+	 */
 	public int getNodeCount() throws SQLException
 	{
 		try
@@ -725,6 +735,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * 
 	 * @param xid
 	 *            The id of the prepared transaction
+	 * @throws SQLException
+	 *             If an exception occurs while saving the mutations to the
+	 *             database for later commit
 	 */
 	public void prepareTransaction(String xid) throws SQLException
 	{
@@ -735,7 +748,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * Commit a previously prepared transaction.
 	 * 
 	 * @param xid
+	 *            The id of the prepared transaction
 	 * @throws SQLException
+	 *             If an error occurs when writing the mutations to the database
 	 */
 	public void commitPreparedTransaction(String xid) throws SQLException
 	{
@@ -746,6 +761,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * Rollback a previously prepared transaction.
 	 * 
 	 * @param xid
+	 *            The id of the prepared transaction to rollback
+	 * @throws SQLException
+	 *             If an error occurs while rolling back the prepared
+	 *             transaction
 	 */
 	public void rollbackPreparedTransaction(String xid) throws SQLException
 	{

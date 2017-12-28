@@ -97,6 +97,8 @@ public class RecoveredXid implements Xid
 	}
 
 	/**
+	 * @param s
+	 *            The string to convert
 	 * @return recovered xid, or null if s does not represent a valid xid
 	 *         encoded by the driver.
 	 */

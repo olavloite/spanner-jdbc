@@ -143,7 +143,7 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	 * schema. This method sets the <code>forceSingleUseReadContext</code> to
 	 * true if necessary.
 	 * 
-	 * @param sql
+	 * @param select
 	 *            The sql statement to be examined.
 	 */
 	protected void determineForceSingleUseReadContext(Select select)
