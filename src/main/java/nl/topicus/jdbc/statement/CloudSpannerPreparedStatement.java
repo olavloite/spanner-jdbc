@@ -53,7 +53,9 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	static final String PARSE_ERROR = "Error while parsing sql statement ";
 
-	private String sql;
+	private final String sql;
+
+	private final String[] sqlTokens;
 
 	/**
 	 * Flag indicating that an INSERT INTO ... ON DUPLICATE KEY UPDATE statement
@@ -67,6 +69,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		super(connection, dbClient);
 		this.sql = sql;
+		this.sqlTokens = getTokens(sql);
 	}
 
 	@Override
@@ -80,6 +83,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public ResultSet executeQuery() throws SQLException
 	{
+		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
+		if (custom != null && custom.isQuery())
+		{
+			return custom.executeQuery(sqlTokens);
+		}
 		Statement statement;
 		try
 		{
@@ -221,6 +229,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 	}
 
+	private boolean isDDLStatement()
+	{
+		return isDDLStatement(sqlTokens);
+	}
+
 	@Override
 	public void addBatch() throws SQLException
 	{
@@ -229,15 +242,15 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			throw new SQLFeatureNotSupportedException(
 					"Batching of statements is only allowed when not running in autocommit mode");
 		}
-		if (isDDLStatement(sql))
+		if (isDDLStatement())
 		{
 			throw new SQLFeatureNotSupportedException("DDL statements may not be batched");
 		}
-		if (isSelectStatement(sql))
+		if (isSelectStatement(sqlTokens))
 		{
 			throw new SQLFeatureNotSupportedException("SELECT statements may not be batched");
 		}
-		Mutations mutations = createMutations(sql);
+		Mutations mutations = createMutations();
 		batchMutations.add(mutations);
 		getParameterStore().clearParameters();
 	}
@@ -267,16 +280,21 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public int executeUpdate() throws SQLException
 	{
-		if (isDDLStatement(sql))
+		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
+		if (custom != null && !custom.isQuery())
+		{
+			return custom.executeUpdate(sqlTokens);
+		}
+		if (isDDLStatement())
 		{
 			String ddl = formatDDLStatement(sql);
 			return executeDDL(ddl);
 		}
-		Mutations mutations = createMutations(sql);
+		Mutations mutations = createMutations();
 		return (int) writeMutations(mutations);
 	}
 
-	private Mutations createMutations(String sql) throws SQLException
+	private Mutations createMutations() throws SQLException
 	{
 		return createMutations(sql, false, false);
 	}
@@ -291,7 +309,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				throw new CloudSpannerSQLException("The connection is in read-only mode. Mutations are not allowed.",
 						Code.FAILED_PRECONDITION);
 			}
-			if (isDDLStatement(sql))
+			if (isDDLStatement())
 			{
 				throw new CloudSpannerSQLException(
 						"Cannot create mutation for DDL statement. Expected INSERT, UPDATE or DELETE",
@@ -363,8 +381,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	private String formatDDLStatement(String sql)
 	{
 		String result = removeComments(sql);
-		String generated = result.trim();
-		String[] parts = generated.split("\\s+");
+		String[] parts = getTokens(sql, 0);
 		if (parts.length > 2)
 		{
 			if (parts[0].equalsIgnoreCase("create") && parts[1].equalsIgnoreCase("table"))
@@ -572,8 +589,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public boolean execute() throws SQLException
 	{
+		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
+		if (custom != null)
+			return custom.execute(sqlTokens);
 		Statement statement = null;
-		boolean ddl = isDDLStatement(sql);
+		boolean ddl = isDDLStatement();
 		if (!ddl)
 		{
 			try
@@ -606,7 +626,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		// parse the SQL statement without executing it
 		try
 		{
-			if (isDDLStatement(sql))
+			if (isDDLStatement())
 			{
 				throw new CloudSpannerSQLException("Cannot get parameter meta data for DDL statement",
 						Code.INVALID_ARGUMENT);

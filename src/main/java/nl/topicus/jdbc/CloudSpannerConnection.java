@@ -12,9 +12,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.json.JSONException;
@@ -31,15 +34,21 @@ import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Instance;
 import com.google.cloud.spanner.Operation;
+import com.google.cloud.spanner.ResultSets;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
+import com.google.cloud.spanner.Struct;
+import com.google.cloud.spanner.Type;
+import com.google.cloud.spanner.Type.StructField;
+import com.google.cloud.spanner.Value;
 import com.google.rpc.Code;
 import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.statement.CloudSpannerPreparedStatement;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.transaction.CloudSpannerTransaction;
@@ -91,11 +100,15 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private boolean readOnly;
 
+	private final RunningOperationsStore operations = new RunningOperationsStore();
+
 	private final String url;
 
 	private final Properties suppliedProperties;
 
-	private final boolean allowExtendedMode;
+	private boolean allowExtendedMode;
+
+	private boolean asyncDdlOperations;
 
 	private String simulateProductName;
 	private Integer simulateMajorVersion;
@@ -281,17 +294,46 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		{
 			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
 					database.database, Arrays.asList(sql), null);
-			do
+			if (asyncDdlOperations)
 			{
-				operation = operation.waitFor();
+				operations.addOperation(sql, operation);
 			}
-			while (!operation.isDone());
+			else
+			{
+				do
+				{
+					operation = operation.waitFor();
+				}
+				while (!operation.isDone());
+			}
 			return operation.getResult();
 		}
 		catch (SpannerException e)
 		{
 			throw new CloudSpannerSQLException("Could not execute DDL statement " + sql + ": " + e.getMessage(), e);
 		}
+	}
+
+	/**
+	 * Clears the asynchronous DDL-operations that have finished.
+	 */
+	public int clearFinishedDDLOperations()
+	{
+		return operations.clearFinishedOperations();
+	}
+
+	/**
+	 * Returns a ResultSet containing all asynchronous DDL-operations started by
+	 * this connection. It does not contain DDL-operations that have been
+	 * started by other connections or by other means.
+	 * 
+	 * @param statement
+	 *            The statement that requested the operations
+	 * @return A ResultSet with the DDL-operations
+	 */
+	public ResultSet getRunningDDLOperations(Statement statement)
+	{
+		return operations.getOperations(statement);
 	}
 
 	@Override
@@ -525,6 +567,81 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public boolean isAllowExtendedMode()
 	{
 		return allowExtendedMode;
+	}
+
+	@Override
+	public void setAllowExtendedMode(boolean allowExtendedMode)
+	{
+		this.allowExtendedMode = allowExtendedMode;
+	}
+
+	@Override
+	public boolean isAsyncDdlOperations()
+	{
+		return asyncDdlOperations;
+	}
+
+	@Override
+	public void setAsyncDdlOperations(boolean asyncDdlOperations)
+	{
+		this.asyncDdlOperations = asyncDdlOperations;
+	}
+
+	public int setDynamicDriverProperty(String propertyName, String propertyValue)
+	{
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		{
+			setAllowExtendedMode(Boolean.valueOf(propertyValue));
+			return 1;
+		}
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		{
+			setAsyncDdlOperations(Boolean.valueOf(propertyValue));
+			return 1;
+		}
+		return 0;
+	}
+
+	public ResultSet getDynamicDriverProperties(Statement statement)
+	{
+		return getDynamicDriverProperty(statement, null);
+	}
+
+	public ResultSet getDynamicDriverProperty(Statement statement, String propertyName)
+	{
+		Map<String, String> values = new HashMap<>();
+		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		{
+			values.put(
+					CloudSpannerDriver.ConnectionProperties
+							.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE),
+					String.valueOf(isAllowExtendedMode()));
+		}
+		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		{
+			values.put(
+					CloudSpannerDriver.ConnectionProperties
+							.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS),
+					String.valueOf(isAsyncDdlOperations()));
+		}
+		return createResultSet(statement, values);
+	}
+
+	private ResultSet createResultSet(Statement statement, Map<String, String> values)
+	{
+		List<Struct> rows = new ArrayList<>(values.size());
+		for (Entry<String, String> entry : values.entrySet())
+		{
+			rows.add(Struct.newBuilder().add("NAME", Value.string(entry.getKey()))
+					.add("VALUE", Value.string(entry.getValue())).build());
+		}
+		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(
+				Type.struct(StructField.of("NAME", Type.string()), StructField.of("VALUE", Type.string())), rows);
+		return new CloudSpannerResultSet(statement, rs);
 	}
 
 	/**

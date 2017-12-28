@@ -4,6 +4,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import com.google.cloud.spanner.DatabaseClient;
@@ -40,6 +42,12 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException
 	{
+		String[] sqlTokens = getTokens(sql);
+		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
+		if (custom != null && custom.isQuery())
+		{
+			return custom.executeQuery(sqlTokens);
+		}
 		try (ReadContext context = getReadContext())
 		{
 			com.google.cloud.spanner.ResultSet rs = context.executeQuery(com.google.cloud.spanner.Statement.of(sql));
@@ -50,6 +58,12 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public int executeUpdate(String sql) throws SQLException
 	{
+		String[] sqlTokens = getTokens(sql);
+		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
+		if (custom != null && !custom.isQuery())
+		{
+			return custom.executeUpdate(sqlTokens);
+		}
 		PreparedStatement ps = getConnection().prepareStatement(sql);
 		return ps.executeUpdate();
 	}
@@ -57,8 +71,12 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public boolean execute(String sql) throws SQLException
 	{
+		String[] sqlTokens = getTokens(sql);
+		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
+		if (custom != null)
+			return custom.execute(sqlTokens);
 		Statement statement = null;
-		boolean ddl = isDDLStatement(sql);
+		boolean ddl = isDDLStatement(sqlTokens);
 		if (!ddl)
 		{
 			try
@@ -91,21 +109,49 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	/**
 	 * Do a quick check if this SQL statement is a DDL statement
 	 * 
-	 * @param sql
+	 * @param sqlTokens
 	 *            The statement to check
 	 * @return true if the SQL statement is a DDL statement
 	 */
-	protected boolean isDDLStatement(String sql)
+	protected boolean isDDLStatement(String[] sqlTokens)
 	{
-		String ddl = removeComments(sql);
-		ddl = ddl.substring(0, Math.min(8, ddl.length())).toUpperCase();
-		for (String statement : DDL_STATEMENTS)
+		if (sqlTokens.length > 0)
 		{
-			if (ddl.startsWith(statement))
-				return true;
+			for (String statement : DDL_STATEMENTS)
+			{
+				if (sqlTokens[0].equalsIgnoreCase(statement))
+					return true;
+			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Remove comments from the given sql string and split it into parts based
+	 * on all space characters
+	 * 
+	 * @param sql
+	 * @return String array with all the parts of the sql statement
+	 */
+	protected String[] getTokens(String sql)
+	{
+		return getTokens(sql, 5);
+	}
+
+	/**
+	 * Remove comments from the given sql string and split it into parts based
+	 * on all space characters
+	 * 
+	 * @param sql
+	 * @param limit
+	 * @return String array with all the parts of the sql statement
+	 */
+	protected String[] getTokens(String sql, int limit)
+	{
+		String result = removeComments(sql);
+		String generated = result.replaceFirst("=", " = ");
+		return generated.split("\\s+", limit);
 	}
 
 	protected String removeComments(String sql)
@@ -113,14 +159,150 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		return commentPattern.matcher(sql).replaceAll("").trim();
 	}
 
-	protected boolean isSelectStatement(String sql)
+	protected boolean isSelectStatement(String[] sqlTokens)
 	{
-		String select = removeComments(sql);
-		select = select.substring(0, Math.min(6, select.length())).toUpperCase();
-		if (select.startsWith("SELECT"))
+		if (sqlTokens.length > 0 && sqlTokens[0].equalsIgnoreCase("SELECT"))
 			return true;
 
 		return false;
+	}
+
+	public abstract class CustomDriverStatement
+	{
+		private final String statement;
+
+		private final boolean query;
+
+		private CustomDriverStatement(String statement, boolean query)
+		{
+			this.statement = statement;
+			this.query = query;
+		}
+
+		protected final boolean isQuery()
+		{
+			return query;
+		}
+
+		protected final boolean execute(String[] sqlTokens) throws SQLException
+		{
+			if (query)
+			{
+				lastResultSet = executeQuery(sqlTokens);
+				lastUpdateCount = -1;
+				return true;
+			}
+			else
+			{
+				lastResultSet = null;
+				lastUpdateCount = executeUpdate(sqlTokens);
+				return false;
+			}
+		}
+
+		protected ResultSet executeQuery(String[] sqlTokens) throws SQLException
+		{
+			throw new IllegalArgumentException("This statement is not valid for execution as a query");
+		}
+
+		protected int executeUpdate(String[] sqlTokens) throws SQLException
+		{
+			throw new IllegalArgumentException("This statement is not valid for execution as an update");
+		}
+	}
+
+	private class ShowDdlOperations extends CustomDriverStatement
+	{
+		private ShowDdlOperations()
+		{
+			super("SHOW_DDL_OPERATIONS", true);
+		}
+
+		@Override
+		public ResultSet executeQuery(String[] sqlTokens) throws SQLException
+		{
+			return getConnection().getRunningDDLOperations(CloudSpannerStatement.this);
+		}
+	}
+
+	private class CleanDdlOperations extends CustomDriverStatement
+	{
+		private CleanDdlOperations()
+		{
+			super("CLEAN_DDL_OPERATIONS", false);
+		}
+
+		@Override
+		public int executeUpdate(String[] sqlTokens) throws SQLException
+		{
+			return getConnection().clearFinishedDDLOperations();
+		}
+	}
+
+	private class SetDriverProperty extends CustomDriverStatement
+	{
+		private SetDriverProperty()
+		{
+			super("SET_DRIVER_PROPERTY", false);
+		}
+
+		@Override
+		public int executeUpdate(String[] sqlTokens) throws SQLException
+		{
+			if (sqlTokens.length != 4 || !"=".equals(sqlTokens[2]))
+				throw new CloudSpannerSQLException(
+						"Invalid argument(s) for SET_DRIVER_PROPERTY. Expected \"SET_DRIVER_PROPERTY propertyName=propertyValue\"",
+						Code.INVALID_ARGUMENT);
+			return getConnection().setDynamicDriverProperty(sqlTokens[1], sqlTokens[3]);
+		}
+	}
+
+	private class GetDriverProperty extends CustomDriverStatement
+	{
+		private GetDriverProperty()
+		{
+			super("GET_DRIVER_PROPERTY", true);
+		}
+
+		@Override
+		public ResultSet executeQuery(String[] sqlTokens) throws SQLException
+		{
+			if (sqlTokens.length == 1)
+				return getConnection().getDynamicDriverProperties(CloudSpannerStatement.this);
+			if (sqlTokens.length == 2)
+				return getConnection().getDynamicDriverProperty(CloudSpannerStatement.this, sqlTokens[1]);
+			throw new CloudSpannerSQLException(
+					"Invalid argument(s) for GET_DRIVER_PROPERTY. Expected \"GET_DRIVER_PROPERTY propertyName\" or \"GET_DRIVER_PROPERTY\"",
+					Code.INVALID_ARGUMENT);
+		}
+	}
+
+	private final List<CustomDriverStatement> CUSTOM_DRIVER_STATEMENTS = Arrays.asList(new ShowDdlOperations(),
+			new CleanDdlOperations(), new SetDriverProperty(), new GetDriverProperty());
+
+	/**
+	 * Checks if a sql statement is a custom statement only recognized by this
+	 * driver
+	 * 
+	 * @param sqlTokens
+	 *            The statement to check
+	 * @return The custom driver statement if the given statement is a custom
+	 *         statement only recognized by the Cloud Spanner JDBC driver, such
+	 *         as show_ddl_operations
+	 */
+	protected CustomDriverStatement getCustomDriverStatement(String[] sqlTokens)
+	{
+		if (sqlTokens.length > 0)
+		{
+			for (CustomDriverStatement statement : CUSTOM_DRIVER_STATEMENTS)
+			{
+				if (sqlTokens[0].equalsIgnoreCase(statement.statement))
+				{
+					return statement;
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override

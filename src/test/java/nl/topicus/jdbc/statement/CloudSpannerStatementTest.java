@@ -129,12 +129,49 @@ public class CloudSpannerStatementTest
 	{
 		CloudSpannerConnection connection = createConnection();
 		CloudSpannerStatement statement = connection.createStatement();
-		Assert.assertTrue(statement
-				.isDDLStatement("CREATE TABLE FOO (ID INT64 NOT NULL, COL1 STRING(100) NOT NULL) PRIMARY KEY (ID)"));
-		Assert.assertTrue(statement.isDDLStatement("ALTER TABLE FOO ADD COLUMN COL2 STRING(100) NOT NULL"));
-		Assert.assertTrue(statement.isDDLStatement("DROP TABLE FOO"));
-		Assert.assertTrue(statement.isDDLStatement("CREATE INDEX IDX_FOO ON FOO (COL1)"));
-		Assert.assertTrue(statement.isDDLStatement("DROP INDEX IDX_FOO"));
+		Assert.assertTrue(statement.isDDLStatement(statement
+				.getTokens("CREATE TABLE FOO (ID INT64 NOT NULL, COL1 STRING(100) NOT NULL) PRIMARY KEY (ID)")));
+		Assert.assertTrue(
+				statement.isDDLStatement(statement.getTokens("ALTER TABLE FOO ADD COLUMN COL2 STRING(100) NOT NULL")));
+		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP TABLE FOO")));
+		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("CREATE INDEX IDX_FOO ON FOO (COL1)")));
+		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP INDEX IDX_FOO")));
+	}
+
+	@Test
+	public void testShowDdlOperations() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+		Assert.assertTrue(statement.execute("SHOW_DDL_OPERATIONS"));
+	}
+
+	@Test
+	public void testCleanDdlOperations() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+		Assert.assertFalse(statement.execute("CLEAN_DDL_OPERATIONS"));
+	}
+
+	@Test
+	public void testGetTokens() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
+				statement.getTokens("   CREATE  TABLE FOO (ID INT64)"));
+		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
+				statement.getTokens("CREATE TABLE FOO (ID INT64)"));
+		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
+				statement.getTokens("\t\nCREATE TABLE\n\tFOO (ID INT64)   "));
+		Assert.assertArrayEquals(new String[] { "SET_DRIVER_PROPERTY", "AsyncDdlOperations", "=", "true" },
+				statement.getTokens("SET_DRIVER_PROPERTY AsyncDdlOperations=true"));
+		Assert.assertArrayEquals(new String[] { "SET_DRIVER_PROPERTY", "AsyncDdlOperations", "=", "true" },
+				statement.getTokens("\t\tSET_DRIVER_PROPERTY     AsyncDdlOperations\t=\ttrue"));
+		Assert.assertArrayEquals(
+				new String[] { "SET_DRIVER_PROPERTY", "AsyncDdlOperations", "=", "true", "AND AllowExtendedMode=true" },
+				statement.getTokens("SET_DRIVER_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
 	}
 
 }

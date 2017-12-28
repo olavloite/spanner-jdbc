@@ -695,7 +695,7 @@ public class CloudSpannerPreparedStatementTest
 		public void testFormatDDLStatement() throws NoSuchMethodException, SecurityException, IllegalAccessException,
 				IllegalArgumentException, InvocationTargetException
 		{
-			CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement(null, null, null);
+			CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement("FOO", null, null);
 			Method method = CloudSpannerPreparedStatement.class.getDeclaredMethod("formatDDLStatement", String.class);
 			method.setAccessible(true);
 			Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
@@ -1054,9 +1054,9 @@ public class CloudSpannerPreparedStatementTest
 				mock(DatabaseClient.class));
 		try
 		{
-			Method isDDLStatement = CloudSpannerStatement.class.getDeclaredMethod("isDDLStatement", String.class);
+			Method isDDLStatement = CloudSpannerPreparedStatement.class.getDeclaredMethod("isDDLStatement");
 			isDDLStatement.setAccessible(true);
-			res = (boolean) isDDLStatement.invoke(ps, sql);
+			res = (boolean) isDDLStatement.invoke(ps);
 		}
 		catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e)
 		{
@@ -1084,9 +1084,9 @@ public class CloudSpannerPreparedStatementTest
 		CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
 		try
 		{
-			Method createMutations = ps.getClass().getDeclaredMethod("createMutations", String.class);
+			Method createMutations = ps.getClass().getDeclaredMethod("createMutations");
 			createMutations.setAccessible(true);
-			mutations = (Mutations) createMutations.invoke(ps, sql);
+			mutations = (Mutations) createMutations.invoke(ps);
 		}
 		catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e)
 		{

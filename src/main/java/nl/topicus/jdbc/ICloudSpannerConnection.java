@@ -28,6 +28,12 @@ public interface ICloudSpannerConnection extends Connection
 
 	public boolean isAllowExtendedMode();
 
+	public void setAllowExtendedMode(boolean allowExtendedMode);
+
+	public boolean isAsyncDdlOperations();
+
+	public void setAsyncDdlOperations(boolean asyncDdlOperations);
+
 	public String getClientId();
 
 	public Timestamp getLastCommitTimestamp();

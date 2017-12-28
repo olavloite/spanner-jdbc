@@ -46,6 +46,11 @@ public class CloudSpannerDriver implements Driver
 
 	static final class ConnectionProperties
 	{
+		static String getPropertyName(String propertyPart)
+		{
+			return propertyPart.substring(0, propertyPart.length() - 1);
+		}
+
 		static final String PROJECT_URL_PART = "Project=";
 
 		static final String INSTANCE_URL_PART = "Instance=";
@@ -61,6 +66,7 @@ public class CloudSpannerDriver implements Driver
 		static final String SIMULATE_PRODUCT_MINOR_VERSION = "SimulateProductMinorVersion=";
 
 		static final String ALLOW_EXTENDED_MODE = "AllowExtendedMode=";
+		static final String ASYNC_DDL_OPERATIONS = "AsyncDdlOperations=";
 
 		String project = null;
 		String instance = null;
@@ -71,6 +77,7 @@ public class CloudSpannerDriver implements Driver
 		Integer majorVersion = null;
 		Integer minorVersion = null;
 		boolean allowExtendedMode = false;
+		boolean asyncDdlOperations = false;
 
 		static ConnectionProperties parse(String url) throws SQLException
 		{
@@ -101,19 +108,9 @@ public class CloudSpannerDriver implements Driver
 					else if (conPartLower.startsWith(SIMULATE_PRODUCT_MINOR_VERSION.toLowerCase()))
 						res.minorVersion = parseInteger(conPart.substring(SIMULATE_PRODUCT_MINOR_VERSION.length()));
 					else if (conPartLower.startsWith(ALLOW_EXTENDED_MODE.toLowerCase()))
-					{
-						try
-						{
-							res.allowExtendedMode = Boolean.valueOf(conPart.substring(ALLOW_EXTENDED_MODE.length()));
-						}
-						catch (NumberFormatException e)
-						{
-							throw new CloudSpannerSQLException(
-									"Invalid value for " + conPart + ": "
-											+ conPart.substring(ALLOW_EXTENDED_MODE.length()),
-									Code.INVALID_ARGUMENT, e);
-						}
-					}
+						res.allowExtendedMode = Boolean.valueOf(conPart.substring(ALLOW_EXTENDED_MODE.length()));
+					else if (conPartLower.startsWith(ASYNC_DDL_OPERATIONS.toLowerCase()))
+						res.asyncDdlOperations = Boolean.valueOf(conPart.substring(ASYNC_DDL_OPERATIONS.length()));
 					else
 						throw new CloudSpannerSQLException("Unknown URL parameter " + conPart, Code.INVALID_ARGUMENT);
 				}
@@ -168,18 +165,12 @@ public class CloudSpannerDriver implements Driver
 				minorVersion = parseInteger(lowerCaseInfo.getProperty(SIMULATE_PRODUCT_MINOR_VERSION
 						.substring(0, SIMULATE_PRODUCT_MINOR_VERSION.length() - 1).toLowerCase(),
 						defaultString(minorVersion)));
-				try
-				{
-					allowExtendedMode = Boolean.valueOf(lowerCaseInfo.getProperty(
-							ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1).toLowerCase(),
-							String.valueOf(allowExtendedMode)));
-				}
-				catch (NumberFormatException e)
-				{
-					throw new CloudSpannerSQLException(
-							"Invalid value for " + ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
-							Code.INVALID_ARGUMENT, e);
-				}
+				allowExtendedMode = Boolean.valueOf(lowerCaseInfo.getProperty(
+						ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1).toLowerCase(),
+						String.valueOf(allowExtendedMode)));
+				asyncDdlOperations = Boolean.valueOf(lowerCaseInfo.getProperty(
+						ASYNC_DDL_OPERATIONS.substring(0, ASYNC_DDL_OPERATIONS.length() - 1).toLowerCase(),
+						String.valueOf(asyncDdlOperations)));
 				if (!logLevelSet)
 					setLogLevel(OFF);
 			}
@@ -187,7 +178,7 @@ public class CloudSpannerDriver implements Driver
 
 		DriverPropertyInfo[] getPropertyInfo()
 		{
-			DriverPropertyInfo[] res = new DriverPropertyInfo[9];
+			DriverPropertyInfo[] res = new DriverPropertyInfo[10];
 			res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
 			res[0].description = "Google Cloud Project id";
 			res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
@@ -213,6 +204,9 @@ public class CloudSpannerDriver implements Driver
 			res[8] = new DriverPropertyInfo(ALLOW_EXTENDED_MODE.substring(0, ALLOW_EXTENDED_MODE.length() - 1),
 					String.valueOf(allowExtendedMode));
 			res[8].description = "Allow the driver to enter 'extended' mode for bulk operations. A value of false (default) indicates that the driver should never enter extended mode. If this property is set to true, the driver will execute all bulk DML-operations in a separate transaction when the number of records affected is greater than what will exceed the limitations of Cloud Spanner.";
+			res[9] = new DriverPropertyInfo(ASYNC_DDL_OPERATIONS.substring(0, ASYNC_DDL_OPERATIONS.length() - 1),
+					String.valueOf(asyncDdlOperations));
+			res[9].description = "Run DDL-operations (CREATE TABLE, ALTER TABLE, DROP TABLE, etc.) in asynchronous mode. When set to true, DDL-statements will be checked for correct syntax and other basic checks before the call returns. It can take up to several minutes before the statement has actually finished executing. The status of running DDL-operations can be queried by issuing a SHOW_DDL_OPERATIONS statement. DDL-operations that have finished can be cleared from this view by issuing a CLEAN_DDL_OPERATIONS statement.";
 
 			return res;
 		}
@@ -256,6 +250,7 @@ public class CloudSpannerDriver implements Driver
 		connection.setSimulateProductName(properties.productName);
 		connection.setSimulateMajorVersion(properties.majorVersion);
 		connection.setSimulateMinorVersion(properties.minorVersion);
+		connection.setAsyncDdlOperations(properties.asyncDdlOperations);
 		registerConnection(connection);
 
 		return connection;
