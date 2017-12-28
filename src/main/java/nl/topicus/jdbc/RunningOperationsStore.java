@@ -99,7 +99,8 @@ class RunningOperationsStore
 			}
 			catch (InterruptedException e)
 			{
-				throw new CloudSpannerSQLException("Wait for DDL-operations interrupted", Code.CANCELLED);
+				Thread.currentThread().interrupt();
+				throw new CloudSpannerSQLException("Wait for DDL-operations interrupted", Code.CANCELLED, e);
 			}
 		}
 	}
