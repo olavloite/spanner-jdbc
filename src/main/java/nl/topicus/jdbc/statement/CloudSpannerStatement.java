@@ -239,11 +239,11 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		}
 	}
 
-	private class SetDriverProperty extends CustomDriverStatement
+	private class SetConnectionProperty extends CustomDriverStatement
 	{
-		private SetDriverProperty()
+		private SetConnectionProperty()
 		{
-			super("SET_DRIVER_PROPERTY", false);
+			super("SET_CONNECTION_PROPERTY", false);
 		}
 
 		@Override
@@ -251,34 +251,34 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		{
 			if (sqlTokens.length != 4 || !"=".equals(sqlTokens[2]))
 				throw new CloudSpannerSQLException(
-						"Invalid argument(s) for SET_DRIVER_PROPERTY. Expected \"SET_DRIVER_PROPERTY propertyName=propertyValue\"",
+						"Invalid argument(s) for SET_CONNECTION_PROPERTY. Expected \"SET_CONNECTION_PROPERTY propertyName=propertyValue\"",
 						Code.INVALID_ARGUMENT);
-			return getConnection().setDynamicDriverProperty(sqlTokens[1], sqlTokens[3]);
+			return getConnection().setDynamicConnectionProperty(sqlTokens[1], sqlTokens[3]);
 		}
 	}
 
-	private class GetDriverProperty extends CustomDriverStatement
+	private class GetConnectionProperty extends CustomDriverStatement
 	{
-		private GetDriverProperty()
+		private GetConnectionProperty()
 		{
-			super("GET_DRIVER_PROPERTY", true);
+			super("GET_CONNECTION_PROPERTY", true);
 		}
 
 		@Override
 		public ResultSet executeQuery(String[] sqlTokens) throws SQLException
 		{
 			if (sqlTokens.length == 1)
-				return getConnection().getDynamicDriverProperties(CloudSpannerStatement.this);
+				return getConnection().getDynamicConnectionProperties(CloudSpannerStatement.this);
 			if (sqlTokens.length == 2)
-				return getConnection().getDynamicDriverProperty(CloudSpannerStatement.this, sqlTokens[1]);
+				return getConnection().getDynamicConnectionProperty(CloudSpannerStatement.this, sqlTokens[1]);
 			throw new CloudSpannerSQLException(
-					"Invalid argument(s) for GET_DRIVER_PROPERTY. Expected \"GET_DRIVER_PROPERTY propertyName\" or \"GET_DRIVER_PROPERTY\"",
+					"Invalid argument(s) for GET_CONNECTION_PROPERTY. Expected \"GET_CONNECTION_PROPERTY propertyName\" or \"GET_CONNECTION_PROPERTY\"",
 					Code.INVALID_ARGUMENT);
 		}
 	}
 
 	private final List<CustomDriverStatement> CUSTOM_DRIVER_STATEMENTS = Arrays.asList(new ShowDdlOperations(),
-			new CleanDdlOperations(), new SetDriverProperty(), new GetDriverProperty());
+			new CleanDdlOperations(), new SetConnectionProperty(), new GetConnectionProperty());
 
 	/**
 	 * Checks if a sql statement is a custom statement only recognized by this

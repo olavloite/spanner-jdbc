@@ -587,7 +587,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		this.asyncDdlOperations = asyncDdlOperations;
 	}
 
-	public int setDynamicDriverProperty(String propertyName, String propertyValue)
+	public int setDynamicConnectionProperty(String propertyName, String propertyValue)
 	{
 		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
 				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
@@ -604,12 +604,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return 0;
 	}
 
-	public ResultSet getDynamicDriverProperties(Statement statement)
+	public ResultSet getDynamicConnectionProperties(Statement statement)
 	{
-		return getDynamicDriverProperty(statement, null);
+		return getDynamicConnectionProperty(statement, null);
 	}
 
-	public ResultSet getDynamicDriverProperty(Statement statement, String propertyName)
+	public ResultSet getDynamicConnectionProperty(Statement statement, String propertyName)
 	{
 		Map<String, String> values = new HashMap<>();
 		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
