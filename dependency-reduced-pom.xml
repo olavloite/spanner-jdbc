@@ -4,7 +4,7 @@
   <groupId>nl.topicus</groupId>
   <artifactId>spanner-jdbc</artifactId>
   <name>spanner-jdbc</name>
-  <version>0.21-SNAPSHOT</version>
+  <version>0.22-SNAPSHOT</version>
   <description>JDBC Driver for Google Cloud Spanner</description>
   <url>https://github.com/olavloite/spanner-jdbc</url>
   <developers>
