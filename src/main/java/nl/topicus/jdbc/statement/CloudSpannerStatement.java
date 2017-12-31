@@ -424,9 +424,27 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		}
 	}
 
+	private class ResetConnectionProperty extends CustomDriverStatement
+	{
+		private ResetConnectionProperty()
+		{
+			super("RESET_CONNECTION_PROPERTY", true);
+		}
+
+		@Override
+		public int executeUpdate(String[] sqlTokens) throws SQLException
+		{
+			if (sqlTokens.length != 2)
+				throw new CloudSpannerSQLException(
+						"Invalid argument(s) for RESET_CONNECTION_PROPERTY. Expected \"RESET_CONNECTION_PROPERTY propertyName\"",
+						Code.INVALID_ARGUMENT);
+			return getConnection().resetDynamicConnectionProperty(sqlTokens[1]);
+		}
+	}
+
 	private final List<CustomDriverStatement> CUSTOM_DRIVER_STATEMENTS = Arrays.asList(new ShowDdlOperations(),
 			new CleanDdlOperations(), new WaitForDdlOperations(), new SetConnectionProperty(),
-			new GetConnectionProperty());
+			new GetConnectionProperty(), new ResetConnectionProperty());
 
 	/**
 	 * Checks if a sql statement is a custom statement only recognized by this

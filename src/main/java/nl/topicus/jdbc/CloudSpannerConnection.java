@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -105,8 +107,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private final Properties suppliedProperties;
 
+	private boolean originalAllowExtendedMode;
 	private boolean allowExtendedMode;
 
+	private boolean originalAsyncDdlOperations;
 	private boolean asyncDdlOperations;
 
 	private String simulateProductName;
@@ -126,13 +130,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private Map<String, Class<?>> typeMap = new HashMap<>();
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, CloudSpannerDatabaseSpecification database,
-			String credentialsPath, String oauthToken, boolean allowExtendedMode, Properties suppliedProperties)
-			throws SQLException
+			String credentialsPath, String oauthToken, Properties suppliedProperties) throws SQLException
 	{
 		this.driver = driver;
 		this.database = database;
 		this.url = url;
-		this.allowExtendedMode = allowExtendedMode;
 		this.suppliedProperties = suppliedProperties;
 
 		int logLevel = CloudSpannerDriver.getLogLevel();
@@ -587,9 +589,20 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	}
 
 	@Override
-	public void setAllowExtendedMode(boolean allowExtendedMode)
+	public int setAllowExtendedMode(boolean allowExtendedMode)
 	{
 		this.allowExtendedMode = allowExtendedMode;
+		return 1;
+	}
+
+	boolean isOriginalAllowExtendedMode()
+	{
+		return originalAllowExtendedMode;
+	}
+
+	void setOriginalAllowExtendedMode(boolean allowExtendedMode)
+	{
+		this.originalAllowExtendedMode = allowExtendedMode;
 	}
 
 	@Override
@@ -599,26 +612,85 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	}
 
 	@Override
-	public void setAsyncDdlOperations(boolean asyncDdlOperations)
+	public int setAsyncDdlOperations(boolean asyncDdlOperations)
 	{
 		this.asyncDdlOperations = asyncDdlOperations;
+		return 1;
 	}
 
+	boolean isOriginalAsyncDdlOperations()
+	{
+		return originalAsyncDdlOperations;
+	}
+
+	void setOriginalAsyncDdlOperations(boolean asyncDdlOperations)
+	{
+		this.originalAsyncDdlOperations = asyncDdlOperations;
+	}
+
+	/**
+	 * Set a dynamic connection property, such as AsyncDdlOperations
+	 * 
+	 * @param propertyName
+	 *            The name of the dynamic connection property
+	 * @param propertyValue
+	 *            The value to set
+	 * @return 1 if the property was set, 0 if not (this complies with the
+	 *         normal behaviour of executeUpdate(...) methods)
+	 */
 	public int setDynamicConnectionProperty(String propertyName, String propertyValue)
+	{
+		return getPropertySetter(propertyName).apply(Boolean.valueOf(propertyValue));
+	}
+
+	/**
+	 * Reset a dynamic connection property to its original value, such as
+	 * AsyncDdlOperations
+	 * 
+	 * @param propertyName
+	 *            The name of the dynamic connection property
+	 * @return 1 if the property was reset, 0 if not (this complies with the
+	 *         normal behaviour of executeUpdate(...) methods)
+	 */
+	public int resetDynamicConnectionProperty(String propertyName)
+	{
+		return getPropertySetter(propertyName).apply(getOriginalValueGetter(propertyName).get());
+	}
+
+	private Supplier<Boolean> getOriginalValueGetter(String propertyName)
 	{
 		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
 				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
 		{
-			setAllowExtendedMode(Boolean.valueOf(propertyValue));
-			return 1;
+			return this::isOriginalAllowExtendedMode;
 		}
 		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
 				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
-			setAsyncDdlOperations(Boolean.valueOf(propertyValue));
-			return 1;
+			return this::isOriginalAsyncDdlOperations;
 		}
-		return 0;
+		// Return a no-op to avoid null checks
+		return () -> {
+			return false;
+		};
+	}
+
+	private Function<Boolean, Integer> getPropertySetter(String propertyName)
+	{
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		{
+			return this::setAllowExtendedMode;
+		}
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		{
+			return this::setAsyncDdlOperations;
+		}
+		// Return a no-op to avoid null checks
+		return x -> {
+			return 0;
+		};
 	}
 
 	public ResultSet getDynamicConnectionProperties(Statement statement)

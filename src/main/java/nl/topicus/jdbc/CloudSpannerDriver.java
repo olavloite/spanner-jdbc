@@ -246,11 +246,14 @@ public class CloudSpannerDriver implements Driver
 		CloudSpannerDatabaseSpecification database = new CloudSpannerDatabaseSpecification(properties.project,
 				properties.instance, properties.database);
 		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, database, properties.keyFile,
-				properties.oauthToken, properties.allowExtendedMode, info);
+				properties.oauthToken, info);
 		connection.setSimulateProductName(properties.productName);
 		connection.setSimulateMajorVersion(properties.majorVersion);
 		connection.setSimulateMinorVersion(properties.minorVersion);
+		connection.setAllowExtendedMode(properties.allowExtendedMode);
+		connection.setOriginalAllowExtendedMode(properties.allowExtendedMode);
 		connection.setAsyncDdlOperations(properties.asyncDdlOperations);
+		connection.setOriginalAsyncDdlOperations(properties.asyncDdlOperations);
 		registerConnection(connection);
 
 		return connection;
