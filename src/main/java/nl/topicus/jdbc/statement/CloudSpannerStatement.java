@@ -417,9 +417,8 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 				throw new CloudSpannerSQLException(
 						"Invalid argument(s) for EXECUTE_DDL_BATCH. Expected \"EXECUTE_DDL_BATCH\"",
 						Code.INVALID_ARGUMENT);
-			try
+			try (CloudSpannerStatement statement = getConnection().createStatement())
 			{
-				CloudSpannerStatement statement = getConnection().createStatement();
 				List<String> operations = getConnection().getAutoBatchedDdlOperations();
 				for (String sql : operations)
 					statement.addBatch(sql);
