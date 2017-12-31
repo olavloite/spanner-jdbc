@@ -645,6 +645,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public int setAutoBatchDdlOperations(boolean autoBatchDdlOperations)
 	{
+		clearAutoBatchedDdlOperations();
 		this.autoBatchDdlOperations = autoBatchDdlOperations;
 		return 1;
 	}
