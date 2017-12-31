@@ -428,7 +428,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	{
 		private ResetConnectionProperty()
 		{
-			super("RESET_CONNECTION_PROPERTY", true);
+			super("RESET_CONNECTION_PROPERTY", false);
 		}
 
 		@Override
