@@ -269,6 +269,8 @@ public class CloudSpannerDriver implements Driver
 		connection.setOriginalAllowExtendedMode(properties.allowExtendedMode);
 		connection.setAsyncDdlOperations(properties.asyncDdlOperations);
 		connection.setOriginalAsyncDdlOperations(properties.asyncDdlOperations);
+		connection.setReportDefaultSchemaAsNull(properties.reportDefaultSchemaAsNull);
+		connection.setOriginalReportDefaultSchemaAsNull(properties.reportDefaultSchemaAsNull);
 		registerConnection(connection);
 
 		return connection;
