@@ -67,7 +67,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public String getCatalog() throws SQLException
 	{
-		return checkClosedAndReturnEmptyString();
+		return isReportDefaultSchemaAsNull() ? checkClosedAndReturnNull() : checkClosedAndReturnEmptyString();
 	}
 
 	@Override
@@ -215,7 +215,7 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	@Override
 	public String getSchema() throws SQLException
 	{
-		return checkClosedAndReturnEmptyString();
+		return isReportDefaultSchemaAsNull() ? checkClosedAndReturnNull() : checkClosedAndReturnEmptyString();
 	}
 
 	@Override

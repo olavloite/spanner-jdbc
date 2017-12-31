@@ -113,6 +113,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private boolean originalAsyncDdlOperations;
 	private boolean asyncDdlOperations;
 
+	private boolean originalReportDefaultSchemaAsNull = true;
+	private boolean reportDefaultSchemaAsNull = true;
+
 	private String simulateProductName;
 	private Integer simulateMajorVersion;
 	private Integer simulateMinorVersion;
@@ -626,6 +629,29 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	void setOriginalAsyncDdlOperations(boolean asyncDdlOperations)
 	{
 		this.originalAsyncDdlOperations = asyncDdlOperations;
+	}
+
+	@Override
+	public boolean isReportDefaultSchemaAsNull()
+	{
+		return reportDefaultSchemaAsNull;
+	}
+
+	@Override
+	public int setReportDefaultSchemaAsNull(boolean reportDefaultSchemaAsNull)
+	{
+		this.reportDefaultSchemaAsNull = reportDefaultSchemaAsNull;
+		return 1;
+	}
+
+	boolean isOriginalReportDefaultSchemaAsNull()
+	{
+		return originalReportDefaultSchemaAsNull;
+	}
+
+	void setOriginalReportDefaultSchemaAsNull(boolean reportDefaultSchemaAsNull)
+	{
+		this.originalReportDefaultSchemaAsNull = reportDefaultSchemaAsNull;
 	}
 
 	/**

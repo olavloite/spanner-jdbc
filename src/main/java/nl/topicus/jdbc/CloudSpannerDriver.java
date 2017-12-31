@@ -67,6 +67,7 @@ public class CloudSpannerDriver implements Driver
 
 		static final String ALLOW_EXTENDED_MODE = "AllowExtendedMode=";
 		static final String ASYNC_DDL_OPERATIONS = "AsyncDdlOperations=";
+		static final String REPORT_DEFAULT_SCHEMA_AS_NULL = "ReportDefaultSchemaAsNull=";
 
 		String project = null;
 		String instance = null;
@@ -78,6 +79,7 @@ public class CloudSpannerDriver implements Driver
 		Integer minorVersion = null;
 		boolean allowExtendedMode = false;
 		boolean asyncDdlOperations = false;
+		boolean reportDefaultSchemaAsNull = true;
 
 		static ConnectionProperties parse(String url) throws SQLException
 		{
@@ -111,6 +113,9 @@ public class CloudSpannerDriver implements Driver
 						res.allowExtendedMode = Boolean.valueOf(conPart.substring(ALLOW_EXTENDED_MODE.length()));
 					else if (conPartLower.startsWith(ASYNC_DDL_OPERATIONS.toLowerCase()))
 						res.asyncDdlOperations = Boolean.valueOf(conPart.substring(ASYNC_DDL_OPERATIONS.length()));
+					else if (conPartLower.startsWith(REPORT_DEFAULT_SCHEMA_AS_NULL.toLowerCase()))
+						res.reportDefaultSchemaAsNull = Boolean
+								.valueOf(conPart.substring(REPORT_DEFAULT_SCHEMA_AS_NULL.length()));
 					else
 						throw new CloudSpannerSQLException("Unknown URL parameter " + conPart, Code.INVALID_ARGUMENT);
 				}
@@ -171,6 +176,12 @@ public class CloudSpannerDriver implements Driver
 				asyncDdlOperations = Boolean.valueOf(lowerCaseInfo.getProperty(
 						ASYNC_DDL_OPERATIONS.substring(0, ASYNC_DDL_OPERATIONS.length() - 1).toLowerCase(),
 						String.valueOf(asyncDdlOperations)));
+				reportDefaultSchemaAsNull = Boolean
+						.valueOf(
+								lowerCaseInfo.getProperty(
+										REPORT_DEFAULT_SCHEMA_AS_NULL
+												.substring(0, REPORT_DEFAULT_SCHEMA_AS_NULL.length() - 1).toLowerCase(),
+										String.valueOf(asyncDdlOperations)));
 				if (!logLevelSet)
 					setLogLevel(OFF);
 			}
@@ -178,7 +189,7 @@ public class CloudSpannerDriver implements Driver
 
 		DriverPropertyInfo[] getPropertyInfo()
 		{
-			DriverPropertyInfo[] res = new DriverPropertyInfo[10];
+			DriverPropertyInfo[] res = new DriverPropertyInfo[11];
 			res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
 			res[0].description = "Google Cloud Project id";
 			res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
@@ -207,6 +218,10 @@ public class CloudSpannerDriver implements Driver
 			res[9] = new DriverPropertyInfo(ASYNC_DDL_OPERATIONS.substring(0, ASYNC_DDL_OPERATIONS.length() - 1),
 					String.valueOf(asyncDdlOperations));
 			res[9].description = "Run DDL-operations (CREATE TABLE, ALTER TABLE, DROP TABLE, etc.) in asynchronous mode. When set to true, DDL-statements will be checked for correct syntax and other basic checks before the call returns. It can take up to several minutes before the statement has actually finished executing. The status of running DDL-operations can be queried by issuing a SHOW_DDL_OPERATIONS statement. DDL-operations that have finished can be cleared from this view by issuing a CLEAN_DDL_OPERATIONS statement.";
+			res[10] = new DriverPropertyInfo(
+					REPORT_DEFAULT_SCHEMA_AS_NULL.substring(0, REPORT_DEFAULT_SCHEMA_AS_NULL.length() - 1),
+					String.valueOf(reportDefaultSchemaAsNull));
+			res[10].description = "Report the default schema and catalog as null (true) or as an empty string (false).";
 
 			return res;
 		}

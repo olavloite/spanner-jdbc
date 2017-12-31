@@ -34,6 +34,10 @@ public interface ICloudSpannerConnection extends Connection
 
 	public int setAsyncDdlOperations(boolean asyncDdlOperations);
 
+	public boolean isReportDefaultSchemaAsNull();
+
+	public int setReportDefaultSchemaAsNull(boolean reportDefaultSchemaAsNull);
+
 	public String getClientId();
 
 	public Timestamp getLastCommitTimestamp();
