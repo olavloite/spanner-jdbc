@@ -799,10 +799,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSchemas() throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CAT " + FROM_STATEMENT_WITHOUT_RESULTS;
-
-		CloudSpannerPreparedStatement statement = prepareStatement(sql);
-		return statement.executeQuery();
+		return getSchemas(null, null);
 	}
 
 	@Override
@@ -1198,8 +1195,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_SCHEM, '' AS TABLE_CATALOG " + FROM_STATEMENT_WITHOUT_RESULTS;
-		sql = sql + " ORDER BY TABLE_SCHEM ";
+		String sql = "SELECT SCHEMA_NAME AS TABLE_SCHEM, CATALOG_NAME AS TABLE_CATALOG FROM INFORMATION_SCHEMA.SCHEMATA "
+				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
+		if (catalog != null)
+			sql = sql + "AND UPPER(CATALOG_NAME) like ? ";
+		if (schemaPattern != null)
+			sql = sql + "AND UPPER(SCHEMA_NAME) like ? ";
+		sql = sql + "ORDER BY SCHEMA_NAME";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
