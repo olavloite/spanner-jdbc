@@ -40,7 +40,7 @@ class RunningOperationsStore
 				Operation<Void, UpdateDatabaseDdlMetadata> operation)
 		{
 			this.timeStarted = timeStarted;
-			this.sql = sql;
+			this.sql = new ArrayList<>(sql);
 			this.operation = operation;
 		}
 
