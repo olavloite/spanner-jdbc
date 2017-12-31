@@ -106,10 +106,11 @@ public class CloudSpannerDriverTest
 		{
 			Driver driver = getDriver();
 			DriverPropertyInfo[] properties = driver.getPropertyInfo("jdbc:cloudspanner://localhost", null);
-			assertEquals(11, properties.length);
+			assertEquals(12, properties.length);
 			for (DriverPropertyInfo property : properties)
 			{
-				if (property.name.equals("AllowExtendedMode") || property.name.equals("AsyncDdlOperations"))
+				if (property.name.equals("AllowExtendedMode") || property.name.equals("AsyncDdlOperations")
+						|| property.name.equals("AutoBatchDdlOperations"))
 					assertEquals("false", property.value);
 				else if (property.name.equals("ReportDefaultSchemaAsNull"))
 					assertEquals("true", property.value);
@@ -125,7 +126,7 @@ public class CloudSpannerDriverTest
 			DriverPropertyInfo[] properties = driver.getPropertyInfo(
 					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL",
 					null);
-			assertEquals(11, properties.length);
+			assertEquals(12, properties.length);
 			assertEquals("adroit-hall-xxx", properties[0].value);
 			assertEquals("test-instance", properties[1].value);
 			assertEquals("testdb", properties[2].value);

@@ -197,7 +197,7 @@ public class CloudSpannerDriver implements Driver
 
 		DriverPropertyInfo[] getPropertyInfo()
 		{
-			DriverPropertyInfo[] res = new DriverPropertyInfo[11];
+			DriverPropertyInfo[] res = new DriverPropertyInfo[12];
 			res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
 			res[0].description = "Google Cloud Project id";
 			res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
