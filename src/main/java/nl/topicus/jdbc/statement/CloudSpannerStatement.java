@@ -194,6 +194,11 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		{
 			return custom.executeUpdate(sqlTokens);
 		}
+		if (isDDLStatement(sqlTokens) && getConnection().isAutoBatchDdlOperations())
+		{
+			getConnection().addAutoBatchedDdlOperation(sql);
+			return 0;
+		}
 		PreparedStatement ps = getConnection().prepareStatement(sql);
 		return ps.executeUpdate();
 	}
@@ -353,6 +358,10 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		@Override
 		public ResultSet executeQuery(String[] sqlTokens) throws SQLException
 		{
+			if (sqlTokens.length != 1)
+				throw new CloudSpannerSQLException(
+						"Invalid argument(s) for SHOW_DDL_OPERATIONS. Expected \"SHOW_DDL_OPERATIONS\"",
+						Code.INVALID_ARGUMENT);
 			return getConnection().getRunningDDLOperations(CloudSpannerStatement.this);
 		}
 	}
@@ -367,6 +376,10 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		@Override
 		public int executeUpdate(String[] sqlTokens) throws SQLException
 		{
+			if (sqlTokens.length != 1)
+				throw new CloudSpannerSQLException(
+						"Invalid argument(s) for CLEAN_DDL_OPERATIONS. Expected \"CLEAN_DDL_OPERATIONS\"",
+						Code.INVALID_ARGUMENT);
 			return getConnection().clearFinishedDDLOperations();
 		}
 	}
@@ -381,8 +394,35 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		@Override
 		public int executeUpdate(String[] sqlTokens) throws SQLException
 		{
+			if (sqlTokens.length != 1)
+				throw new CloudSpannerSQLException(
+						"Invalid argument(s) for WAIT_FOR_DDL_OPERATIONS. Expected \"WAIT_FOR_DDL_OPERATIONS\"",
+						Code.INVALID_ARGUMENT);
 			getConnection().waitForDdlOperations();
 			return 0;
+		}
+	}
+
+	private class ExecuteDdlBatch extends CustomDriverStatement
+	{
+		private ExecuteDdlBatch()
+		{
+			super("EXECUTE_DDL_BATCH", false);
+		}
+
+		@Override
+		public int executeUpdate(String[] sqlTokens) throws SQLException
+		{
+			if (sqlTokens.length != 1)
+				throw new CloudSpannerSQLException(
+						"Invalid argument(s) for EXECUTE_DDL_BATCH. Expected \"EXECUTE_DDL_BATCH\"",
+						Code.INVALID_ARGUMENT);
+			CloudSpannerStatement statement = getConnection().createStatement();
+			List<String> operations = getConnection().getAutoBatchedDdlOperations();
+			for (String sql : operations)
+				statement.addBatch(sql);
+			statement.executeBatch();
+			return operations.size();
 		}
 	}
 
@@ -443,7 +483,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	}
 
 	private final List<CustomDriverStatement> CUSTOM_DRIVER_STATEMENTS = Arrays.asList(new ShowDdlOperations(),
-			new CleanDdlOperations(), new WaitForDdlOperations(), new SetConnectionProperty(),
+			new CleanDdlOperations(), new WaitForDdlOperations(), new ExecuteDdlBatch(), new SetConnectionProperty(),
 			new GetConnectionProperty(), new ResetConnectionProperty());
 
 	/**

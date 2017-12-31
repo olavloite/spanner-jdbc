@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +113,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private boolean originalAsyncDdlOperations;
 	private boolean asyncDdlOperations;
+
+	private boolean originalAutoBatchDdlOperations;
+	private boolean autoBatchDdlOperations;
+	private List<String> autoBatchedDdlOperations = new ArrayList<>();
 
 	private boolean originalReportDefaultSchemaAsNull = true;
 	private boolean reportDefaultSchemaAsNull = true;
@@ -632,6 +637,29 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	}
 
 	@Override
+	public boolean isAutoBatchDdlOperations()
+	{
+		return autoBatchDdlOperations;
+	}
+
+	@Override
+	public int setAutoBatchDdlOperations(boolean autoBatchDdlOperations)
+	{
+		this.autoBatchDdlOperations = autoBatchDdlOperations;
+		return 1;
+	}
+
+	boolean isOriginalAutoBatchDdlOperations()
+	{
+		return originalAutoBatchDdlOperations;
+	}
+
+	void setOriginalAutoBatchDdlOperations(boolean autoBatchDdlOperations)
+	{
+		this.originalAutoBatchDdlOperations = autoBatchDdlOperations;
+	}
+
+	@Override
 	public boolean isReportDefaultSchemaAsNull()
 	{
 		return reportDefaultSchemaAsNull;
@@ -695,6 +723,16 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		{
 			return this::isOriginalAsyncDdlOperations;
 		}
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		{
+			return this::isOriginalAutoBatchDdlOperations;
+		}
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		{
+			return this::isOriginalReportDefaultSchemaAsNull;
+		}
 		// Return a no-op to avoid null checks
 		return () -> {
 			return false;
@@ -712,6 +750,16 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
 			return this::setAsyncDdlOperations;
+		}
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		{
+			return this::setAutoBatchDdlOperations;
+		}
+		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		{
+			return this::setReportDefaultSchemaAsNull;
 		}
 		// Return a no-op to avoid null checks
 		return x -> {
@@ -742,6 +790,22 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 					CloudSpannerDriver.ConnectionProperties
 							.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS),
 					String.valueOf(isAsyncDdlOperations()));
+		}
+		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		{
+			values.put(
+					CloudSpannerDriver.ConnectionProperties
+							.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS),
+					String.valueOf(isAutoBatchDdlOperations()));
+		}
+		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
+				.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		{
+			values.put(
+					CloudSpannerDriver.ConnectionProperties
+							.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL),
+					String.valueOf(isReportDefaultSchemaAsNull()));
 		}
 		return createResultSet(statement, values);
 	}
@@ -867,6 +931,21 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void rollbackPreparedTransaction(String xid) throws SQLException
 	{
 		transaction.rollbackPreparedTransaction(xid);
+	}
+
+	public List<String> getAutoBatchedDdlOperations()
+	{
+		return Collections.unmodifiableList(autoBatchedDdlOperations);
+	}
+
+	public void clearAutoBatchedDdlOperations()
+	{
+		autoBatchedDdlOperations.clear();
+	}
+
+	public void addAutoBatchedDdlOperation(String sql)
+	{
+		autoBatchedDdlOperations.add(sql);
 	}
 
 }
