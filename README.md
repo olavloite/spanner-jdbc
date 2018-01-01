@@ -42,28 +42,38 @@ This driver does allow DML operations, although also limited because of the unde
 * As of version 0.16 and newer the driver also supports bulk INSERT/UPDATE/DELETE-statements. Please note that the underlying limitations of Google Cloud Spanner transactions still apply: https://cloud.google.com/spanner/quotas. This means a maximum of 20,000 mutations and 100MB of data in one transaction. You can get the driver to automatically bypass these quotas by setting the connection property AllowExtendedMode=true (see the Wiki-pages of this driver: https://github.com/olavloite/spanner-jdbc/wiki/URL-and-Connection-Properties).
 * As of version 0.20 and newer the driver has support for distributed transactions (XADatasource and XAResource).
 
-Example of bulk INSERT:  
-INSERT INTO TABLE1  
-(COL1, COL2, COL3)  
+Example of bulk INSERT:  
+```sql
+INSERT INTO TABLE1  
+(COL1, COL2, COL3)  
 SELECT SOMECOL1, SOMECOL2, SOMECOL3  
 FROM TABLE2  
-WHERE SOMECOL1>? AND SOMECOL3 LIKE ?  
+WHERE SOMECOL1>? AND SOMECOL3 LIKE ?  
+```
 
-Example of bulk INSERT-OR-UPDATE:  
-INSERT INTO TABLE1  
+Example of bulk INSERT-OR-UPDATE:  
+```sql
+INSERT INTO TABLE1  
 (COL1, COL2, COL3)  
 SELECT COL1, COL2+COL4, COL3*2  
 FROM TABLE1  
 WHERE COL4=?  
-ON DUPLICATE KEY UPDATE  
+ON DUPLICATE KEY UPDATE  
+```
 
-The above UPDATE example is equal to: UPDATE TABLE1 SET COL2=COL2+COL4 AND COL3=COL3*2 WHERE COL4=? (assuming that COL1 is the primary key of the table).
+The above UPDATE example is equal to:
+```sql
+UPDATE TABLE1 SET COL2=COL2+COL4 AND COL3=COL3*2 WHERE COL4=?
+```
+(assuming that COL1 is the primary key of the table).
 
-Example of bulk UPDATE:  
-UPDATE TABLE1 SET  
+Example of bulk UPDATE:  
+```sql
+UPDATE TABLE1 SET  
 COL1=COL1*1.1,  
 COL2=COL3+COL4  
-WHERE COL5<1000  
+WHERE COL5<1000  
+```
 
 The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 
