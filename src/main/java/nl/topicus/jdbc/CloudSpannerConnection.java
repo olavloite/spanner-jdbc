@@ -735,9 +735,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			return this::isOriginalReportDefaultSchemaAsNull;
 		}
 		// Return a no-op to avoid null checks
-		return () -> {
-			return false;
-		};
+		return () -> false;
 	}
 
 	private Function<Boolean, Integer> getPropertySetter(String propertyName)
@@ -763,9 +761,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			return this::setReportDefaultSchemaAsNull;
 		}
 		// Return a no-op to avoid null checks
-		return x -> {
-			return 0;
-		};
+		return x -> 0;
 	}
 
 	public ResultSet getDynamicConnectionProperties(Statement statement)
