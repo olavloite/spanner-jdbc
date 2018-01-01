@@ -101,7 +101,7 @@ The property 'SimulateProductName' indicates what database name should be return
 ## Spring Boot
 The driver has been tested with a number of popular frameworks. Have a look at this page for a list of sample applications with Spring Boot and related frameworks: http://www.googlecloudspanner.com/2017/12/google-cloud-spanner-and-spring-boot.html
 
-Credits
+### Credits
 This application uses Open Source components. You can find the source code of their open source projects along with license information below.
 
 A special thanks to Tobias for his great JSqlParser library.
