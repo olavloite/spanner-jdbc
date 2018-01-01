@@ -2,10 +2,12 @@ package nl.topicus.jdbc.statement;
 
 import static org.junit.Assert.assertEquals;
 
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -13,6 +15,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.Returns;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.statement.CloudSpannerStatement.BatchMode;
@@ -254,6 +257,29 @@ public class CloudSpannerStatementTest
 		thrown.expect(SQLFeatureNotSupportedException.class);
 		thrown.expectMessage("Custom statements may not be batched");
 		statement.addBatch("GET_CONNECTION_PROPERTY");
+	}
+
+	@Test
+	public void testAutoBatch() throws SQLException, NoSuchFieldException, SecurityException, IllegalArgumentException,
+			IllegalAccessException
+	{
+		CloudSpannerConnection connection = createConnection();
+		Mockito.doCallRealMethod().when(connection).addAutoBatchedDdlOperation(Mockito.anyString());
+		Mockito.doCallRealMethod().when(connection).clearAutoBatchedDdlOperations();
+		Mockito.doCallRealMethod().when(connection).getAutoBatchedDdlOperations();
+		Mockito.when(connection.isAutoBatchDdlOperations()).then(new Returns(true));
+		Field field = CloudSpannerConnection.class.getDeclaredField("autoBatchedDdlOperations");
+		field.setAccessible(true);
+		field.set(connection, new ArrayList<String>());
+
+		CloudSpannerStatement statement = connection.createStatement();
+		assertEquals(0, connection.getAutoBatchedDdlOperations().size());
+		statement.execute(BATCH_DDL);
+		assertEquals(1, connection.getAutoBatchedDdlOperations().size());
+		statement.execute(BATCH_DML);
+		assertEquals(1, connection.getAutoBatchedDdlOperations().size());
+		statement.execute("EXECUTE_DDL_BATCH");
+		assertEquals(0, connection.getAutoBatchedDdlOperations().size());
 	}
 
 }
