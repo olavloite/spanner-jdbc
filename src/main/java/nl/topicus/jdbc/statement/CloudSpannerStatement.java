@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -39,7 +40,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 
 	private List<String> batchStatements = new ArrayList<>();
 
-	private enum BatchMode
+	public enum BatchMode
 	{
 		None, DML, DDL;
 	}
@@ -81,6 +82,29 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		}
 
 		return result;
+	}
+
+	/**
+	 * Batching of DML and DDL statements together is not supported. The batch
+	 * mode of a statement is determined by the first statement that is batched.
+	 * All subsequent statements that are added to the batch must be of the same
+	 * type.
+	 * 
+	 * @return The current batch mode of this statement
+	 */
+	public BatchMode getCurrentBatchMode()
+	{
+		return batchMode;
+	}
+
+	/**
+	 * 
+	 * @return An unmodifiable list of the currently batched statements that
+	 *         will be executed if {@link #executeBatch()} is called.
+	 */
+	public List<String> getBatch()
+	{
+		return Collections.unmodifiableList(batchStatements);
 	}
 
 	@Override
