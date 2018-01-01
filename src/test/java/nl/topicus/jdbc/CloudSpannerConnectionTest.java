@@ -1,6 +1,7 @@
 package nl.topicus.jdbc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -38,12 +39,11 @@ public class CloudSpannerConnectionTest
 
 	public CloudSpannerConnectionTest() throws SQLException
 	{
-		subject = createConnection();
+		subject = createConnection(createDefaultProperties());
 	}
 
-	private static CloudSpannerConnection createConnection() throws SQLException
+	private static Properties createDefaultProperties()
 	{
-		String url = "jdbc:cloudspanner://localhost";
 		String project = "test-project-id";
 		String instance = "test-instance-id";
 		String database = "test-database-id";
@@ -55,6 +55,13 @@ public class CloudSpannerConnectionTest
 		properties.setProperty("Database", database);
 		properties.setProperty("SimulateProductName", product);
 		properties.setProperty("AllowExtendedMode", allowExtendedMode);
+
+		return properties;
+	}
+
+	private static CloudSpannerConnection createConnection(Properties properties) throws SQLException
+	{
+		String url = "jdbc:cloudspanner://localhost";
 		return (CloudSpannerConnection) DriverManager.getConnection(url, properties);
 	}
 
@@ -199,6 +206,41 @@ public class CloudSpannerConnectionTest
 	}
 
 	@Test
+	public void testOriginalSettings() throws SQLException
+	{
+		Properties properties = createDefaultProperties();
+		CloudSpannerConnection connection = createConnection(properties);
+		assertTrue(connection.isOriginalAllowExtendedMode());
+		assertFalse(connection.isOriginalAsyncDdlOperations());
+		assertFalse(connection.isOriginalAutoBatchDdlOperations());
+		assertTrue(connection.isOriginalReportDefaultSchemaAsNull());
+
+		connection.setAllowExtendedMode(false);
+		assertTrue(connection.isOriginalAllowExtendedMode());
+		assertFalse(connection.isAllowExtendedMode());
+		connection.resetDynamicConnectionProperty("AllowExtendedMode");
+		assertTrue(connection.isAllowExtendedMode());
+
+		connection.setAsyncDdlOperations(true);
+		assertFalse(connection.isOriginalAsyncDdlOperations());
+		assertTrue(connection.isAsyncDdlOperations());
+		connection.resetDynamicConnectionProperty("AsyncDdlOperations");
+		assertFalse(connection.isAsyncDdlOperations());
+
+		connection.setAutoBatchDdlOperations(true);
+		assertFalse(connection.isOriginalAutoBatchDdlOperations());
+		assertTrue(connection.isAutoBatchDdlOperations());
+		connection.resetDynamicConnectionProperty("AutoBatchDdlOperations");
+		assertFalse(connection.isAutoBatchDdlOperations());
+
+		connection.setReportDefaultSchemaAsNull(false);
+		assertTrue(connection.isOriginalReportDefaultSchemaAsNull());
+		assertFalse(connection.isReportDefaultSchemaAsNull());
+		connection.resetDynamicConnectionProperty("ReportDefaultSchemaAsNull");
+		assertTrue(connection.isReportDefaultSchemaAsNull());
+	}
+
+	@Test
 	public void testClosedAbstractCloudSpannerConnection() throws SQLException, NoSuchMethodException,
 			SecurityException, IllegalAccessException, IllegalArgumentException
 	{
@@ -306,7 +348,7 @@ public class CloudSpannerConnectionTest
 	private void testInvokeMethodOnClosedConnection(Method method, Object... args)
 			throws SQLException, IllegalAccessException, IllegalArgumentException
 	{
-		CloudSpannerConnection connection = createConnection();
+		CloudSpannerConnection connection = createConnection(createDefaultProperties());
 		connection.close();
 		boolean valid = false;
 		try
