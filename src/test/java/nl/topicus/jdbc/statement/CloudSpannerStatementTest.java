@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.statement;
 
+import static org.junit.Assert.assertEquals;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -13,6 +15,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.statement.CloudSpannerStatement.BatchMode;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.test.util.CloudSpannerTestObjects;
 
@@ -173,6 +176,84 @@ public class CloudSpannerStatementTest
 				new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true",
 						"AND AllowExtendedMode=true" },
 				statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
+	}
+
+	private static final String BATCH_DML = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (1,2,3)";
+	private static final String BATCH_DDL = "CREATE TABLE FOO (COL1 INT64, COL2 INT64) PRIMARY KEY (COL1)";
+
+	@Test
+	public void testBatchDML() throws SQLException
+	{
+		testBatch(BATCH_DML, BatchMode.DML);
+	}
+
+	@Test
+	public void testBatchDDL() throws SQLException
+	{
+		testBatch(BATCH_DDL, BatchMode.DDL);
+	}
+
+	private void testBatch(String sql, BatchMode expectedMode) throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+
+		assertEquals(BatchMode.None, statement.getCurrentBatchMode());
+		assertEquals(0, statement.getBatch().size());
+
+		statement.addBatch(sql);
+		assertEquals(expectedMode, statement.getCurrentBatchMode());
+		assertEquals(1, statement.getBatch().size());
+
+		int[] res = statement.executeBatch();
+		assertEquals(1, res.length);
+		assertEquals(0, statement.getBatch().size());
+	}
+
+	@Test
+	public void testBatchDMLThenDDL() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		thrown.expectMessage("DDL statements may not be batched together with DML statements");
+		statement.addBatch(BATCH_DML);
+		statement.addBatch(BATCH_DDL);
+	}
+
+	@Test
+	public void testBatchDDLThenDML() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		thrown.expectMessage("DML statements may not be batched together with DDL statements");
+		statement.addBatch(BATCH_DDL);
+		statement.addBatch(BATCH_DML);
+	}
+
+	@Test
+	public void testBatchSelect() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		thrown.expectMessage("SELECT statements may not be batched");
+		statement.addBatch("SELECT * FROM FOO");
+	}
+
+	@Test
+	public void testBatchCustom() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		thrown.expectMessage("Custom statements may not be batched");
+		statement.addBatch("GET_CONNECTION_PROPERTY");
 	}
 
 }
