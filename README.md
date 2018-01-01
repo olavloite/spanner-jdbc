@@ -75,19 +75,18 @@ COL2=COL3+COL4
 WHERE COL5<1000  
 ```
 
+## JPA and Hibernate
 The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 
 A simple example project using Spring Boot + JPA + Hibernate + this JDBC Driver can be found here: https://github.com/olavloite/spanner-jpa-example
 
 Example usage:
 
-****
+```java
 spring.datasource.driver-class-name=nl.topicus.jdbc.CloudSpannerDriver
 
 spring.datasource.url=jdbc:cloudspanner://localhost;Project=projectId;Instance=instanceId;Database=databaseName;SimulateProductName=PostgreSQL;PvtKeyPath=key_file;AllowExtendedMode=false
-
-****
-
+```
 
 The last two properties (SimulateProductName and PvtKeyPath) are optional.
 All properties can also be supplied in a Properties object instead of in the URL.
@@ -99,6 +98,8 @@ You either need to
 The server name (in the example above: localhost) is ignored by the driver, but as it is a mandatory part of a JDBC URL it needs to be specified.
 The property 'SimulateProductName' indicates what database name should be returned by the method DatabaseMetaData.getDatabaseProductName(). This can be used in combination with for example Spring Batch. Spring Batch automatically generates a schema for batch jobs, parameters etc., but does so only if it recognizes the underlying database. Supplying PostgreSQL as a value for this parameter, ensures the correct schema generation.
 
+## Spring Boot
+The driver has been tested with a number of popular frameworks. Have a look at this page for a list of sample applications with Spring Boot and related frameworks: http://www.googlecloudspanner.com/2017/12/google-cloud-spanner-and-spring-boot.html
 
 Credits
 This application uses Open Source components. You can find the source code of their open source projects along with license information below.
