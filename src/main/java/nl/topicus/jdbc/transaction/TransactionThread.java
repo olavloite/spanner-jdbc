@@ -77,8 +77,16 @@ class TransactionThread extends Thread
 
 	private BlockingQueue<ResultSet> resultSets = new LinkedBlockingQueue<>();
 
+	private static int threadInitNumber;
+
+	private static synchronized int nextThreadNum()
+	{
+		return threadInitNumber++;
+	}
+
 	TransactionThread(DatabaseClient dbClient)
 	{
+		super("Google Cloud Spanner JDBC Transaction Thread-" + nextThreadNum());
 		this.dbClient = dbClient;
 		setDaemon(true);
 	}
