@@ -205,7 +205,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		GoogleCredentials credentials = null;
 		if (oauthToken != null && oauthToken.length() > 0)
 		{
-			credentials = new GoogleCredentials(new AccessToken(oauthToken, null));
+			credentials = GoogleCredentials.create(new AccessToken(oauthToken, null));
 		}
 		return credentials;
 	}
