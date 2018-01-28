@@ -259,6 +259,44 @@ public class CloudSpannerConnectionTest
 	}
 
 	@Test
+	public void testIsValidAfterClose() throws SQLException
+	{
+		Properties properties = createDefaultProperties();
+		CloudSpannerConnection connection = createConnection(properties);
+		connection.close();
+		assertFalse(connection.isValid(0));
+		assertFalse(connection.isValid(1));
+	}
+
+	@Test
+	public void testGetDynamicConnectionProperties() throws SQLException
+	{
+		Properties properties = createDefaultProperties();
+		try (CloudSpannerConnection connection = createConnection(properties))
+		{
+			testGetDynamicConnectionProperty(connection, null, 4);
+			testGetDynamicConnectionProperty(connection, "ALLOWEXTENDEDMODE", 1);
+			testGetDynamicConnectionProperty(connection, "ASYNCDDLOPERATIONS", 1);
+			testGetDynamicConnectionProperty(connection, "AUTOBATCHDDLOPERATIONS", 1);
+			testGetDynamicConnectionProperty(connection, "REPORTDEFAULTSCHEMAASNULL", 1);
+			testGetDynamicConnectionProperty(connection, "NOT_A_PROPERTY", 0);
+		}
+	}
+
+	private void testGetDynamicConnectionProperty(Connection connection, String property, int expectedCount)
+			throws SQLException
+	{
+		try (ResultSet rs = connection.createStatement()
+				.executeQuery("GET_CONNECTION_PROPERTY" + (property == null ? "" : (" " + property))))
+		{
+			int count = 0;
+			while (rs.next())
+				count++;
+			assertEquals(expectedCount, count);
+		}
+	}
+
+	@Test
 	public void testClosedAbstractCloudSpannerConnection() throws SQLException, NoSuchMethodException,
 			SecurityException, IllegalAccessException, IllegalArgumentException
 	{

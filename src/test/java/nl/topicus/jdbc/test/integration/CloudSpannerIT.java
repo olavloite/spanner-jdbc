@@ -1,5 +1,6 @@
 package nl.topicus.jdbc.test.integration;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.beans.PropertyVetoException;
@@ -129,6 +130,8 @@ public class CloudSpannerIT
 			assertTrue(connection.isValid(0));
 			assertTrue(connection.isValid(1));
 			assertTrue(connection.isValid(1000));
+			// Check node count
+			assertEquals(1, ((CloudSpannerConnection) connection).getNodeCount());
 			// Test connection pooling
 			ConnectionPoolingTester poolingTester = new ConnectionPoolingTester();
 			poolingTester.testPooling((CloudSpannerConnection) connection);
