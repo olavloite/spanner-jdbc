@@ -166,7 +166,7 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 			debug("CloudSpannerXAConnection.getConnection called");
 		}
 
-		Connection conn = super.getConnection();
+		Connection connection = super.getConnection();
 
 		// When we're outside an XA transaction, autocommit
 		// is supposed to be true, per usual JDBC convention.
@@ -174,14 +174,14 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		// false.
 		if (state == STATE_IDLE)
 		{
-			conn.setAutoCommit(true);
+			connection.setAutoCommit(true);
 		}
 
 		/*
 		 * Wrap the connection in a proxy to forbid application from fiddling
 		 * with transaction state directly during an XA transaction
 		 */
-		ConnectionHandler handler = new ConnectionHandler(conn);
+		ConnectionHandler handler = new ConnectionHandler(connection);
 		return (ICloudSpannerConnection) Proxy.newProxyInstance(getClass().getClassLoader(),
 				new Class[] { Connection.class, ICloudSpannerConnection.class }, handler);
 	}
