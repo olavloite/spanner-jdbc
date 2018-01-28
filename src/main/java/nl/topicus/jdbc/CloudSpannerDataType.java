@@ -27,7 +27,7 @@ public enum CloudSpannerDataType
 		}
 
 		@Override
-		public Class<?> getJavaClass()
+		public Class<Boolean> getJavaClass()
 		{
 			return Boolean.class;
 		}
@@ -59,7 +59,7 @@ public enum CloudSpannerDataType
 		}
 
 		@Override
-		public Class<?> getJavaClass()
+		public Class<byte[]> getJavaClass()
 		{
 			return byte[].class;
 		}
@@ -91,7 +91,7 @@ public enum CloudSpannerDataType
 		}
 
 		@Override
-		public Class<?> getJavaClass()
+		public Class<Date> getJavaClass()
 		{
 			return Date.class;
 		}
@@ -125,7 +125,7 @@ public enum CloudSpannerDataType
 		}
 
 		@Override
-		public Class<?> getJavaClass()
+		public Class<Double> getJavaClass()
 		{
 			return Double.class;
 		}
@@ -165,7 +165,7 @@ public enum CloudSpannerDataType
 		}
 
 		@Override
-		public Class<?> getJavaClass()
+		public Class<Long> getJavaClass()
 		{
 			return Long.class;
 		}
@@ -203,7 +203,7 @@ public enum CloudSpannerDataType
 		}
 
 		@Override
-		public Class<?> getJavaClass()
+		public Class<String> getJavaClass()
 		{
 			return String.class;
 		}
@@ -235,7 +235,7 @@ public enum CloudSpannerDataType
 		}
 
 		@Override
-		public Class<?> getJavaClass()
+		public Class<Timestamp> getJavaClass()
 		{
 			return Timestamp.class;
 		}
@@ -274,7 +274,7 @@ public enum CloudSpannerDataType
 	 * @return The corresponding array elements of the type in the given result
 	 *         set
 	 */
-	public abstract List<? extends Object> getArrayElements(ResultSet rs, int columnIndex);
+	public abstract List<?> getArrayElements(ResultSet rs, int columnIndex);
 
 	public String getTypeName()
 	{
