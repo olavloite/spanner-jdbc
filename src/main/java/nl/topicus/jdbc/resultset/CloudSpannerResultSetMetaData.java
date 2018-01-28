@@ -82,8 +82,9 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 			return 50;
 		case Types.TIMESTAMP:
 			return 16;
+		default:
+			return 10;
 		}
-		return 10;
 	}
 
 	@Override
