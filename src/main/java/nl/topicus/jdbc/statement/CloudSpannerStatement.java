@@ -40,7 +40,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 
 	private List<String> batchStatements = new ArrayList<>();
 
-	static enum BatchMode
+	enum BatchMode
 	{
 		NONE, DML, DDL;
 	}
