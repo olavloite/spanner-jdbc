@@ -291,6 +291,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	 * on all space characters
 	 * 
 	 * @param sql
+	 *            The sql string to split into tokens
 	 * @return String array with all the parts of the sql statement
 	 */
 	protected String[] getTokens(String sql)
