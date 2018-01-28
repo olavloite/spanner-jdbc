@@ -55,6 +55,9 @@ public class TableDDLTester
 		log.info("Starting CreateTableWithArray");
 		runCreateTableTest("TEST_WITH_ARRAY", "CreateTableWithArray.sql");
 
+		log.info("Starting CreateQuotedTableTest");
+		runCreateTableTest("ASYNCTEST", "CreateTableAsyncTest.sql");
+
 		log.info("Finished CreateTableTests");
 	}
 
@@ -160,10 +163,11 @@ public class TableDDLTester
 
 	private void executeDdl(String file, boolean expectsError) throws IOException, URISyntaxException, SQLException
 	{
-		String sql = TestUtil.getSingleStatement(getClass(), file);
+		String[] sqls = TestUtil.getMultipleStatements(getClass(), file);
 		try
 		{
-			connection.createStatement().execute(sql);
+			for (String sql : sqls)
+				connection.createStatement().execute(sql);
 		}
 		catch (SQLException e)
 		{
