@@ -57,7 +57,7 @@ public class TableDDLTester
 		log.info("Starting CreateTableWithArray");
 		runCreateTableTest("TEST_WITH_ARRAY", "CreateTableWithArray.sql");
 
-		log.info("Starting CreateQuotedTableTest");
+		log.info("Starting CreateAsyncTableTest");
 		runCreateTableTest("ASYNCTEST", "CreateTableAsyncTest.sql");
 		for (int expectedCount = 1; expectedCount >= 0; expectedCount--)
 		{
