@@ -22,7 +22,7 @@ public class DeleteWorker extends AbstractTablePartWorker
 
 	public DeleteWorker(CloudSpannerConnection connection, Delete delete, boolean allowExtendedMode) throws SQLException
 	{
-		super(connection, createSelect(connection, delete), allowExtendedMode, DMLOperation.Delete);
+		super(connection, createSelect(connection, delete), allowExtendedMode, DMLOperation.DELETE);
 		this.delete = delete;
 	}
 

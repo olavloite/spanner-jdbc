@@ -624,11 +624,11 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		boolean isDuplicate = insert.isUseDuplicate();
 		InsertWorker.DMLOperation mode;
 		if (forceUpdate)
-			mode = DMLOperation.Update;
+			mode = DMLOperation.UPDATE;
 		else if (isDuplicate)
-			mode = DMLOperation.OnDuplicateKeyUpdate;
+			mode = DMLOperation.ONDUPLICATEKEYUPDATE;
 		else
-			mode = DMLOperation.Insert;
+			mode = DMLOperation.INSERT;
 		return new InsertWorker(getConnection(), select, insert, getConnection().isAllowExtendedMode(), mode);
 	}
 

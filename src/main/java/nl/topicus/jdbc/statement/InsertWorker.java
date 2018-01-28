@@ -51,7 +51,7 @@ public class InsertWorker extends AbstractTablePartWorker
 		String sql = "INSERT INTO " + CloudSpannerDriver.quoteIdentifier(insert.getTable().getName()) + " ("
 				+ columnNames + ") VALUES \n";
 		sql = sql + "(" + parameterNames + ")";
-		if (operation == DMLOperation.OnDuplicateKeyUpdate || operation == DMLOperation.Update)
+		if (operation == DMLOperation.ONDUPLICATEKEYUPDATE || operation == DMLOperation.UPDATE)
 		{
 			sql = sql + " ON DUPLICATE KEY UPDATE";
 		}

@@ -21,12 +21,12 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 {
 	private static enum Mode
 	{
-		Unknown, Normal, Extended;
+		UNKNOWN, NORMAL, EXTENDED;
 	}
 
-	public static enum DMLOperation
+	static enum DMLOperation
 	{
-		Insert, OnDuplicateKeyUpdate, Update, Delete;
+		INSERT, ONDUPLICATEKEYUPDATE, UPDATE, DELETE;
 	}
 
 	protected final CloudSpannerConnection connection;
@@ -44,7 +44,7 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 	 */
 	private boolean allowExtendedMode;
 
-	private Mode mode = Mode.Unknown;
+	private Mode mode = Mode.UNKNOWN;
 
 	protected final DMLOperation operation;
 
@@ -101,7 +101,7 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 			try (PreparedStatement statement = destination == null ? connection.prepareStatement(sql)
 					: destination.prepareStatement(sql))
 			{
-				if (operation == DMLOperation.Update)
+				if (operation == DMLOperation.UPDATE)
 				{
 					// Set force update
 					((CloudSpannerPreparedStatement) statement).setForceUpdate(true);
@@ -178,26 +178,26 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 
 	protected boolean isExtendedMode(long batchSize) throws SQLException
 	{
-		if (mode == Mode.Unknown)
+		if (mode == Mode.UNKNOWN)
 		{
 			if (!allowExtendedMode)
 			{
-				mode = Mode.Normal;
+				mode = Mode.NORMAL;
 			}
 			else
 			{
 				long count = getEstimatedRecordCount(select);
 				if (count >= batchSize)
 				{
-					mode = Mode.Extended;
+					mode = Mode.EXTENDED;
 				}
 				else
 				{
-					mode = Mode.Normal;
+					mode = Mode.NORMAL;
 				}
 			}
 		}
-		return mode == Mode.Extended;
+		return mode == Mode.EXTENDED;
 	}
 
 	public long getRecordCount()
