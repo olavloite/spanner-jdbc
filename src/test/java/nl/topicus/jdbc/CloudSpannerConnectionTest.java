@@ -54,6 +54,9 @@ public class CloudSpannerConnectionTest
 		properties.setProperty("Instance", instance);
 		properties.setProperty("Database", database);
 		properties.setProperty("SimulateProductName", product);
+		properties.setProperty("SimulateProductMajorVersion", "9");
+		properties.setProperty("SimulateProductMinorVersion", "4");
+
 		properties.setProperty("AllowExtendedMode", allowExtendedMode);
 
 		return properties;
@@ -78,11 +81,17 @@ public class CloudSpannerConnectionTest
 	}
 
 	@Test
-	public void testProductName()
+	public void testProductNameAndVersion() throws SQLException
 	{
 		Assert.assertEquals("PostgreSQL", subject.getProductName());
+		Assert.assertEquals(9, subject.getMetaData().getDatabaseMajorVersion());
+		Assert.assertEquals(4, subject.getMetaData().getDatabaseMinorVersion());
 		subject.setSimulateProductName(null);
+		subject.setSimulateMajorVersion(null);
+		subject.setSimulateMinorVersion(null);
 		Assert.assertEquals("Google Cloud Spanner", subject.getProductName());
+		Assert.assertEquals(1, subject.getMetaData().getDatabaseMajorVersion());
+		Assert.assertEquals(0, subject.getMetaData().getDatabaseMinorVersion());
 	}
 
 	@Test
@@ -238,6 +247,15 @@ public class CloudSpannerConnectionTest
 		assertFalse(connection.isReportDefaultSchemaAsNull());
 		connection.resetDynamicConnectionProperty("ReportDefaultSchemaAsNull");
 		assertTrue(connection.isReportDefaultSchemaAsNull());
+	}
+
+	@Test
+	public void testMultipleClosedIsNoOp() throws SQLException
+	{
+		Properties properties = createDefaultProperties();
+		CloudSpannerConnection connection = createConnection(properties);
+		connection.close();
+		connection.close();
 	}
 
 	@Test
