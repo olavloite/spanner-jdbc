@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import org.junit.Assert;
+
 import nl.topicus.jdbc.test.integration.TestUtil;
 
 /**
@@ -57,6 +59,20 @@ public class TableDDLTester
 
 		log.info("Starting CreateQuotedTableTest");
 		runCreateTableTest("ASYNCTEST", "CreateTableAsyncTest.sql");
+		for (int expectedCount = 1; expectedCount >= 0; expectedCount--)
+		{
+			try (ResultSet rs = connection.createStatement().executeQuery("SHOW_DDL_OPERATIONS"))
+			{
+				int count = 0;
+				while (rs.next())
+				{
+					count++;
+					Assert.assertTrue(rs.getBoolean("DONE"));
+				}
+				Assert.assertEquals("Number of running operations", expectedCount, count);
+				connection.createStatement().executeUpdate("CLEAR_DDL_OPERATIONS");
+			}
+		}
 
 		log.info("Finished CreateTableTests");
 	}
