@@ -108,7 +108,7 @@ final class ConnectionProperties
 		return val == null ? null : val.toString();
 	}
 
-	void setAdditionalConnectionProperties(Properties info) throws SQLException
+	void setAdditionalConnectionProperties(Properties info)
 	{
 		if (info != null)
 		{
