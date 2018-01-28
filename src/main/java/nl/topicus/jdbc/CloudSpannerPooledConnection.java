@@ -541,11 +541,23 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 		}
 	}
 
+	/**
+	 * This implementation does nothing as the driver does not support pooled
+	 * statements.
+	 * 
+	 * @see PooledConnection#removeStatementEventListener(StatementEventListener)
+	 */
 	@Override
 	public void removeStatementEventListener(StatementEventListener listener)
 	{
 	}
 
+	/**
+	 * This implementation does nothing as the driver does not support pooled
+	 * statements.
+	 * 
+	 * @see PooledConnection#removeStatementEventListener(StatementEventListener)
+	 */
 	@Override
 	public void addStatementEventListener(StatementEventListener listener)
 	{
