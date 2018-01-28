@@ -111,6 +111,9 @@ public class ConverterUtils
 				case Types.TIMESTAMP:
 					totalSize += 12;
 					break;
+				default:
+					totalSize += 8;
+					break;
 				}
 			}
 		}
