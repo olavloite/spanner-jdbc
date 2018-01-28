@@ -366,8 +366,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@Override
 	public String getProductName()
 	{
-		if (simulateProductName != null)
-			return simulateProductName;
+		if (getSimulateProductName() != null)
+			return getSimulateProductName();
 		return "Google Cloud Spanner";
 	}
 
