@@ -8,8 +8,6 @@ import java.sql.SQLException;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 
-import nl.topicus.jdbc.CloudSpannerDriver.ConnectionProperties;
-
 public class MockCloudSpannerConnection
 {
 

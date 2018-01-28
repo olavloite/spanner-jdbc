@@ -714,23 +714,23 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private Supplier<Boolean> getOriginalValueGetter(String propertyName)
 	{
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
 		{
 			return this::isOriginalAllowExtendedMode;
 		}
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
 			return this::isOriginalAsyncDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
 		{
 			return this::isOriginalAutoBatchDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
 		{
 			return this::isOriginalReportDefaultSchemaAsNull;
 		}
@@ -740,23 +740,23 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private Function<Boolean, Integer> getPropertySetter(String propertyName)
 	{
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
 		{
 			return this::setAllowExtendedMode;
 		}
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
 			return this::setAsyncDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
 		{
 			return this::setAutoBatchDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		if (propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
 		{
 			return this::setReportDefaultSchemaAsNull;
 		}
@@ -772,36 +772,36 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public ResultSet getDynamicConnectionProperty(Statement statement, String propertyName)
 	{
 		Map<String, String> values = new HashMap<>();
-		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
 		{
 			values.put(
-					CloudSpannerDriver.ConnectionProperties
-							.getPropertyName(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE),
+					ConnectionProperties
+							.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE),
 					String.valueOf(isAllowExtendedMode()));
 		}
-		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
 			values.put(
-					CloudSpannerDriver.ConnectionProperties
-							.getPropertyName(CloudSpannerDriver.ConnectionProperties.ASYNC_DDL_OPERATIONS),
+					ConnectionProperties
+							.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS),
 					String.valueOf(isAsyncDdlOperations()));
 		}
-		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
 		{
 			values.put(
-					CloudSpannerDriver.ConnectionProperties
-							.getPropertyName(CloudSpannerDriver.ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS),
+					ConnectionProperties
+							.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS),
 					String.valueOf(isAutoBatchDdlOperations()));
 		}
-		if (propertyName == null || propertyName.equalsIgnoreCase(CloudSpannerDriver.ConnectionProperties
-				.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
+				.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
 		{
 			values.put(
-					CloudSpannerDriver.ConnectionProperties
-							.getPropertyName(CloudSpannerDriver.ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL),
+					ConnectionProperties
+							.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL),
 					String.valueOf(isReportDefaultSchemaAsNull()));
 		}
 		return createResultSet(statement, values);

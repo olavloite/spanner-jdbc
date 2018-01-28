@@ -96,15 +96,15 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 	private Properties getProperties()
 	{
 		Properties info = new Properties();
-		setProperty(info, stripEqualsSign(CloudSpannerDriver.ConnectionProperties.PROJECT_URL_PART), getProjectId());
-		setProperty(info, stripEqualsSign(CloudSpannerDriver.ConnectionProperties.INSTANCE_URL_PART), getInstanceId());
-		setProperty(info, stripEqualsSign(CloudSpannerDriver.ConnectionProperties.DATABASE_URL_PART), getDatabase());
-		setProperty(info, stripEqualsSign(CloudSpannerDriver.ConnectionProperties.KEY_FILE_URL_PART), getPvtKeyPath());
-		setProperty(info, stripEqualsSign(CloudSpannerDriver.ConnectionProperties.OAUTH_ACCESS_TOKEN_URL_PART),
+		setProperty(info, stripEqualsSign(ConnectionProperties.PROJECT_URL_PART), getProjectId());
+		setProperty(info, stripEqualsSign(ConnectionProperties.INSTANCE_URL_PART), getInstanceId());
+		setProperty(info, stripEqualsSign(ConnectionProperties.DATABASE_URL_PART), getDatabase());
+		setProperty(info, stripEqualsSign(ConnectionProperties.KEY_FILE_URL_PART), getPvtKeyPath());
+		setProperty(info, stripEqualsSign(ConnectionProperties.OAUTH_ACCESS_TOKEN_URL_PART),
 				getOauthAccessToken());
-		setProperty(info, stripEqualsSign(CloudSpannerDriver.ConnectionProperties.SIMULATE_PRODUCT_NAME),
+		setProperty(info, stripEqualsSign(ConnectionProperties.SIMULATE_PRODUCT_NAME),
 				getSimulateProductName());
-		setProperty(info, stripEqualsSign(CloudSpannerDriver.ConnectionProperties.ALLOW_EXTENDED_MODE),
+		setProperty(info, stripEqualsSign(ConnectionProperties.ALLOW_EXTENDED_MODE),
 				isAllowExtendedMode());
 
 		return info;
