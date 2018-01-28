@@ -246,8 +246,7 @@ class TransactionThread extends Thread
 			catch (InterruptedException e)
 			{
 				Thread.currentThread().interrupt();
-				throw new CloudSpannerSQLException(statement.toString() + " failed: " + e.getMessage(), Code.ABORTED,
-						e);
+				throw new CloudSpannerSQLException(getFailedMessage(statement, e), Code.ABORTED, e);
 			}
 		}
 
@@ -267,8 +266,7 @@ class TransactionThread extends Thread
 				catch (InterruptedException e)
 				{
 					Thread.currentThread().interrupt();
-					throw new CloudSpannerSQLException(statement.toString() + " failed: " + e.getMessage(),
-							Code.ABORTED, e);
+					throw new CloudSpannerSQLException(getFailedMessage(statement, e), Code.ABORTED, e);
 				}
 			}
 		}
@@ -279,9 +277,13 @@ class TransactionThread extends Thread
 				code = ((CloudSpannerSQLException) exception).getCode();
 			if (exception instanceof SpannerException)
 				code = Code.forNumber(((SpannerException) exception).getCode());
-			throw new CloudSpannerSQLException(statement.toString() + " failed: " + exception.getMessage(), code,
-					exception);
+			throw new CloudSpannerSQLException(getFailedMessage(statement, exception), code, exception);
 		}
+	}
+
+	private String getFailedMessage(TransactionStopStatement statement, Exception e)
+	{
+		return statement.toString() + " failed: " + e.getMessage();
 	}
 
 	TransactionStatus getTransactionStatus()
