@@ -25,15 +25,17 @@ public class MetaDataTester
 {
 	private static final Logger log = Logger.getLogger(MetaDataTester.class.getName());
 
-	private static final String[] TABLES = { "TEST", "TESTCHILD", "TEST_QUOTED", "TEST_WITH_ARRAY" };
+	private static final String[] TABLES = { "ASYNCTEST", "TEST", "TESTCHILD", "TEST_QUOTED", "TEST_WITH_ARRAY" };
 
 	private static final String[][] COLUMNS = {
+			{ "ID", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" },
 			{ "ID", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" },
 			{ "ID", "CHILDID", "DESCRIPTION" },
 			{ "Id", "UUID", "active", "Amount", "Description", "Created_Date", "Last_Updated" },
 			{ "ID", "ID2", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" } };
 
 	private static final int[][] COLUMN_TYPES = {
+			{ Types.BIGINT, Types.BINARY, Types.BOOLEAN, Types.DOUBLE, Types.NVARCHAR, Types.DATE, Types.TIMESTAMP },
 			{ Types.BIGINT, Types.BINARY, Types.BOOLEAN, Types.DOUBLE, Types.NVARCHAR, Types.DATE, Types.TIMESTAMP },
 			{ Types.BIGINT, Types.BIGINT, Types.NVARCHAR },
 			{ Types.BIGINT, Types.BINARY, Types.BOOLEAN, Types.DOUBLE, Types.NVARCHAR, Types.DATE, Types.TIMESTAMP },
@@ -43,6 +45,7 @@ public class MetaDataTester
 	private static final Map<String, String[]> INDEX_COLUMNS = new HashMap<>();
 	static
 	{
+		INDEX_COLUMNS.put("ASYNCTEST.PRIMARY_KEY", new String[] { "ID" });
 		INDEX_COLUMNS.put("TEST.PRIMARY_KEY", new String[] { "ID" });
 		INDEX_COLUMNS.put("TEST_QUOTED.PRIMARY_KEY", new String[] { "Id" });
 		INDEX_COLUMNS.put("TESTCHILD.PRIMARY_KEY", new String[] { "ID", "CHILDID" });
@@ -54,6 +57,7 @@ public class MetaDataTester
 	private static final Map<String, Boolean> INDEX_UNIQUE = new HashMap<>();
 	static
 	{
+		INDEX_UNIQUE.put("ASYNCTEST.PRIMARY_KEY", Boolean.TRUE);
 		INDEX_UNIQUE.put("TEST.PRIMARY_KEY", Boolean.TRUE);
 		INDEX_UNIQUE.put("TESTCHILD.PRIMARY_KEY", Boolean.TRUE);
 		INDEX_UNIQUE.put("TEST_QUOTED.PRIMARY_KEY", Boolean.TRUE);
