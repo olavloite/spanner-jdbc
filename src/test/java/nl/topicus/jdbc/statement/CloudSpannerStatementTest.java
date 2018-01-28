@@ -201,7 +201,7 @@ public class CloudSpannerStatementTest
 		CloudSpannerConnection connection = createConnection();
 		CloudSpannerStatement statement = connection.createStatement();
 
-		assertEquals(BatchMode.None, statement.getCurrentBatchMode());
+		assertEquals(BatchMode.NONE, statement.getCurrentBatchMode());
 		assertEquals(0, statement.getBatch().size());
 
 		statement.addBatch(sql);

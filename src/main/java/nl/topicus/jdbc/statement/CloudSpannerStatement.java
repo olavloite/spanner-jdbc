@@ -36,13 +36,13 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 
 	private Pattern commentPattern = Pattern.compile("//.*|/\\*((.|\\n)(?!=*/))+\\*/|--.*(?=\\n)", Pattern.DOTALL);
 
-	private BatchMode batchMode = BatchMode.None;
+	private BatchMode batchMode = BatchMode.NONE;
 
 	private List<String> batchStatements = new ArrayList<>();
 
-	public enum BatchMode
+	static enum BatchMode
 	{
-		None, DML, DDL;
+		NONE, DML, DDL;
 	}
 
 	public CloudSpannerStatement(CloudSpannerConnection connection, DatabaseClient dbClient)
@@ -121,7 +121,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 			throw new SQLFeatureNotSupportedException("SELECT statements may not be batched");
 		}
 		boolean ddlStatement = isDDLStatement(sqlTokens);
-		if (batchMode == BatchMode.None)
+		if (batchMode == BatchMode.NONE)
 		{
 			if (ddlStatement)
 			{
@@ -156,7 +156,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	public void clearBatch() throws SQLException
 	{
 		batchStatements.clear();
-		batchMode = BatchMode.None;
+		batchMode = BatchMode.NONE;
 	}
 
 	@Override
@@ -178,7 +178,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 			}
 		}
 		batchStatements.clear();
-		batchMode = BatchMode.None;
+		batchMode = BatchMode.NONE;
 		return res;
 	}
 
