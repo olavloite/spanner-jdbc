@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.test.integration;
 
+import static org.junit.Assert.assertTrue;
+
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.sql.Connection;
@@ -123,6 +125,10 @@ public class CloudSpannerIT
 		try (Connection connection = createConnection())
 		{
 			connection.setAutoCommit(false);
+			// Test connection validity
+			assertTrue(connection.isValid(0));
+			assertTrue(connection.isValid(1));
+			assertTrue(connection.isValid(1000));
 			// Test connection pooling
 			ConnectionPoolingTester poolingTester = new ConnectionPoolingTester();
 			poolingTester.testPooling((CloudSpannerConnection) connection);
