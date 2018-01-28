@@ -93,12 +93,12 @@ public class Base64
 	/**
 	 * Specify encoding.
 	 */
-	public final static int ENCODE = 1;
+	public final static int ENCODE_FLAG = 1;
 
 	/**
 	 * Specify decoding.
 	 */
-	public final static int DECODE = 0;
+	public final static int DECODE_FLAG = 0;
 
 	/**
 	 * Don't break lines when encoding (violates strict Base64 specification)
