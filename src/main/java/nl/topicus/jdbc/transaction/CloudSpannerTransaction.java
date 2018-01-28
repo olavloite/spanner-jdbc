@@ -262,6 +262,7 @@ public class CloudSpannerTransaction implements TransactionContext
 	@Override
 	public void close()
 	{
+		// no-op as there is nothing to close or throw away
 	}
 
 }
