@@ -550,6 +550,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 	@Override
 	public void removeStatementEventListener(StatementEventListener listener)
 	{
+		// do nothing as pooled statements are not supported
 	}
 
 	/**
@@ -561,6 +562,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 	@Override
 	public void addStatementEventListener(StatementEventListener listener)
 	{
+		// do nothing as pooled statements are not supported
 	}
 
 	public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
