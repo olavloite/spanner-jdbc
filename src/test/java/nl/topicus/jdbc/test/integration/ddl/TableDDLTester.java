@@ -70,7 +70,7 @@ public class TableDDLTester
 					Assert.assertTrue(rs.getBoolean("DONE"));
 				}
 				Assert.assertEquals("Number of running operations", expectedCount, count);
-				connection.createStatement().executeUpdate("CLEAR_DDL_OPERATIONS");
+				connection.createStatement().executeUpdate("CLEAN_DDL_OPERATIONS");
 			}
 		}
 
