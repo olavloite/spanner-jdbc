@@ -80,8 +80,7 @@ final class ConnectionProperties
 				else if (conPartLower.startsWith(ASYNC_DDL_OPERATIONS.toLowerCase()))
 					res.asyncDdlOperations = Boolean.valueOf(conPart.substring(ASYNC_DDL_OPERATIONS.length()));
 				else if (conPartLower.startsWith(AUTO_BATCH_DDL_OPERATIONS.toLowerCase()))
-					res.autoBatchDdlOperations = Boolean
-							.valueOf(conPart.substring(AUTO_BATCH_DDL_OPERATIONS.length()));
+					res.autoBatchDdlOperations = Boolean.valueOf(conPart.substring(AUTO_BATCH_DDL_OPERATIONS.length()));
 				else if (conPartLower.startsWith(REPORT_DEFAULT_SCHEMA_AS_NULL.toLowerCase()))
 					res.reportDefaultSchemaAsNull = Boolean
 							.valueOf(conPart.substring(REPORT_DEFAULT_SCHEMA_AS_NULL.length()));
@@ -100,8 +99,8 @@ final class ConnectionProperties
 		}
 		catch (NumberFormatException e)
 		{
+			return null;
 		}
-		return null;
 	}
 
 	private static String defaultString(Integer val)
@@ -120,19 +119,19 @@ final class ConnectionProperties
 				lowerCaseInfo.setProperty(key.toLowerCase(), info.getProperty(key));
 			}
 
-			project = lowerCaseInfo.getProperty(
-					PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1).toLowerCase(), project);
+			project = lowerCaseInfo
+					.getProperty(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1).toLowerCase(), project);
 			instance = lowerCaseInfo.getProperty(
 					INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1).toLowerCase(), instance);
 			database = lowerCaseInfo.getProperty(
 					DATABASE_URL_PART.substring(0, DATABASE_URL_PART.length() - 1).toLowerCase(), database);
-			keyFile = lowerCaseInfo.getProperty(
-					KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1).toLowerCase(), keyFile);
-			oauthToken = lowerCaseInfo.getProperty(OAUTH_ACCESS_TOKEN_URL_PART
-					.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1).toLowerCase(), oauthToken);
+			keyFile = lowerCaseInfo
+					.getProperty(KEY_FILE_URL_PART.substring(0, KEY_FILE_URL_PART.length() - 1).toLowerCase(), keyFile);
+			oauthToken = lowerCaseInfo.getProperty(
+					OAUTH_ACCESS_TOKEN_URL_PART.substring(0, OAUTH_ACCESS_TOKEN_URL_PART.length() - 1).toLowerCase(),
+					oauthToken);
 			productName = lowerCaseInfo.getProperty(
-					SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1).toLowerCase(),
-					productName);
+					SIMULATE_PRODUCT_NAME.substring(0, SIMULATE_PRODUCT_NAME.length() - 1).toLowerCase(), productName);
 			majorVersion = parseInteger(lowerCaseInfo.getProperty(SIMULATE_PRODUCT_MAJOR_VERSION
 					.substring(0, SIMULATE_PRODUCT_MAJOR_VERSION.length() - 1).toLowerCase(),
 					defaultString(majorVersion)));
@@ -190,8 +189,7 @@ final class ConnectionProperties
 		res[9] = new DriverPropertyInfo(ASYNC_DDL_OPERATIONS.substring(0, ASYNC_DDL_OPERATIONS.length() - 1),
 				String.valueOf(asyncDdlOperations));
 		res[9].description = "Run DDL-operations (CREATE TABLE, ALTER TABLE, DROP TABLE, etc.) in asynchronous mode. When set to true, DDL-statements will be checked for correct syntax and other basic checks before the call returns. It can take up to several minutes before the statement has actually finished executing. The status of running DDL-operations can be queried by issuing a SHOW_DDL_OPERATIONS statement. DDL-operations that have finished can be cleared from this view by issuing a CLEAN_DDL_OPERATIONS statement.";
-		res[10] = new DriverPropertyInfo(
-				AUTO_BATCH_DDL_OPERATIONS.substring(0, AUTO_BATCH_DDL_OPERATIONS.length() - 1),
+		res[10] = new DriverPropertyInfo(AUTO_BATCH_DDL_OPERATIONS.substring(0, AUTO_BATCH_DDL_OPERATIONS.length() - 1),
 				String.valueOf(autoBatchDdlOperations));
 		res[10].description = "Automatically batch DDL-operations (CREATE TABLE, ALTER TABLE, DROP TABLE, etc.). When set to true, DDL-statements that are submitted through a Statement (not PreparedStatement) will automatically be batched together and only executed after an EXECUTE_DDL_BATCH statement. This property can be used in combination with the AsyncDdlOperations property to run a batch asynchronously or synchronously.";
 		res[11] = new DriverPropertyInfo(
