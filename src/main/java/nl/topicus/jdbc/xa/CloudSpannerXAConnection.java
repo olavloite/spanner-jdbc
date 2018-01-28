@@ -214,8 +214,7 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 				if (methodName.equals("commit") || methodName.equals("rollback") || methodName.equals("setSavePoint")
 						|| (methodName.equals("setAutoCommit") && (Boolean) args[0]))
 				{
-					throw new CloudSpannerSQLException(
-							"Transaction control methods setAutoCommit(true), commit, rollback and setSavePoint not allowed while an XA transaction is active.",
+					throw new CloudSpannerSQLException(CloudSpannerXAException.COMMIT_METHODS_NOT_ALLOWED_WHEN_ACTIVE,
 							Code.FAILED_PRECONDITION);
 				}
 			}
@@ -276,17 +275,19 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		// Check preconditions
 		if (flags != XAResource.TMNOFLAGS && flags != XAResource.TMRESUME && flags != XAResource.TMJOIN)
 		{
-			throw new CloudSpannerXAException("Invalid flags", Code.INVALID_ARGUMENT, XAException.XAER_INVAL);
+			throw new CloudSpannerXAException(CloudSpannerXAException.INVALID_FLAGS, Code.INVALID_ARGUMENT,
+					XAException.XAER_INVAL);
 		}
 
 		if (xid == null)
 		{
-			throw new CloudSpannerXAException("xid must not be null", Code.INVALID_ARGUMENT, XAException.XAER_INVAL);
+			throw new CloudSpannerXAException(CloudSpannerXAException.XID_NOT_NULL, Code.INVALID_ARGUMENT,
+					XAException.XAER_INVAL);
 		}
 
 		if (state == STATE_ACTIVE)
 		{
-			throw new CloudSpannerXAException("Connection is busy with another transaction", Code.FAILED_PRECONDITION,
+			throw new CloudSpannerXAException(CloudSpannerXAException.CONNECTION_BUSY, Code.FAILED_PRECONDITION,
 					XAException.XAER_PROTO);
 		}
 
@@ -297,7 +298,7 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		// Check implementation deficiency preconditions
 		if (flags == TMRESUME)
 		{
-			throw new CloudSpannerXAException("suspend/resume not implemented", Code.UNIMPLEMENTED,
+			throw new CloudSpannerXAException(CloudSpannerXAException.SUSPEND_NOT_IMPLEMENTED, Code.UNIMPLEMENTED,
 					XAException.XAER_RMERR);
 		}
 
@@ -306,19 +307,19 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		{
 			if (state != STATE_ENDED)
 			{
-				throw new CloudSpannerXAException("Transaction interleaving not implemented", Code.UNIMPLEMENTED,
-						XAException.XAER_RMERR);
+				throw new CloudSpannerXAException(CloudSpannerXAException.INTERLEAVING_NOT_IMPLEMENTED,
+						Code.UNIMPLEMENTED, XAException.XAER_RMERR);
 			}
 
 			if (!xid.equals(currentXid))
 			{
-				throw new CloudSpannerXAException("Transaction interleaving not implemented", Code.UNIMPLEMENTED,
-						XAException.XAER_RMERR);
+				throw new CloudSpannerXAException(CloudSpannerXAException.INTERLEAVING_NOT_IMPLEMENTED,
+						Code.UNIMPLEMENTED, XAException.XAER_RMERR);
 			}
 		}
 		else if (state == STATE_ENDED)
 		{
-			throw new CloudSpannerXAException("Transaction interleaving not implemented", Code.UNIMPLEMENTED,
+			throw new CloudSpannerXAException(CloudSpannerXAException.INTERLEAVING_NOT_IMPLEMENTED, Code.UNIMPLEMENTED,
 					XAException.XAER_RMERR);
 		}
 
@@ -334,11 +335,12 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 			}
 			catch (CloudSpannerSQLException ex)
 			{
-				throw new CloudSpannerXAException("Error disabling autocommit", ex, XAException.XAER_RMERR);
+				throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_DISABLING_AUTOCOMMIT, ex,
+						XAException.XAER_RMERR);
 			}
 			catch (SQLException ex)
 			{
-				throw new CloudSpannerXAException("Error disabling autocommit", ex, Code.UNKNOWN,
+				throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_DISABLING_AUTOCOMMIT, ex, Code.UNKNOWN,
 						XAException.XAER_RMERR);
 			}
 		}
@@ -370,24 +372,26 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 
 		if (flags != XAResource.TMSUSPEND && flags != XAResource.TMFAIL && flags != XAResource.TMSUCCESS)
 		{
-			throw new CloudSpannerXAException("Invalid flags", Code.INVALID_ARGUMENT, XAException.XAER_INVAL);
+			throw new CloudSpannerXAException(CloudSpannerXAException.INVALID_FLAGS, Code.INVALID_ARGUMENT,
+					XAException.XAER_INVAL);
 		}
 
 		if (xid == null)
 		{
-			throw new CloudSpannerXAException("xid must not be null", Code.INVALID_ARGUMENT, XAException.XAER_INVAL);
+			throw new CloudSpannerXAException(CloudSpannerXAException.XID_NOT_NULL, Code.INVALID_ARGUMENT,
+					XAException.XAER_INVAL);
 		}
 
 		if (state != STATE_ACTIVE || !currentXid.equals(xid))
 		{
-			throw new CloudSpannerXAException("tried to call end without corresponding start call",
-					Code.FAILED_PRECONDITION, XAException.XAER_PROTO);
+			throw new CloudSpannerXAException(CloudSpannerXAException.END_WITHOUT_START, Code.FAILED_PRECONDITION,
+					XAException.XAER_PROTO);
 		}
 
 		// Check implementation deficiency preconditions
 		if (flags == XAResource.TMSUSPEND)
 		{
-			throw new CloudSpannerXAException("suspend/resume not implemented", Code.UNIMPLEMENTED,
+			throw new CloudSpannerXAException(CloudSpannerXAException.SUSPEND_NOT_IMPLEMENTED, Code.UNIMPLEMENTED,
 					XAException.XAER_RMERR);
 		}
 
@@ -420,13 +424,12 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		// Check preconditions
 		if (!currentXid.equals(xid))
 		{
-			throw new CloudSpannerXAException(
-					"Not implemented: Prepare must be issued using the same connection that started the transaction",
-					Code.UNIMPLEMENTED, XAException.XAER_RMERR);
+			throw new CloudSpannerXAException(CloudSpannerXAException.PREPARE_WITH_SAME, Code.UNIMPLEMENTED,
+					XAException.XAER_RMERR);
 		}
 		if (state != STATE_ENDED)
 		{
-			throw new CloudSpannerXAException("Prepare called before end", Code.FAILED_PRECONDITION,
+			throw new CloudSpannerXAException(CloudSpannerXAException.PREPARE_BEFORE_END, Code.FAILED_PRECONDITION,
 					XAException.XAER_INVAL);
 		}
 
@@ -443,11 +446,12 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		}
 		catch (CloudSpannerSQLException ex)
 		{
-			throw new CloudSpannerXAException("Error preparing transaction", ex, XAException.XAER_RMERR);
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_PREPARING, ex, XAException.XAER_RMERR);
 		}
 		catch (SQLException ex)
 		{
-			throw new CloudSpannerXAException("Error preparing transaction", ex, Code.UNKNOWN, XAException.XAER_RMERR);
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_PREPARING, ex, Code.UNKNOWN,
+					XAException.XAER_RMERR);
 		}
 	}
 
@@ -466,7 +470,8 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		// Check preconditions
 		if (flag != TMSTARTRSCAN && flag != TMENDRSCAN && flag != TMNOFLAGS && flag != (TMSTARTRSCAN | TMENDRSCAN))
 		{
-			throw new CloudSpannerXAException("Invalid flag", Code.INVALID_ARGUMENT, XAException.XAER_INVAL);
+			throw new CloudSpannerXAException(CloudSpannerXAException.INVALID_FLAGS, Code.INVALID_ARGUMENT,
+					XAException.XAER_INVAL);
 		}
 
 		// We don't check for precondition 2, because we would have to add some
@@ -509,11 +514,12 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 			}
 			catch (CloudSpannerSQLException ex)
 			{
-				throw new CloudSpannerXAException("Error during recover", ex, XAException.XAER_RMERR);
+				throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_RECOVER, ex, XAException.XAER_RMERR);
 			}
 			catch (SQLException ex)
 			{
-				throw new CloudSpannerXAException("Error during recover", ex, Code.UNKNOWN, XAException.XAER_RMERR);
+				throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_RECOVER, ex, Code.UNKNOWN,
+						XAException.XAER_RMERR);
 			}
 		}
 	}
@@ -557,13 +563,15 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		{
 			if (ex.getCode().equals(Code.NOT_FOUND))
 			{
-				throw new CloudSpannerXAException("Error rolling back prepared transaction", ex, XAException.XAER_NOTA);
+				throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_ROLLBACK_PREPARED, ex,
+						XAException.XAER_NOTA);
 			}
-			throw new CloudSpannerXAException("Error rolling back prepared transaction", ex, XAException.XAER_RMERR);
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_ROLLBACK_PREPARED, ex,
+					XAException.XAER_RMERR);
 		}
 		catch (SQLException ex)
 		{
-			throw new CloudSpannerXAException("Error rolling back prepared transaction", ex, Code.UNKNOWN,
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_ROLLBACK_PREPARED, ex, Code.UNKNOWN,
 					XAException.XAER_RMERR);
 		}
 	}
@@ -578,7 +586,8 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 
 		if (xid == null)
 		{
-			throw new CloudSpannerXAException("xid must not be null", Code.INVALID_ARGUMENT, XAException.XAER_INVAL);
+			throw new CloudSpannerXAException(CloudSpannerXAException.XID_NOT_NULL, Code.INVALID_ARGUMENT,
+					XAException.XAER_INVAL);
 		}
 
 		if (onePhase)
@@ -610,13 +619,12 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 				// associated with this
 				// connection.
 				// Assume it's our fault.
-				throw new CloudSpannerXAException(
-						"Not implemented: one-phase commit must be issued using the same connection that was used to start it",
-						Code.UNIMPLEMENTED, XAException.XAER_RMERR);
+				throw new CloudSpannerXAException(CloudSpannerXAException.ONE_PHASE_SAME, Code.UNIMPLEMENTED,
+						XAException.XAER_RMERR);
 			}
 			if (state != STATE_ENDED)
 			{
-				throw new CloudSpannerXAException("commit called before end", Code.FAILED_PRECONDITION,
+				throw new CloudSpannerXAException(CloudSpannerXAException.COMMIT_BEFORE_END, Code.FAILED_PRECONDITION,
 						XAException.XAER_PROTO);
 			}
 
@@ -629,11 +637,11 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		}
 		catch (CloudSpannerSQLException ex)
 		{
-			throw new CloudSpannerXAException("Error during one-phase commit", ex, XAException.XAER_RMERR);
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_ONE_PHASE, ex, XAException.XAER_RMERR);
 		}
 		catch (SQLException ex)
 		{
-			throw new CloudSpannerXAException("Error during one-phase commit", ex, Code.UNKNOWN,
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_ONE_PHASE, ex, Code.UNKNOWN,
 					XAException.XAER_RMERR);
 		}
 	}
@@ -655,9 +663,8 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 			// would mess it up.
 			if (state != STATE_IDLE || conn.getTransaction().hasBufferedMutations())
 			{
-				throw new CloudSpannerXAException(
-						"Not implemented: 2nd phase commit must be issued using an idle connection",
-						Code.FAILED_PRECONDITION, XAException.XAER_RMERR);
+				throw new CloudSpannerXAException(CloudSpannerXAException.TWO_PHASE_IDLE, Code.FAILED_PRECONDITION,
+						XAException.XAER_RMERR);
 			}
 
 			String s = RecoveredXid.xidToString(xid);
@@ -675,11 +682,12 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 		}
 		catch (CloudSpannerSQLException ex)
 		{
-			throw new CloudSpannerXAException("Error committing prepared transaction", ex, XAException.XAER_RMERR);
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_COMMIT_PREPARED, ex,
+					XAException.XAER_RMERR);
 		}
 		catch (SQLException ex)
 		{
-			throw new CloudSpannerXAException("Error committing prepared transaction", ex, Code.UNKNOWN,
+			throw new CloudSpannerXAException(CloudSpannerXAException.ERROR_COMMIT_PREPARED, ex, Code.UNKNOWN,
 					XAException.XAER_RMERR);
 		}
 	}
@@ -696,7 +704,7 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 	@Override
 	public void forget(Xid xid) throws XAException
 	{
-		throw new CloudSpannerXAException("Heuristic commit/rollback not supported", Code.UNIMPLEMENTED,
+		throw new CloudSpannerXAException(CloudSpannerXAException.HEURISTIC_NOT_IMPLEMENTED, Code.UNIMPLEMENTED,
 				XAException.XAER_NOTA);
 	}
 

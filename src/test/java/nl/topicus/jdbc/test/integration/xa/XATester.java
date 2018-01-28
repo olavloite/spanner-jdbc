@@ -18,6 +18,7 @@ import org.junit.Assert;
 
 import com.google.rpc.Code;
 
+import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.CloudSpannerXADataSource;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.xa.CloudSpannerXAConnection;
@@ -35,6 +36,8 @@ public class XATester
 	public void testXA(String projectId, String instanceId, String database, String pvtKeyPath) throws SQLException
 	{
 		log.info("Starting XA tests");
+		int originalLogLevel = CloudSpannerDriver.getLogLevel();
+		CloudSpannerDriver.setLogLevel(CloudSpannerDriver.DEBUG);
 		CloudSpannerXADataSource ds = new CloudSpannerXADataSource();
 		ds.setProjectId(projectId);
 		ds.setInstanceId(instanceId);
@@ -54,6 +57,10 @@ public class XATester
 		{
 			throw new CloudSpannerSQLException("Exception occurred during XA tests", Code.INTERNAL, e);
 		}
+		finally
+		{
+			CloudSpannerDriver.setLogLevel(originalLogLevel);
+		}
 		log.info("Finished XA tests");
 	}
 
@@ -67,10 +74,8 @@ public class XATester
 			throws SQLException, XAException
 	{
 		log.info("Starting XA simple transaction test");
-		Random rnd = new Random();
 		Connection connection = xaConnection.getConnection();
-		int id = rnd.nextInt();
-		Xid xid = RecoveredXid.stringToXid(String.valueOf(id) + "_Z3RyaWQ=_YnF1YWw=");
+		Xid xid = getRandomXid();
 		xaConnection.start(xid, XAResource.TMNOFLAGS);
 		String sql = "insert into test (id, uuid, active, amount, description, created_date, last_updated) values (?, ?, ?, ?, ?, ?, ?)";
 		PreparedStatement statement = connection.prepareStatement(sql);
@@ -115,10 +120,8 @@ public class XATester
 
 	private Xid prepareDeleteRow(CloudSpannerXAConnection xaConnection) throws SQLException, XAException
 	{
-		Random rnd = new Random();
 		Connection connection = xaConnection.getConnection();
-		int id = rnd.nextInt();
-		Xid xid = RecoveredXid.stringToXid(String.valueOf(id) + "_Z3RyaWQ=_YnF1YWw=");
+		Xid xid = getRandomXid();
 		xaConnection.start(xid, XAResource.TMNOFLAGS);
 		String sql = "delete from test where id=1000000";
 		PreparedStatement statement = connection.prepareStatement(sql);
@@ -156,6 +159,13 @@ public class XATester
 		statement.setString(5, "xa test");
 		statement.setDate(6, new Date(1000));
 		statement.setTimestamp(7, new Timestamp(10000));
+	}
+
+	private Xid getRandomXid()
+	{
+		Random rnd = new Random();
+		int id = rnd.nextInt();
+		return RecoveredXid.stringToXid(String.valueOf(id) + "_Z3RyaWQ=_YnF1YWw=");
 	}
 
 }
