@@ -510,7 +510,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		}
 	}
 
-	private final List<CustomDriverStatement> CUSTOM_DRIVER_STATEMENTS = Arrays.asList(new ShowDdlOperations(),
+	private final List<CustomDriverStatement> customDriverStatements = Arrays.asList(new ShowDdlOperations(),
 			new CleanDdlOperations(), new WaitForDdlOperations(), new ExecuteDdlBatch(), new SetConnectionProperty(),
 			new GetConnectionProperty(), new ResetConnectionProperty());
 
@@ -528,7 +528,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	{
 		if (sqlTokens.length > 0)
 		{
-			for (CustomDriverStatement statement : CUSTOM_DRIVER_STATEMENTS)
+			for (CustomDriverStatement statement : customDriverStatements)
 			{
 				if (sqlTokens[0].equalsIgnoreCase(statement.statement))
 				{
