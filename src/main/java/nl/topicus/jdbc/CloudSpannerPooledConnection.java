@@ -497,19 +497,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			// From Object
 			if (method.getDeclaringClass().equals(Object.class))
 			{
-				if (methodName.equals("toString"))
-				{
-					return "Pooled statement wrapping physical statement " + st;
-				}
-				if (methodName.equals("hashCode"))
-				{
-					return System.identityHashCode(proxy);
-				}
-				if (methodName.equals("equals"))
-				{
-					return proxy == args[0];
-				}
-				return method.invoke(st, args);
+				return handleInvokeObjectMethod(proxy, method, args);
 			}
 
 			// All the rest is from the Statement interface
@@ -519,15 +507,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			}
 			if (methodName.equals("close"))
 			{
-				if (st == null || st.isClosed())
-				{
-					return null;
-				}
-				con = null;
-				final Statement oldSt = st;
-				st = null;
-				oldSt.close();
-				return null;
+				handleInvokeClose();
 			}
 			if (st == null || st.isClosed())
 			{
@@ -555,6 +535,37 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 				}
 				throw te;
 			}
+		}
+
+		private Object handleInvokeObjectMethod(Object proxy, Method method, Object[] args) throws Throwable
+		{
+			final String methodName = method.getName();
+			if (methodName.equals("toString"))
+			{
+				return "Pooled statement wrapping physical statement " + st;
+			}
+			if (methodName.equals("hashCode"))
+			{
+				return System.identityHashCode(proxy);
+			}
+			if (methodName.equals("equals"))
+			{
+				return proxy == args[0];
+			}
+			return method.invoke(st, args);
+		}
+
+		private Object handleInvokeClose() throws Throwable
+		{
+			if (st == null || st.isClosed())
+			{
+				return null;
+			}
+			con = null;
+			final Statement oldSt = st;
+			st = null;
+			oldSt.close();
+			return null;
 		}
 	}
 
