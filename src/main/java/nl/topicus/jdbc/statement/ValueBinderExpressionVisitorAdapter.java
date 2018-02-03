@@ -102,7 +102,7 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		else if (Character[].class.isAssignableFrom(value.getClass()))
 		{
 			List<Character> list = Arrays.asList((Character[]) value);
-			String s = list.stream().map(c -> c.toString()).reduce("", String::concat);
+			String s = list.stream().map(Object::toString).reduce("", String::concat);
 			return binder.to(s);
 		}
 		else if (char[].class.isAssignableFrom(value.getClass()))
