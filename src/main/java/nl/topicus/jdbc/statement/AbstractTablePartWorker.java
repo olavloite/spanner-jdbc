@@ -19,12 +19,12 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 public abstract class AbstractTablePartWorker implements Callable<ConversionResult>
 {
-	private static enum Mode
+	private enum Mode
 	{
 		UNKNOWN, NORMAL, EXTENDED;
 	}
 
-	static enum DMLOperation
+	enum DMLOperation
 	{
 		INSERT, ONDUPLICATEKEYUPDATE, UPDATE, DELETE;
 	}
