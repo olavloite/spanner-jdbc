@@ -18,6 +18,16 @@ public class CloudSpannerDataSourceTest
 	public void createDataSourceTest() throws SQLException
 	{
 		CloudSpannerDataSource subject = new CloudSpannerDataSource();
+		setCommonDataSourceTestProperties(subject);
+		Connection con = subject.getConnection();
+		Assert.assertNotNull(con);
+		Assert.assertTrue(con.isWrapperFor(CloudSpannerConnection.class));
+		CloudSpannerConnection connection = con.unwrap(CloudSpannerConnection.class);
+		testCommonDataSourceTestProperties(connection);
+	}
+
+	public static void setCommonDataSourceTestProperties(CloudSpannerDataSource subject) throws SQLException
+	{
 		subject.setProjectId("helpful-adroit-123456");
 		subject.setInstanceId("test-instance");
 		subject.setDatabase("test");
@@ -28,10 +38,10 @@ public class CloudSpannerDataSourceTest
 		subject.setAllowExtendedMode(true);
 		subject.setLoginTimeout(10);
 		subject.setLogWriter(new PrintWriter(System.out));
-		Connection con = subject.getConnection();
-		Assert.assertNotNull(con);
-		Assert.assertTrue(con.isWrapperFor(CloudSpannerConnection.class));
-		CloudSpannerConnection connection = con.unwrap(CloudSpannerConnection.class);
+	}
+
+	public static void testCommonDataSourceTestProperties(CloudSpannerConnection connection)
+	{
 		Assert.assertEquals("jdbc:cloudspanner://localhost", connection.getUrl());
 		Assert.assertEquals("PostgreSQL", connection.getProductName());
 		Assert.assertEquals("helpful-adroit-123456", connection.getSuppliedProperties().getProperty("Project"));

@@ -40,11 +40,13 @@ import nl.topicus.jdbc.xa.CloudSpannerXAConnection;
  */
 public class CloudSpannerXADataSource extends CloudSpannerDataSource implements XADataSource
 {
+	private boolean createXATable = true;
+
 	@Override
 	public CloudSpannerXAConnection getXAConnection() throws SQLException
 	{
 		Connection con = super.getConnection();
-		return new CloudSpannerXAConnection((CloudSpannerConnection) con);
+		return new CloudSpannerXAConnection((CloudSpannerConnection) con, isCreateXATable());
 	}
 
 	@Override
@@ -62,5 +64,15 @@ public class CloudSpannerXADataSource extends CloudSpannerDataSource implements 
 	public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException
 	{
 		throw new SQLFeatureNotSupportedException("Method getParentLogger() is not supported");
+	}
+
+	public boolean isCreateXATable()
+	{
+		return createXATable;
+	}
+
+	public void setCreateXATable(boolean createXATable)
+	{
+		this.createXATable = createXATable;
 	}
 }

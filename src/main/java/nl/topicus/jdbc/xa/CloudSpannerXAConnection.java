@@ -109,11 +109,17 @@ public class CloudSpannerXAConnection extends CloudSpannerPooledConnection imple
 
 	public CloudSpannerXAConnection(CloudSpannerConnection conn) throws SQLException
 	{
+		this(conn, true);
+	}
+
+	public CloudSpannerXAConnection(CloudSpannerConnection conn, boolean createXATable) throws SQLException
+	{
 		super(conn, true, true);
 		this.conn = conn;
 		this.state = STATE_IDLE;
 		this.logger = conn.getLogger();
-		checkAndCreateTable();
+		if (createXATable)
+			checkAndCreateTable();
 	}
 
 	private void checkAndCreateTable() throws SQLException
