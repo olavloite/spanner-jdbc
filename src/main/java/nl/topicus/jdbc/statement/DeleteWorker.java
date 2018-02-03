@@ -60,7 +60,7 @@ public class DeleteWorker extends AbstractTablePartWorker
 	protected String createSQL() throws SQLException
 	{
 		TableKeyMetaData table = connection.getTable(CloudSpannerDriver.unquoteIdentifier(getTable().getName()));
-		List<String> keyCols = table.getKeyColumns().stream().map(x -> CloudSpannerDriver.quoteIdentifier(x))
+		List<String> keyCols = table.getKeyColumns().stream().map(CloudSpannerDriver::quoteIdentifier)
 				.collect(Collectors.toList());
 		String sql = "DELETE FROM " + CloudSpannerDriver.quoteIdentifier(delete.getTable().getName()) + " WHERE ";
 		boolean first = true;
