@@ -320,26 +320,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			// From Object
 			if (method.getDeclaringClass().equals(Object.class))
 			{
-				if (methodName.equals("toString"))
-				{
-					return "Pooled connection wrapping physical connection " + con;
-				}
-				if (methodName.equals("equals"))
-				{
-					return proxy == args[0];
-				}
-				if (methodName.equals("hashCode"))
-				{
-					return System.identityHashCode(proxy);
-				}
-				try
-				{
-					return method.invoke(con, args);
-				}
-				catch (InvocationTargetException e)
-				{
-					throw e.getTargetException();
-				}
+				return handleInvokeObjectMethod(method, args);
 			}
 
 			// All the rest is from the Connection or PGConnection interface
@@ -349,38 +330,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			}
 			if (methodName.equals("close"))
 			{
-				// we are already closed and a double close
-				// is not an error.
-				if (con == null)
-				{
-					return null;
-				}
-
-				SQLException ex = null;
-				if (!con.isClosed())
-				{
-					if (!isXA && !con.getAutoCommit())
-					{
-						try
-						{
-							con.rollback();
-						}
-						catch (SQLException e)
-						{
-							ex = e;
-						}
-					}
-					con.clearWarnings();
-				}
-				con = null;
-				this.proxy = null;
-				last = null;
-				fireConnectionClosed();
-				if (ex != null)
-				{
-					throw ex;
-				}
-				return null;
+				return handleInvokeClose();
 			}
 			if (con == null || con.isClosed())
 			{
@@ -427,6 +377,67 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 				}
 				throw te;
 			}
+		}
+
+		private Object handleInvokeObjectMethod(Method method, Object[] args) throws Throwable
+		{
+			final String methodName = method.getName();
+			if (methodName.equals("toString"))
+			{
+				return "Pooled connection wrapping physical connection " + con;
+			}
+			if (methodName.equals("equals"))
+			{
+				return proxy == args[0];
+			}
+			if (methodName.equals("hashCode"))
+			{
+				return System.identityHashCode(proxy);
+			}
+			try
+			{
+				return method.invoke(con, args);
+			}
+			catch (InvocationTargetException e)
+			{
+				throw e.getTargetException();
+			}
+		}
+
+		private Object handleInvokeClose() throws Throwable
+		{
+			// we are already closed and a double close
+			// is not an error.
+			if (con == null)
+			{
+				return null;
+			}
+
+			SQLException ex = null;
+			if (!con.isClosed())
+			{
+				if (!isXA && !con.getAutoCommit())
+				{
+					try
+					{
+						con.rollback();
+					}
+					catch (SQLException e)
+					{
+						ex = e;
+					}
+				}
+				con.clearWarnings();
+			}
+			con = null;
+			this.proxy = null;
+			last = null;
+			fireConnectionClosed();
+			if (ex != null)
+			{
+				throw ex;
+			}
+			return null;
 		}
 
 		Connection getProxy()
