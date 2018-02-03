@@ -507,7 +507,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			}
 			if (methodName.equals("close"))
 			{
-				handleInvokeClose();
+				return handleInvokeClose();
 			}
 			if (st == null || st.isClosed())
 			{
