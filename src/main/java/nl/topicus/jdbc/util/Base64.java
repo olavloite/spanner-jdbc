@@ -88,50 +88,50 @@ public class Base64
 	/**
 	 * No options specified. Value is zero.
 	 */
-	public final static int NO_OPTIONS = 0;
+	public static final int NO_OPTIONS = 0;
 
 	/**
 	 * Specify encoding.
 	 */
-	public final static int ENCODE_FLAG = 1;
+	public static final int ENCODE_FLAG = 1;
 
 	/**
 	 * Specify decoding.
 	 */
-	public final static int DECODE_FLAG = 0;
+	public static final int DECODE_FLAG = 0;
 
 	/**
 	 * Don't break lines when encoding (violates strict Base64 specification)
 	 */
-	public final static int DONT_BREAK_LINES = 8;
+	public static final int DONT_BREAK_LINES = 8;
 
 	/* ******** P R I V A T E F I E L D S ******** */
 
 	/**
 	 * Maximum line length (76) of Base64 output.
 	 */
-	private final static int MAX_LINE_LENGTH = 76;
+	private static final int MAX_LINE_LENGTH = 76;
 
 	/**
 	 * The equals sign (=) as a byte.
 	 */
-	private final static byte EQUALS_SIGN = (byte) '=';
+	private static final byte EQUALS_SIGN = (byte) '=';
 
 	/**
 	 * The new line character (\n) as a byte.
 	 */
-	private final static byte NEW_LINE = (byte) '\n';
+	private static final byte NEW_LINE = (byte) '\n';
 
 	/**
 	 * Preferred encoding.
 	 */
-	private final static String PREFERRED_ENCODING = "UTF-8";
+	private static final String PREFERRED_ENCODING = "UTF-8";
 
 	/**
 	 * The 64 valid Base64 values.
 	 */
-	private final static byte[] ALPHABET;
-	private final static byte[] _NATIVE_ALPHABET = { /*
+	private static final byte[] ALPHABET;
+	private static final byte[] _NATIVE_ALPHABET = { /*
 														 * May be something
 														 * funny like EBCDIC
 														 */
@@ -147,23 +147,23 @@ public class Base64
 	/** Determine which ALPHABET to use. */
 	static
 	{
-		byte[] __bytes;
+		byte[] bytes;
 		try
 		{
-			__bytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes(PREFERRED_ENCODING);
+			bytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes(PREFERRED_ENCODING);
 		}
 		catch (java.io.UnsupportedEncodingException use)
 		{
-			__bytes = _NATIVE_ALPHABET; // Fall back to native encoding
+			bytes = _NATIVE_ALPHABET; // Fall back to native encoding
 		}
-		ALPHABET = __bytes;
+		ALPHABET = bytes;
 	}
 
 	/**
 	 * Translates a Base64 value to either its 6-bit reconstruction value or a
 	 * negative number indicating some other meaning.
 	 **/
-	private final static byte[] DECODABET = { -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal
+	private static final byte[] DECODABET = { -9, -9, -9, -9, -9, -9, -9, -9, -9, // Decimal
 																					// 0
 																					// -
 																					// 8
@@ -209,9 +209,9 @@ public class Base64
 	// I think I end up not using the BAD_ENCODING indicator.
 	// private final static byte BAD_ENCODING = -9; // Indicates error in
 	// encoding
-	private final static byte WHITE_SPACE_ENC = -5; // Indicates white space in
+	private static final byte WHITE_SPACE_ENC = -5; // Indicates white space in
 													// encoding
-	private final static byte EQUALS_SIGN_ENC = -1; // Indicates equals sign in
+	private static final byte EQUALS_SIGN_ENC = -1; // Indicates equals sign in
 													// encoding
 
 	/**
@@ -249,12 +249,17 @@ public class Base64
 	 */
 	private static byte[] encode3to4(byte[] source, int srcOffset, int numSigBytes, byte[] destination, int destOffset)
 	{
-		// 1 2 3
-		// 01234567890123456789012345678901 Bit position
-		// --------000000001111111122222222 Array position from threeBytes
-		// --------| || || || | Six bit groups to index ALPHABET
-		// >>18 >>12 >> 6 >> 0 Right shift necessary
-		// 0x3f 0x3f 0x3f Additional AND
+		/**
+		 * <pre>
+		 * 1 2 3
+		 * 01234567890123456789012345678901 Bit position
+		 * --------000000001111111122222222 Array position from threeBytes
+		 * --------| || || || | Six bit groups to index ALPHABET
+		 * >>18 >>12 >> 6 >> 0 Right shift necessary
+		 * 0x3f 0x3f 0x3f Additional AND
+		 * </pre>
+		 * 
+		 */
 
 		// Create buffer with zero-padding if there are only one or two
 		// significant bytes passed in the array.
@@ -461,10 +466,14 @@ public class Base64
 		// Example: Dk==
 		if (source[srcOffset + 2] == EQUALS_SIGN)
 		{
-			// Two ways to do the same thing. Don't know which way I like best.
-			// int outBuff = ( ( DECODABET[ source[ srcOffset ] ] << 24 ) >>> 6
-			// )
-			// | ( ( DECODABET[ source[ srcOffset + 1] ] << 24 ) >>> 12 );
+			/**
+			 * <pre>
+			 * Two ways to do the same thing. Don't know which way I like best.
+			 * int outBuff = ( ( DECODABET[ source[ srcOffset ] ] << 24 ) >>> 6
+			 * )
+			 * | ( ( DECODABET[ source[ srcOffset + 1] ] << 24 ) >>> 12 );
+			 * </pre>
+			 */
 			int outBuff = ((DECODABET[source[srcOffset]] & 0xFF) << 18)
 					| ((DECODABET[source[srcOffset + 1]] & 0xFF) << 12);
 
@@ -473,12 +482,16 @@ public class Base64
 		}
 		else if (source[srcOffset + 3] == EQUALS_SIGN)
 		{
-			// Example: DkL=
-			// Two ways to do the same thing. Don't know which way I like best.
-			// int outBuff = ( ( DECODABET[ source[ srcOffset ] ] << 24 ) >>> 6
-			// )
-			// | ( ( DECODABET[ source[ srcOffset + 1 ] ] << 24 ) >>> 12 )
-			// | ( ( DECODABET[ source[ srcOffset + 2 ] ] << 24 ) >>> 18 );
+			/**
+			 * <pre>
+			 * Example: DkL=
+			 * Two ways to do the same thing. Don't know which way I like best.
+			 * int outBuff = ( ( DECODABET[ source[ srcOffset ] ] << 24 ) >>> 6
+			 * )
+			 * | ( ( DECODABET[ source[ srcOffset + 1 ] ] << 24 ) >>> 12 )
+			 * | ( ( DECODABET[ source[ srcOffset + 2 ] ] << 24 ) >>> 18 );
+			 * </pre>
+			 */
 			int outBuff = ((DECODABET[source[srcOffset]] & 0xFF) << 18)
 					| ((DECODABET[source[srcOffset + 1]] & 0xFF) << 12)
 					| ((DECODABET[source[srcOffset + 2]] & 0xFF) << 6);
