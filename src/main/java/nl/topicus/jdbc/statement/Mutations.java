@@ -7,7 +7,7 @@ import com.google.cloud.spanner.Mutation;
 
 class Mutations
 {
-	private final List<Mutation> mutations;
+	private final List<Mutation> buffer;
 
 	private final AbstractTablePartWorker worker;
 
@@ -18,19 +18,19 @@ class Mutations
 	 */
 	Mutations(Mutation mutation)
 	{
-		this.mutations = Arrays.asList(mutation);
+		this.buffer = Arrays.asList(mutation);
 		this.worker = null;
 	}
 
 	Mutations(List<Mutation> mutations)
 	{
-		this.mutations = mutations;
+		this.buffer = mutations;
 		this.worker = null;
 	}
 
 	Mutations(AbstractTablePartWorker worker)
 	{
-		this.mutations = null;
+		this.buffer = null;
 		this.worker = worker;
 	}
 
@@ -39,7 +39,7 @@ class Mutations
 		if (isWorker())
 			throw new IllegalStateException(
 					"Cannot call getMutations() on a Mutations-object that returns its results as a worker");
-		return mutations;
+		return buffer;
 	}
 
 	AbstractTablePartWorker getWorker()
@@ -56,7 +56,7 @@ class Mutations
 	{
 		if (isWorker())
 			return worker.getRecordCount();
-		return mutations.size();
+		return buffer.size();
 	}
 
 }
