@@ -173,13 +173,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 				last.close();
 				if (!con.getAutoCommit())
 				{
-					try
-					{
-						con.rollback();
-					}
-					catch (SQLException ignored)
-					{
-					}
+					rollbackAndIgnoreException();
 				}
 				con.clearWarnings();
 			}
@@ -204,6 +198,18 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 				new Class[] { Connection.class, ICloudSpannerConnection.class }, handler);
 		last.setProxy(proxyCon);
 		return proxyCon;
+	}
+
+	private void rollbackAndIgnoreException()
+	{
+		try
+		{
+			con.rollback();
+		}
+		catch (SQLException ignored)
+		{
+			// ignore exception
+		}
 	}
 
 	/**
