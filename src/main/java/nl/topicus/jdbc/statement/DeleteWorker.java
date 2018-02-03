@@ -62,16 +62,17 @@ public class DeleteWorker extends AbstractTablePartWorker
 		TableKeyMetaData table = connection.getTable(CloudSpannerDriver.unquoteIdentifier(getTable().getName()));
 		List<String> keyCols = table.getKeyColumns().stream().map(CloudSpannerDriver::quoteIdentifier)
 				.collect(Collectors.toList());
-		String sql = "DELETE FROM " + CloudSpannerDriver.quoteIdentifier(delete.getTable().getName()) + " WHERE ";
+		StringBuilder sql = new StringBuilder("DELETE FROM ")
+				.append(CloudSpannerDriver.quoteIdentifier(delete.getTable().getName())).append(" WHERE ");
 		boolean first = true;
 		for (String key : keyCols)
 		{
 			if (!first)
-				sql = sql + " AND ";
-			sql = sql + key + "=?";
+				sql.append(" AND ");
+			sql.append(key).append("=?");
 			first = false;
 		}
-		return sql;
+		return sql.toString();
 	}
 
 	@Override
