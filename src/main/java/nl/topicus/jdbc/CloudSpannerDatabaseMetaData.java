@@ -831,6 +831,8 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	{
 		String sql = CloudSpannerDatabaseMetaDataConstants.GET_COLUMNS;
 		sql = sql + getCatalogSchemaTableWhereClause("C", catalog, schemaPattern, tableNamePattern);
+		if (columnNamePattern != null)
+			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
 		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern,
