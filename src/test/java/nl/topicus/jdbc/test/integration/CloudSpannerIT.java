@@ -156,7 +156,7 @@ public class CloudSpannerIT
 			// Test drop statements
 			tableDDLTester.runDropTests();
 		}
-		catch (SQLException | PropertyVetoException e)
+		catch (SQLException | PropertyVetoException | AssertionError e)
 		{
 			log.log(Level.WARNING, "Error during JDBC tests", e);
 			throw e;
