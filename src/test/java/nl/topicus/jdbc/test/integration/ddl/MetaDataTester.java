@@ -196,6 +196,9 @@ public class MetaDataTester
 		}
 		for (String table : TABLES)
 		{
+			try (ResultSet rs = metadata.getIndexInfo("", "", table, true, true))
+			{
+			}
 			try (ResultSet rs = metadata.getExportedKeys("", "", table))
 			{
 			}
