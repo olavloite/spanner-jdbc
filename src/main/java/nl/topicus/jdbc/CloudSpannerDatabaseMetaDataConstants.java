@@ -92,7 +92,7 @@ public abstract class CloudSpannerDatabaseMetaDataConstants
 
 			+ "NULL AS SCOPE_SCHEMA, NULL AS SCOPE_TABLE, NULL AS SOURCE_DATA_TYPE, 'NO' AS IS_AUTOINCREMENT, 'NO' AS IS_GENERATEDCOLUMN \n"
 
-			+ "FROM INFORMATION_SCHEMA.COLUMNS " + WHERE_1_EQUALS_1;
+			+ "FROM INFORMATION_SCHEMA.COLUMNS C " + WHERE_1_EQUALS_1;
 
 	// Prevent instantiation
 	private CloudSpannerDatabaseMetaDataConstants()

@@ -16,7 +16,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 
 	private static final int JDBC_MINOR_VERSION = 2;
 
-	private static final String FROM_STATEMENT_WITHOUT_RESULTS = " FROM INFORMATION_SCHEMA.TABLES WHERE 1=2 ";
+	private static final String FROM_STATEMENT_WITHOUT_RESULTS = " FROM INFORMATION_SCHEMA.TABLES T WHERE 1=2 ";
 
 	private CloudSpannerConnection connection;
 
@@ -777,6 +777,18 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		return statement;
 	}
 
+	private String getCatalogSchemaTableWhereClause(String alias, String catalog, String schema, String table)
+	{
+		StringBuilder res = new StringBuilder();
+		if (catalog != null)
+			res.append(String.format("AND UPPER(%s.TABLE_CATALOG) like ? ", alias));
+		if (schema != null)
+			res.append(String.format("AND UPPER(%s.TABLE_SCHEMA) like ? ", alias));
+		if (table != null)
+			res.append(String.format("AND UPPER(%s.TABLE_NAME) like ? ", alias));
+		return res.toString();
+	}
+
 	@Override
 	public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
 			throws SQLException
@@ -784,12 +796,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		String sql = CloudSpannerDatabaseMetaDataConstants.SELECT_TABLES_COLUMNS
 				+ CloudSpannerDatabaseMetaDataConstants.FROM_TABLES_T
 				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
-		if (catalog != null)
-			sql = sql + "AND UPPER(T.TABLE_CATALOG) like ? ";
-		if (schemaPattern != null)
-			sql = sql + "AND UPPER(T.TABLE_SCHEMA) like ? ";
-		if (tableNamePattern != null)
-			sql = sql + "AND UPPER(T.TABLE_NAME) like ? ";
+		sql = sql + getCatalogSchemaTableWhereClause("T", catalog, schemaPattern, tableNamePattern);
 		sql = sql + "ORDER BY TABLE_NAME";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern);
@@ -823,15 +830,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			throws SQLException
 	{
 		String sql = CloudSpannerDatabaseMetaDataConstants.GET_COLUMNS;
-
-		if (catalog != null)
-			sql = sql + "AND UPPER(TABLE_CATALOG) like ? ";
-		if (schemaPattern != null)
-			sql = sql + "AND UPPER(TABLE_SCHEMA) like ? ";
-		if (tableNamePattern != null)
-			sql = sql + "AND UPPER(TABLE_NAME) like ? ";
-		if (columnNamePattern != null)
-			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
+		sql = sql + getCatalogSchemaTableWhereClause("C", catalog, schemaPattern, tableNamePattern);
 		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern,
@@ -889,12 +888,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "FROM INFORMATION_SCHEMA.INDEXES IDX "
 				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS COLS ON IDX.TABLE_CATALOG=COLS.TABLE_CATALOG AND IDX.TABLE_SCHEMA=COLS.TABLE_SCHEMA AND IDX.TABLE_NAME=COLS.TABLE_NAME AND IDX.INDEX_NAME=COLS.INDEX_NAME "
 				+ "WHERE IDX.INDEX_TYPE='PRIMARY_KEY' ";
-		if (catalog != null)
-			sql = sql + "AND UPPER(IDX.TABLE_CATALOG) like ? ";
-		if (schema != null)
-			sql = sql + "AND UPPER(IDX.TABLE_SCHEMA) like ? ";
-		if (table != null)
-			sql = sql + "AND UPPER(IDX.TABLE_NAME) like ? ";
+		sql = sql + getCatalogSchemaTableWhereClause("IDX", catalog, schema, table);
 		sql = sql + "ORDER BY COLS.ORDINAL_POSITION ";
 
 		PreparedStatement statement = prepareStatement(sql, catalog, schema, table);
@@ -911,12 +905,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS COL ON INDEXES.TABLE_CATALOG=COL.TABLE_CATALOG AND INDEXES.TABLE_SCHEMA=COL.TABLE_SCHEMA AND INDEXES.TABLE_NAME=COL.TABLE_NAME AND INDEXES.INDEX_NAME=COL.INDEX_NAME "
 				+ "WHERE CHILD.PARENT_TABLE_NAME IS NOT NULL ";
 
-		if (catalog != null)
-			sql = sql + "AND UPPER(CHILD.TABLE_CATALOG) like ? ";
-		if (schema != null)
-			sql = sql + "AND UPPER(CHILD.TABLE_SCHEMA) like ? ";
-		if (table != null)
-			sql = sql + "AND UPPER(CHILD.TABLE_NAME) like ? ";
+		sql = sql + getCatalogSchemaTableWhereClause("CHILD", catalog, schema, table);
 		sql = sql + "ORDER BY PARENT.TABLE_CATALOG, PARENT.TABLE_SCHEMA, PARENT.TABLE_NAME, COL.ORDINAL_POSITION ";
 
 		PreparedStatement statement = prepareStatement(sql, catalog, schema, table);
@@ -936,12 +925,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "INNER JOIN INFORMATION_SCHEMA.INDEX_COLUMNS PARENT_INDEX_COLUMNS ON PARENT_INDEX_COLUMNS.TABLE_NAME=PARENT.TABLE_NAME AND PARENT_INDEX_COLUMNS.INDEX_NAME='PRIMARY_KEY' "
 				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
 
-		if (catalog != null)
-			sql = sql + "AND UPPER(PARENT.TABLE_CATALOG) like ? ";
-		if (schema != null)
-			sql = sql + "AND UPPER(PARENT.TABLE_SCHEMA) like ? ";
-		if (table != null)
-			sql = sql + "AND UPPER(PARENT.TABLE_NAME) like ? ";
+		sql = sql + getCatalogSchemaTableWhereClause("PARENT", catalog, schema, table);
 		sql = sql
 				+ "ORDER BY CHILD.TABLE_CATALOG, CHILD.TABLE_SCHEMA, CHILD.TABLE_NAME, PARENT_INDEX_COLUMNS.ORDINAL_POSITION ";
 
@@ -973,14 +957,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "INNER JOIN information_schema.index_columns col on idx.table_catalog=col.table_catalog and idx.table_schema=col.table_schema and idx.table_name=col.table_name and idx.index_name=col.index_name "
 				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
 
-		if (catalog != null)
-			sql = sql + "AND UPPER(idx.TABLE_CATALOG) like ? ";
-		if (schema != null)
-			sql = sql + "AND UPPER(idx.TABLE_SCHEMA) like ? ";
-		if (table != null)
-			sql = sql + "AND UPPER(idx.TABLE_NAME) like ? ";
+		sql = sql + getCatalogSchemaTableWhereClause("idx", catalog, schema, table);
 		if (unique)
-			sql = sql + "AND IS_UNIQUE ";
+			sql = sql + "AND IS_UNIQUE=TRUE ";
 		sql = sql + "ORDER BY IS_UNIQUE, INDEX_NAME, ORDINAL_POSITION ";
 
 		PreparedStatement statement = prepareStatement(sql, catalog, schema, table);
@@ -1268,12 +1247,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "0 AS COLUMN_SIZE, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, 'USAGE_UNKNOWN' AS COLUMN_USAGE, NULL AS REMARKS, 0 AS CHAR_OCTET_LENGTH, IS_NULLABLE "
 				+ FROM_STATEMENT_WITHOUT_RESULTS;
 
-		if (catalog != null)
-			sql = sql + "AND UPPER(TABLE_CATALOG) like ? ";
-		if (schemaPattern != null)
-			sql = sql + "AND UPPER(TABLE_SCHEMA) like ? ";
-		if (tableNamePattern != null)
-			sql = sql + "AND UPPER(TABLE_NAME) like ? ";
+		sql = sql + getCatalogSchemaTableWhereClause("T", catalog, schemaPattern, tableNamePattern);
 		if (columnNamePattern != null)
 			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
 		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
