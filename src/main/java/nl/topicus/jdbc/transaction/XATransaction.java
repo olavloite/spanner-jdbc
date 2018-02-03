@@ -31,6 +31,13 @@ import nl.topicus.jdbc.xa.CloudSpannerXAConnection;
 class XATransaction
 {
 
+	/**
+	 * Avoid instantiation
+	 */
+	private XATransaction()
+	{
+	}
+
 	private static final String SELECT_MUTATIONS = "SELECT " + CloudSpannerXAConnection.XA_NUMBER_COLUMN + ", "
 			+ CloudSpannerXAConnection.XA_MUTATION_COLUMN + " FROM "
 			+ CloudSpannerXAConnection.XA_PREPARED_MUTATIONS_TABLE + " WHERE " + CloudSpannerXAConnection.XA_XID_COLUMN
