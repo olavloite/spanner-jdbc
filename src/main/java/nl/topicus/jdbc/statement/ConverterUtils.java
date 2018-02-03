@@ -24,8 +24,7 @@ public class ConverterUtils
 		// The maximum number of mutations per commit is 20,000
 		int rowSize = getRowSize(destination, catalog, schema, table);
 		int indices = getNumberOfIndices(destination, catalog, schema, table);
-		int actualBatchSize = Math.max(Math.min(batchSize / rowSize, 20000 / (numberOfCols + indices)), 100);
-		return actualBatchSize;
+		return Math.max(Math.min(batchSize / rowSize, 20000 / (numberOfCols + indices)), 100);
 	}
 
 	public static int getRowSize(Connection destination, String catalog, String schema, String table)
