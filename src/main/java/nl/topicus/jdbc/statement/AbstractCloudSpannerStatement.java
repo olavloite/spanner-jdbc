@@ -15,6 +15,7 @@ import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 import com.google.rpc.Code;
 
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.FromItemVisitorAdapter;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -95,19 +96,18 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		String tableName = unquoteIdentifier(update.getTables().get(0).getName());
 		TableKeyMetaData table = getConnection().getTable(tableName);
 		List<String> keyColumns = table.getKeyColumns();
-		List<String> updateColumns = update.getColumns().stream().map(x -> x.getColumnName())
+		List<String> updateColumns = update.getColumns().stream().map(Column::getColumnName)
 				.collect(Collectors.toList());
-		List<String> quotedKeyColumns = keyColumns.stream().map(x -> quoteIdentifier(x)).collect(Collectors.toList());
+		List<String> quotedKeyColumns = keyColumns.stream().map(this::quoteIdentifier).collect(Collectors.toList());
 		List<String> quotedAndQualifiedKeyColumns = keyColumns.stream()
 				.map(x -> quoteIdentifier(tableName) + "." + quoteIdentifier(x)).collect(Collectors.toList());
 
-		List<String> quotedUpdateColumns = updateColumns.stream().map(x -> quoteIdentifier(x))
+		List<String> quotedUpdateColumns = updateColumns.stream().map(this::quoteIdentifier)
 				.collect(Collectors.toList());
-		List<String> expressions = update.getExpressions().stream().map(x -> x.toString()).collect(Collectors.toList());
-		if (updateColumns.stream().anyMatch(x -> keyColumns.contains(x)))
+		List<String> expressions = update.getExpressions().stream().map(Object::toString).collect(Collectors.toList());
+		if (updateColumns.stream().anyMatch(keyColumns::contains))
 		{
-			String invalidCols = updateColumns.stream().filter(x -> keyColumns.contains(x))
-					.collect(Collectors.joining());
+			String invalidCols = updateColumns.stream().filter(keyColumns::contains).collect(Collectors.joining());
 			throw new CloudSpannerSQLException(
 					"UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) " + invalidCols,
 					Code.INVALID_ARGUMENT);
