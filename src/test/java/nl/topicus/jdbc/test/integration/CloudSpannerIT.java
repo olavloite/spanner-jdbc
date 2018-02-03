@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +21,6 @@ import com.google.cloud.spanner.Database;
 import com.google.cloud.spanner.Instance;
 import com.google.cloud.spanner.InstanceAdminClient;
 import com.google.cloud.spanner.InstanceConfig;
-import com.google.cloud.spanner.InstanceConfigId;
 import com.google.cloud.spanner.InstanceId;
 import com.google.cloud.spanner.Operation;
 import com.google.cloud.spanner.Spanner;
@@ -186,19 +184,9 @@ public class CloudSpannerIT
 	private void createInstance()
 	{
 		InstanceAdminClient instanceAdminClient = spanner.getInstanceAdminClient();
-		Iterator<InstanceConfig> configs = instanceAdminClient.listInstanceConfigs().iterateAll().iterator();
-		InstanceConfigId configId = null;
-		while (configs.hasNext())
-		{
-			InstanceConfig cfg = configs.next();
-			if (cfg.getDisplayName().toLowerCase().contains("europe"))
-			{
-				configId = cfg.getId();
-				break;
-			}
-		}
+		InstanceConfig config = instanceAdminClient.getInstanceConfig("regional-europe-west1");
 		Instance instance = instanceAdminClient.newInstanceBuilder(InstanceId.of(projectId, instanceId))
-				.setDisplayName("Test Instance").setInstanceConfigId(configId).setNodeCount(1).build();
+				.setDisplayName("Test Instance").setInstanceConfigId(config.getId()).setNodeCount(1).build();
 		Operation<Instance, CreateInstanceMetadata> createInstance = instanceAdminClient.createInstance(instance);
 		createInstance = createInstance.waitFor();
 	}
