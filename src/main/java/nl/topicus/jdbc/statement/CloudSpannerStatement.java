@@ -323,10 +323,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 
 	protected boolean isSelectStatement(String[] sqlTokens)
 	{
-		if (sqlTokens.length > 0 && sqlTokens[0].equalsIgnoreCase("SELECT"))
-			return true;
-
-		return false;
+		return sqlTokens.length > 0 && sqlTokens[0].equalsIgnoreCase("SELECT");
 	}
 
 	public abstract class CustomDriverStatement
