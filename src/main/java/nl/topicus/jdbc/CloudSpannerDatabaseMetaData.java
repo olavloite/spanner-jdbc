@@ -954,17 +954,27 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
 			throws SQLException
 	{
-		String sql = "select idx.TABLE_CATALOG AS TABLE_CAT, idx.TABLE_SCHEMA AS TABLE_SCHEM, idx.TABLE_NAME, CASE WHEN IS_UNIQUE THEN FALSE ELSE TRUE END AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, idx.INDEX_NAME, 3 AS TYPE, ORDINAL_POSITION, COLUMN_NAME, SUBSTR(COLUMN_ORDERING, 0, 1) AS ASC_OR_DESC, -1 AS CARDINALITY, -1 AS PAGES, NULL AS FILTER_CONDITION "
-				+ "FROM information_schema.indexes idx "
-				+ "INNER JOIN information_schema.index_columns col on idx.table_catalog=col.table_catalog and idx.table_schema=col.table_schema and idx.table_name=col.table_name and idx.index_name=col.index_name "
-				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
+		return getIndexInfo(catalog, schema, table, null, unique);
+	}
 
-		sql = sql + getCatalogSchemaTableWhereClause("idx", catalog, schema, table);
+	public ResultSet getIndexInfo(String catalog, String schema, String indexName) throws SQLException
+	{
+		return getIndexInfo(catalog, schema, null, indexName, false);
+	}
+
+	private ResultSet getIndexInfo(String catalog, String schema, String table, String indexName, boolean unique)
+			throws SQLException
+	{
+		String sql = CloudSpannerDatabaseMetaDataConstants.GET_INDEX_INFO;
+
+		sql = sql + getCatalogSchemaTableWhereClause("IDX", catalog, schema, table);
 		if (unique)
 			sql = sql + "AND IS_UNIQUE=TRUE ";
+		if (indexName != null)
+			sql = sql + " AND IDX.INDEX_NAME LIKE ? ";
 		sql = sql + "ORDER BY IS_UNIQUE, INDEX_NAME, ORDINAL_POSITION ";
 
-		PreparedStatement statement = prepareStatement(sql, catalog, schema, table);
+		PreparedStatement statement = prepareStatement(sql, catalog, schema, table, indexName);
 		return statement.executeQuery();
 	}
 
