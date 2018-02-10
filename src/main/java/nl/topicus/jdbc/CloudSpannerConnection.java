@@ -290,8 +290,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * this method will also automatically commit the currently running
 	 * transaction.
 	 * 
-	 * @param sql
-	 *            The DDL-statement(s) to execute
+	 * @param inputSql
+	 *            The DDL-statement(s) to execute. Some statements may end up
+	 *            not being sent to Cloud Spanner if they contain IF [NOT]
+	 *            EXISTS clauses. The driver will check whether the condition is
+	 *            met, and only then will it be sent to Cloud Spanner.
 	 * @return Nothing
 	 * @throws SQLException
 	 *             If an error occurs during the execution of the statement.
