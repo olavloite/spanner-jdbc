@@ -192,7 +192,8 @@ class DDLStatement
 		tokenizer.quoteChar('`');
 		try
 		{
-			while (tokenizer.nextToken() != StreamTokenizer.TT_EOF && tokenizer.ttype == StreamTokenizer.TT_WORD
+			while (tokenizer.nextToken() != StreamTokenizer.TT_EOF
+					&& (tokenizer.ttype == StreamTokenizer.TT_WORD || tokenizer.ttype == '`')
 					&& tokenNumber < maxTokens)
 			{
 				res.add(tokenizer.sval);
