@@ -2,7 +2,6 @@ package nl.topicus.jdbc.test.integration.ddl;
 
 import static org.junit.Assert.assertEquals;
 
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
@@ -15,6 +14,9 @@ import java.util.logging.Logger;
 
 import org.junit.Assert;
 
+import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
+
 /**
  * Class for testing different MetaData methods of the JDBC driver.
  * 
@@ -26,6 +28,8 @@ public class MetaDataTester
 	private static final Logger log = Logger.getLogger(MetaDataTester.class.getName());
 
 	private static final String[] TABLES = { "ASYNCTEST", "TEST", "TESTCHILD", "TEST_QUOTED", "TEST_WITH_ARRAY" };
+
+	private static final String[] INDEXES = { "IDX_TEST_UUID", "IDX_TESTCHILD_DESCRIPTION" };
 
 	private static final String[][] COLUMNS = {
 			{ "ID", "UUID", "ACTIVE", "AMOUNT", "DESCRIPTION", "CREATED_DATE", "LAST_UPDATED" },
@@ -66,9 +70,9 @@ public class MetaDataTester
 		INDEX_UNIQUE.put("TEST_WITH_ARRAY.PRIMARY_KEY", Boolean.TRUE);
 	}
 
-	private Connection connection;
+	private CloudSpannerConnection connection;
 
-	public MetaDataTester(Connection connection)
+	public MetaDataTester(CloudSpannerConnection connection)
 	{
 		this.connection = connection;
 	}
@@ -154,7 +158,7 @@ public class MetaDataTester
 
 	private void runOtherMetaDataTests() throws SQLException
 	{
-		DatabaseMetaData metadata = connection.getMetaData();
+		CloudSpannerDatabaseMetaData metadata = connection.getMetaData();
 		try (ResultSet rs = metadata.getCatalogs())
 		{
 		}
@@ -193,6 +197,12 @@ public class MetaDataTester
 		}
 		try (ResultSet rs = metadata.getUDTs(null, null, null, null))
 		{
+		}
+		for (String index : INDEXES)
+		{
+			try (ResultSet rs = metadata.getIndexInfo("", "", index))
+			{
+			}
 		}
 		for (String table : TABLES)
 		{
