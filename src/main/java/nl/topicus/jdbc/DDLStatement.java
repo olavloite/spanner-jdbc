@@ -189,6 +189,10 @@ class DDLStatement
 		List<String> res = new ArrayList<>(maxTokens);
 		int tokenNumber = 0;
 		StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(sql));
+		tokenizer.eolIsSignificant(false);
+		tokenizer.wordChars('_', '_');
+		tokenizer.wordChars('"', '"');
+		tokenizer.wordChars('\'', '\'');
 		tokenizer.quoteChar('`');
 		try
 		{
