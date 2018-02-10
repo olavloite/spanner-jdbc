@@ -290,39 +290,62 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * this method will also automatically commit the currently running
 	 * transaction.
 	 * 
-	 * @param sql
-	 *            The DDL-statement(s) to execute
+	 * @param inputSql
+	 *            The DDL-statement(s) to execute. Some statements may end up
+	 *            not being sent to Cloud Spanner if they contain IF [NOT]
+	 *            EXISTS clauses. The driver will check whether the condition is
+	 *            met, and only then will it be sent to Cloud Spanner.
 	 * @return Nothing
 	 * @throws SQLException
 	 *             If an error occurs during the execution of the statement.
 	 */
-	public Void executeDDL(List<String> sql) throws SQLException
+	public Void executeDDL(List<String> inputSql) throws SQLException
 	{
 		if (!getAutoCommit())
 			commit();
-		try
+		// Check for IF [NOT] EXISTS statements
+		List<String> sql = getActualSql(inputSql);
+		if (!sql.isEmpty())
 		{
-			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
-					database.database, sql, null);
-			if (asyncDdlOperations)
+			try
 			{
-				operations.addOperation(sql, operation);
-			}
-			else
-			{
-				do
+				Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
+						database.database, sql, null);
+				if (asyncDdlOperations)
 				{
-					operation = operation.waitFor();
+					operations.addOperation(sql, operation);
 				}
-				while (!operation.isDone());
+				else
+				{
+					do
+					{
+						operation = operation.waitFor();
+					}
+					while (!operation.isDone());
+				}
+				return operation.getResult();
 			}
-			return operation.getResult();
+			catch (SpannerException e)
+			{
+				throw new CloudSpannerSQLException(
+						"Could not execute DDL statement(s) " + String.join("\n;\n", sql) + ": " + e.getMessage(), e);
+			}
 		}
-		catch (SpannerException e)
+		return null;
+	}
+
+	private List<String> getActualSql(List<String> sql) throws SQLException
+	{
+		List<DDLStatement> statements = DDLStatement.parseDdlStatements(sql);
+		List<String> actualSql = new ArrayList<>(sql.size());
+		for (DDLStatement statement : statements)
 		{
-			throw new CloudSpannerSQLException(
-					"Could not execute DDL statement(s) " + String.join("\n;\n", sql) + ": " + e.getMessage(), e);
+			if (statement.shouldExecute(this))
+			{
+				actualSql.add(statement.getSql());
+			}
 		}
+		return actualSql;
 	}
 
 	/**
@@ -714,23 +737,23 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private Supplier<Boolean> getOriginalValueGetter(String propertyName)
 	{
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
 		{
 			return this::isOriginalAllowExtendedMode;
 		}
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
 			return this::isOriginalAsyncDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
 		{
 			return this::isOriginalAutoBatchDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		if (propertyName.equalsIgnoreCase(
+				ConnectionProperties.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
 		{
 			return this::isOriginalReportDefaultSchemaAsNull;
 		}
@@ -740,23 +763,23 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private Function<Boolean, Integer> getPropertySetter(String propertyName)
 	{
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
 		{
 			return this::setAllowExtendedMode;
 		}
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
 			return this::setAsyncDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
 		{
 			return this::setAutoBatchDdlOperations;
 		}
-		if (propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		if (propertyName.equalsIgnoreCase(
+				ConnectionProperties.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
 		{
 			return this::setReportDefaultSchemaAsNull;
 		}
@@ -772,36 +795,28 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public ResultSet getDynamicConnectionProperty(Statement statement, String propertyName)
 	{
 		Map<String, String> values = new HashMap<>();
-		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
+		if (propertyName == null || propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
 		{
-			values.put(
-					ConnectionProperties
-							.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE),
+			values.put(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE),
 					String.valueOf(isAllowExtendedMode()));
 		}
-		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
+		if (propertyName == null || propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS)))
 		{
-			values.put(
-					ConnectionProperties
-							.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS),
+			values.put(ConnectionProperties.getPropertyName(ConnectionProperties.ASYNC_DDL_OPERATIONS),
 					String.valueOf(isAsyncDdlOperations()));
 		}
-		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
+		if (propertyName == null || propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS)))
 		{
-			values.put(
-					ConnectionProperties
-							.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS),
+			values.put(ConnectionProperties.getPropertyName(ConnectionProperties.AUTO_BATCH_DDL_OPERATIONS),
 					String.valueOf(isAutoBatchDdlOperations()));
 		}
-		if (propertyName == null || propertyName.equalsIgnoreCase(ConnectionProperties
-				.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
+		if (propertyName == null || propertyName.equalsIgnoreCase(
+				ConnectionProperties.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
 		{
-			values.put(
-					ConnectionProperties
-							.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL),
+			values.put(ConnectionProperties.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL),
 					String.valueOf(isReportDefaultSchemaAsNull()));
 		}
 		return createResultSet(statement, values);

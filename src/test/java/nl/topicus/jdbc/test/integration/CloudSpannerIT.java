@@ -141,7 +141,7 @@ public class CloudSpannerIT
 			DMLTester dmlTester = new DMLTester(connection);
 			dmlTester.runDMLTests();
 			// Test meta data functions
-			MetaDataTester metaDataTester = new MetaDataTester(connection);
+			MetaDataTester metaDataTester = new MetaDataTester((CloudSpannerConnection) connection);
 			metaDataTester.runMetaDataTests();
 			// Test transaction functions
 			TransactionTester txTester = new TransactionTester(connection);

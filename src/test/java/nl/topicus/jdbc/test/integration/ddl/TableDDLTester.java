@@ -44,6 +44,8 @@ public class TableDDLTester
 	{
 		log.info("Starting CreateTableTests");
 		runCreateTableTest("TEST", "CreateTableTest.sql");
+		log.info("Starting CreateTableIfNotExistsTests");
+		runCreateTableTest("TEST", "CreateTableIfNotExistsTest.sql");
 		log.info("Verifying primary keys of parent table");
 		verifyPrimaryKey("TEST", "ID");
 		runCreateTableTest("TESTCHILD", "CreateTableTestChild.sql");
@@ -89,6 +91,7 @@ public class TableDDLTester
 		// CREATE UNIQUE INDEX takes forever, and also hinders bulk insert tests
 		// executeDdl("CreateIndexTest.sql");
 		executeDdl("CreateIndexTestChild.sql");
+		executeDdl("CreateIndexIfNotExistsTestChild.sql");
 	}
 
 	private void verifyTableExists(String table) throws SQLException
