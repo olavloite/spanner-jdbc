@@ -305,29 +305,33 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			commit();
 		// Check for IF [NOT] EXISTS statements
 		List<String> sql = getActualSql(inputSql);
-		try
+		if (!sql.isEmpty())
 		{
-			Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
-					database.database, sql, null);
-			if (asyncDdlOperations)
+			try
 			{
-				operations.addOperation(sql, operation);
-			}
-			else
-			{
-				do
+				Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient.updateDatabaseDdl(database.instance,
+						database.database, sql, null);
+				if (asyncDdlOperations)
 				{
-					operation = operation.waitFor();
+					operations.addOperation(sql, operation);
 				}
-				while (!operation.isDone());
+				else
+				{
+					do
+					{
+						operation = operation.waitFor();
+					}
+					while (!operation.isDone());
+				}
+				return operation.getResult();
 			}
-			return operation.getResult();
+			catch (SpannerException e)
+			{
+				throw new CloudSpannerSQLException(
+						"Could not execute DDL statement(s) " + String.join("\n;\n", sql) + ": " + e.getMessage(), e);
+			}
 		}
-		catch (SpannerException e)
-		{
-			throw new CloudSpannerSQLException(
-					"Could not execute DDL statement(s) " + String.join("\n;\n", sql) + ": " + e.getMessage(), e);
-		}
+		return null;
 	}
 
 	private List<String> getActualSql(List<String> sql) throws SQLException
