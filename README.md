@@ -73,6 +73,8 @@ COL2=COL3+COL4
 WHERE COL5<1000  
 ```
 
+Have a look at this article for more DML examples: http://www.googlecloudspanner.com/2018/02/data-manipulation-language-with-google.html
+
 ## JPA and Hibernate
 The driver is designed to work with applications using JPA/Hibernate. See https://github.com/olavloite/spanner-hibernate for a Hibernate Dialect implementation for Google Cloud Spanner that works together with this JDBC Driver.
 
