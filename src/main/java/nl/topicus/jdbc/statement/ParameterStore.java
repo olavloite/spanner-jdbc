@@ -117,7 +117,7 @@ public class ParameterStore
 		{
 			parameters = Arrays.copyOf(parameters, Math.max(parameters.length * 2, arrayIndex));
 			types = Arrays.copyOf(types, Math.max(types.length * 2, arrayIndex));
-			nullable = Arrays.copyOf(types, Math.max(nullable.length * 2, arrayIndex));
+			nullable = Arrays.copyOf(nullable, Math.max(nullable.length * 2, arrayIndex));
 			scalesOrLengths = Arrays.copyOf(scalesOrLengths, Math.max(scalesOrLengths.length * 2, arrayIndex));
 			columns = Arrays.copyOf(columns, Math.max(columns.length * 2, arrayIndex));
 		}
