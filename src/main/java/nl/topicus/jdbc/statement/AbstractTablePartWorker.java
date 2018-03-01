@@ -48,15 +48,18 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 
 	protected final DMLOperation operation;
 
+	private final ParameterStore parameters;
+
 	private long estimatedRecordCount = -1;
 
 	private long recordCount = 0;
 
-	AbstractTablePartWorker(CloudSpannerConnection connection, Select select, boolean allowExtendedMode,
-			DMLOperation operation)
+	AbstractTablePartWorker(CloudSpannerConnection connection, Select select, ParameterStore parameters,
+			boolean allowExtendedMode, DMLOperation operation)
 	{
 		this.connection = connection;
 		this.select = select;
+		this.parameters = parameters;
 		this.allowExtendedMode = allowExtendedMode;
 		this.operation = operation;
 	}
@@ -106,7 +109,12 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 					// Set force update
 					((CloudSpannerPreparedStatement) statement).setForceUpdate(true);
 				}
-				try (ResultSet rs = connection.prepareStatement(select.toString()).executeQuery())
+				CloudSpannerPreparedStatement selectStatement = connection.prepareStatement(select.toString());
+				for (int i = 1; i <= parameters.getHighestIndex(); i++)
+				{
+					selectStatement.setObject(i, parameters.getParameter(i));
+				}
+				try (ResultSet rs = selectStatement.executeQuery())
 				{
 					ResultSetMetaData metadata = rs.getMetaData();
 					while (rs.next())

@@ -15,10 +15,10 @@ public class InsertWorker extends AbstractTablePartWorker
 {
 	final Insert insert;
 
-	public InsertWorker(CloudSpannerConnection connection, Select select, Insert insert, boolean allowExtendedMode,
-			DMLOperation operation)
+	public InsertWorker(CloudSpannerConnection connection, Select select, Insert insert, ParameterStore parameters,
+			boolean allowExtendedMode, DMLOperation operation)
 	{
-		super(connection, select, allowExtendedMode, operation);
+		super(connection, select, parameters, allowExtendedMode, operation);
 		this.insert = insert;
 	}
 
