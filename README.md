@@ -19,7 +19,7 @@ This driver supports a number of unsupported features of the official JDBC drive
 
 The driver ofcourse also supports normal SELECT-statements, including parameters. Example usage and tutorials can be found on http://www.googlecloudspanner.com/.
 
-Releases are available on Maven Central and here: https://github.com/olavloite/spanner-jdbc/releases. Current release is version 0.24.
+Releases are available on Maven Central and here: https://github.com/olavloite/spanner-jdbc/releases. Current release is version 0.25.
 
 Include the following if you want the thick jar version that includes all (shaded) dependencies. This is the recommended version unless you know that the transitive dependencies of the small jar will not conflict with the rest of your project.
 
