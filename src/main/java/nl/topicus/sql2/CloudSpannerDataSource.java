@@ -1,5 +1,7 @@
 package nl.topicus.sql2;
 
+import java.util.function.Function;
+
 import nl.topicus.java.sql2.ConnectionProperty;
 import nl.topicus.java.sql2.DataSource;
 import nl.topicus.sql2.CloudSpannerConnection.CloudSpannerConnectionBuilder;
@@ -62,6 +64,18 @@ public class CloudSpannerDataSource implements DataSource
 	public void close()
 	{
 		connectionProperties = null;
+	}
+
+	@Override
+	public CloudSpannerConnection getConnection()
+	{
+		return (CloudSpannerConnection) DataSource.super.getConnection();
+	}
+
+	@Override
+	public CloudSpannerConnection getConnection(Function<Throwable, Void> handler)
+	{
+		return (CloudSpannerConnection) DataSource.super.getConnection(handler);
 	}
 
 }

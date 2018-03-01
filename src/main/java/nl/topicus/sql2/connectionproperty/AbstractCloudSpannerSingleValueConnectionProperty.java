@@ -41,12 +41,19 @@ public abstract class AbstractCloudSpannerSingleValueConnectionProperty<T> imple
 	}
 
 	@Override
+	public int hashCode()
+	{
+		return name.hashCode();
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
 	public boolean equals(Object o)
 	{
-		if (o instanceof String)
-			return ((String) o).equalsIgnoreCase(name);
-		if (o instanceof Class)
-			return o.equals(this.getClass());
+		if (o instanceof AbstractCloudSpannerSingleValueConnectionProperty)
+		{
+			return ((AbstractCloudSpannerSingleValueConnectionProperty) o).name.equals(name);
+		}
 		return false;
 	}
 

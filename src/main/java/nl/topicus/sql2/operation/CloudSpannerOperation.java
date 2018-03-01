@@ -6,11 +6,16 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.google.cloud.spanner.DatabaseClient;
+
 import nl.topicus.java.sql2.Operation;
 import nl.topicus.java.sql2.Submission;
+import nl.topicus.sql2.CloudSpannerConnection;
 
 public abstract class CloudSpannerOperation<T> implements Operation<T>, Supplier<T>
 {
+	private final CloudSpannerConnection connection;
+
 	private final Executor exec;
 
 	private Submission<T> submission;
@@ -19,9 +24,20 @@ public abstract class CloudSpannerOperation<T> implements Operation<T>, Supplier
 
 	private long timeout;
 
-	protected CloudSpannerOperation(Executor exec)
+	protected CloudSpannerOperation(Executor exec, CloudSpannerConnection connection)
 	{
 		this.exec = exec;
+		this.connection = connection;
+	}
+
+	protected CloudSpannerConnection getConnection()
+	{
+		return connection;
+	}
+
+	protected DatabaseClient getDbClient()
+	{
+		return connection.getDbClient();
 	}
 
 	private boolean isSubmitted()

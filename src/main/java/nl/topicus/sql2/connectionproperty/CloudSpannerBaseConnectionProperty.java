@@ -44,12 +44,18 @@ public class CloudSpannerBaseConnectionProperty implements ConnectionProperty
 	}
 
 	@Override
+	public int hashCode()
+	{
+		return name.hashCode();
+	}
+
+	@Override
 	public boolean equals(Object o)
 	{
-		if (o instanceof String)
-			return ((String) o).equalsIgnoreCase(name);
-		if (o instanceof ConnectionProperty)
-			return ((ConnectionProperty) o).name().equalsIgnoreCase(name);
+		if (o instanceof CloudSpannerBaseConnectionProperty)
+		{
+			return ((CloudSpannerBaseConnectionProperty) o).name.equals(name);
+		}
 		return false;
 	}
 

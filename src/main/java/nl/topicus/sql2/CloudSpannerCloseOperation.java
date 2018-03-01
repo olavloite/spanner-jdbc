@@ -7,12 +7,9 @@ import nl.topicus.sql2.operation.CloudSpannerOperation;
 
 public class CloudSpannerCloseOperation extends CloudSpannerOperation<Void>
 {
-	private final CloudSpannerConnection connection;
-
 	CloudSpannerCloseOperation(Executor exec, CloudSpannerConnection connection)
 	{
-		super(exec);
-		this.connection = connection;
+		super(exec, connection);
 	}
 
 	@Override
@@ -20,7 +17,7 @@ public class CloudSpannerCloseOperation extends CloudSpannerOperation<Void>
 	{
 		try
 		{
-			connection.doClose();
+			getConnection().doClose();
 		}
 		catch (SQLException e)
 		{

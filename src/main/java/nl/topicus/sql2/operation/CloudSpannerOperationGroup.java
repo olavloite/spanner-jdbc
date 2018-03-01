@@ -22,8 +22,6 @@ import nl.topicus.sql2.CloudSpannerConnection;
 
 public class CloudSpannerOperationGroup<S, T> extends CloudSpannerOperation<T> implements OperationGroup<S, T>
 {
-	private final CloudSpannerConnection connection;
-
 	private boolean held = false;
 
 	protected CloudSpannerOperationGroup(Executor exec)
@@ -33,13 +31,7 @@ public class CloudSpannerOperationGroup<S, T> extends CloudSpannerOperation<T> i
 
 	CloudSpannerOperationGroup(Executor exec, CloudSpannerConnection connection)
 	{
-		super(exec);
-		this.connection = connection;
-	}
-
-	protected CloudSpannerConnection getConnection()
-	{
-		return connection;
+		super(exec, connection);
 	}
 
 	@Override
@@ -101,7 +93,7 @@ public class CloudSpannerOperationGroup<S, T> extends CloudSpannerOperation<T> i
 	@Override
 	public <R extends S> ParameterizedCountOperation<R> countOperation(String sql)
 	{
-		return new CloudSpannerParameterizedCountOperation<>(getExecutor(), sql);
+		return new CloudSpannerParameterizedCountOperation<>(getExecutor(), getConnection(), sql);
 	}
 
 	@Override
