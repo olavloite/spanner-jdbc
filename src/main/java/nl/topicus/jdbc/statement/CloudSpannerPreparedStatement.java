@@ -629,7 +629,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			mode = DMLOperation.ONDUPLICATEKEYUPDATE;
 		else
 			mode = DMLOperation.INSERT;
-		return new InsertWorker(getConnection(), select, insert, getConnection().isAllowExtendedMode(), mode);
+		return new InsertWorker(getConnection(), select, insert, getParameterStore(),
+				getConnection().isAllowExtendedMode(), mode);
 	}
 
 	private DeleteWorker createDeleteWorker(Delete delete) throws SQLException
@@ -638,7 +639,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new CloudSpannerSQLException("DELETE statement must contain only one table", Code.INVALID_ARGUMENT);
 		}
-		return new DeleteWorker(getConnection(), delete, getConnection().isAllowExtendedMode());
+		return new DeleteWorker(getConnection(), delete, getParameterStore(), getConnection().isAllowExtendedMode());
 	}
 
 	boolean isForceUpdate()

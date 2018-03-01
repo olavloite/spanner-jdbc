@@ -20,9 +20,10 @@ public class DeleteWorker extends AbstractTablePartWorker
 {
 	final Delete delete;
 
-	public DeleteWorker(CloudSpannerConnection connection, Delete delete, boolean allowExtendedMode) throws SQLException
+	public DeleteWorker(CloudSpannerConnection connection, Delete delete, ParameterStore parameters,
+			boolean allowExtendedMode) throws SQLException
 	{
-		super(connection, createSelect(connection, delete), allowExtendedMode, DMLOperation.DELETE);
+		super(connection, createSelect(connection, delete), parameters, allowExtendedMode, DMLOperation.DELETE);
 		this.delete = delete;
 	}
 
