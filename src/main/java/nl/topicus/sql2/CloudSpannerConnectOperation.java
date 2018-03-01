@@ -1,6 +1,5 @@
 package nl.topicus.sql2;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.Executor;
 
@@ -16,6 +15,7 @@ import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
 import com.google.rpc.Code;
 
+import nl.topicus.java.sql2.Connection.Lifecycle;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.sql2.connectionproperty.CloudSpannerCredentialsPathConnectionProperty;
 import nl.topicus.sql2.connectionproperty.CloudSpannerDatabaseConnectionProperty;
@@ -28,32 +28,29 @@ public class CloudSpannerConnectOperation extends CloudSpannerOperation<Void>
 {
 	private final ConnectionProperties connectionProperties;
 
-	private final CloudSpannerConnection connection;
-
 	CloudSpannerConnectOperation(Executor exec, CloudSpannerConnection connection,
 			ConnectionProperties connectionProperties)
 	{
-		super(exec);
-		this.connection = connection;
+		super(exec, connection);
 		this.connectionProperties = connectionProperties;
 	}
 
 	@Override
 	public Void get()
 	{
-		Spanner spanner;
-		String clientId = null;
-		DatabaseClient dbClient;
-		DatabaseAdminClient adminClient;
-
-		String project = (String) connectionProperties.get(CloudSpannerProjectConnectionProperty.class);
-		String instance = (String) connectionProperties.get(CloudSpannerInstanceConnectionProperty.class);
-		String database = (String) connectionProperties.get(CloudSpannerDatabaseConnectionProperty.class);
-		String credentialsPath = (String) connectionProperties.get(CloudSpannerCredentialsPathConnectionProperty.class);
-		String oauthToken = (String) connectionProperties.get(CloudSpannerOAuthTokenConnectionProperty.class);
-
 		try
 		{
+			Spanner spanner;
+			String clientId = null;
+			DatabaseClient dbClient;
+			DatabaseAdminClient adminClient;
+
+			String project = (String) connectionProperties.get(CloudSpannerProjectConnectionProperty.class);
+			String instance = (String) connectionProperties.get(CloudSpannerInstanceConnectionProperty.class);
+			String database = (String) connectionProperties.get(CloudSpannerDatabaseConnectionProperty.class);
+			String credentialsPath = (String) connectionProperties
+					.get(CloudSpannerCredentialsPathConnectionProperty.class);
+			String oauthToken = (String) connectionProperties.get(CloudSpannerOAuthTokenConnectionProperty.class);
 			Builder builder = SpannerOptions.newBuilder();
 			builder.setProjectId(project);
 			GoogleCredentials credentials = null;
@@ -83,21 +80,24 @@ public class CloudSpannerConnectOperation extends CloudSpannerOperation<Void>
 			spanner = options.getService();
 			dbClient = spanner.getDatabaseClient(DatabaseId.of(options.getProjectId(), instance, database));
 			adminClient = spanner.getDatabaseAdminClient();
-			connection.doConnect(spanner, clientId, dbClient, adminClient);
+			getConnection().doConnect(spanner, clientId, dbClient, adminClient);
 		}
 		catch (SpannerException e)
 		{
+			getConnection().setLifecycle(Lifecycle.CLOSED);
 			handle(new CloudSpannerSQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(),
 					e));
 		}
-		catch (IOException e)
-		{
-			handle(new CloudSpannerSQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(),
-					Code.UNKNOWN, e));
-		}
 		catch (SQLException e)
 		{
+			getConnection().setLifecycle(Lifecycle.CLOSED);
 			handle(e);
+		}
+		catch (Exception e)
+		{
+			getConnection().setLifecycle(Lifecycle.CLOSED);
+			handle(new CloudSpannerSQLException("Error when opening Google Cloud Spanner connection: " + e.getMessage(),
+					Code.UNKNOWN, e));
 		}
 		return null;
 	}

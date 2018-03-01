@@ -1,10 +1,14 @@
 package nl.topicus.sql2;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Flow.Subscription;
+import java.util.concurrent.TimeUnit;
 
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
@@ -48,7 +52,7 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		}
 
 		@Override
-		public Connection build()
+		public CloudSpannerConnection build()
 		{
 			if (exec == null)
 				exec = createDefaultExecutor();
@@ -57,7 +61,57 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 
 		private Executor createDefaultExecutor()
 		{
-			return Executors.newFixedThreadPool(10);
+			// Default 1 thread as execution directly on the connection should
+			// be sequential
+			return Executors.newFixedThreadPool(1);
+		}
+
+	}
+
+	private static final class WaitForConnectOperationListener implements ConnectionLifecycleListener
+	{
+		private final CountDownLatch latch = new CountDownLatch(1);
+
+		private static void waitForConnection(Connection connection, long timeout, TimeUnit unit) throws SQLException
+		{
+			WaitForConnectOperationListener listener = new WaitForConnectOperationListener();
+			connection.registerLifecycleListener(listener);
+			boolean res = false;
+			if (!(connection.getLifecycle() == Lifecycle.OPEN || connection.getLifecycle() == Lifecycle.CLOSED))
+			{
+				try
+				{
+					res = listener.latch.await(timeout, unit);
+				}
+				catch (InterruptedException e)
+				{
+					throw new CloudSpannerSQLException("Wait interrupted", Code.UNKNOWN, e);
+				}
+			}
+			if (!(connection.getLifecycle() == Lifecycle.OPEN || connection.getLifecycle() == Lifecycle.CLOSED))
+			{
+				if (!res)
+				{
+					throw new CloudSpannerSQLException("Timeout", Code.DEADLINE_EXCEEDED);
+				}
+				else
+				{
+					throw new CloudSpannerSQLException("Failed to open connection", Code.UNKNOWN);
+				}
+			}
+		}
+
+		private WaitForConnectOperationListener()
+		{
+		}
+
+		@Override
+		public void lifecycleEvent(Connection conn, Lifecycle previous, Lifecycle current)
+		{
+			if (current == Lifecycle.CLOSED || current == Lifecycle.OPEN)
+			{
+				latch.countDown();
+			}
 		}
 
 	}
@@ -65,6 +119,8 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 	private final ConnectionProperties connectionProperties;
 
 	private Lifecycle lifecycle = Lifecycle.NEW;
+
+	private List<ConnectionLifecycleListener> lifecycleListeners = new ArrayList<>();
 
 	private Spanner spanner;
 
@@ -92,6 +148,11 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		return new CloudSpannerConnectOperation(getExecutor(), this, connectionProperties);
 	}
 
+	Spanner getSpanner()
+	{
+		return spanner;
+	}
+
 	void doConnect(Spanner spanner, String clientId, DatabaseClient dbClient, DatabaseAdminClient adminClient)
 			throws SQLException
 	{
@@ -100,12 +161,37 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		this.dbClient = dbClient;
 		this.adminClient = adminClient;
 		if (lifecycle == Lifecycle.NEW)
-			lifecycle = Lifecycle.OPEN;
+			setLifecycle(Lifecycle.OPEN);
 		else if (lifecycle == Lifecycle.NEW_INACTIVE)
-			lifecycle = Lifecycle.INACTIVE;
+			setLifecycle(Lifecycle.INACTIVE);
 		else
+		{
 			throw new CloudSpannerSQLException("Invalid lifecycle for finalizing connect: " + lifecycle,
 					Code.FAILED_PRECONDITION);
+		}
+	}
+
+	void setLifecycle(Lifecycle lc)
+	{
+		Lifecycle prev = this.lifecycle;
+		this.lifecycle = lc;
+		lifecycleListeners.stream().forEach(listener -> listener.lifecycleEvent(this, prev, lc));
+	}
+
+	public void waitForConnect(long timeout, TimeUnit unit) throws SQLException
+	{
+		WaitForConnectOperationListener.waitForConnection(this, timeout, unit);
+	}
+
+	public boolean getAutoCommit()
+	{
+		return true;
+	}
+
+	@Override
+	public DatabaseClient getDbClient()
+	{
+		return dbClient;
 	}
 
 	@Override
@@ -123,6 +209,7 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 
 	void doClose() throws SQLException
 	{
+		setLifecycle(Lifecycle.CLOSED);
 	}
 
 	@Override
@@ -142,8 +229,12 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 	@Override
 	public void registerLifecycleListener(ConnectionLifecycleListener listener)
 	{
-		// TODO Auto-generated method stub
+		lifecycleListeners.add(listener);
+	}
 
+	public void removeLifecycleListener(ConnectionLifecycleListener listener)
+	{
+		lifecycleListeners.remove(listener);
 	}
 
 	@Override

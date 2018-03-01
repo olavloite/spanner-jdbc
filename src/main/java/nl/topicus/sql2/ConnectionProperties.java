@@ -18,16 +18,18 @@ class ConnectionProperties
 		return connectionProperties.put(connectionProperty, value);
 	}
 
-	@SuppressWarnings("unlikely-arg-type")
 	<T extends ConnectionProperty> Object get(Class<T> connectionProperty)
 	{
-		return connectionProperties.get(connectionProperty);
+		ConnectionProperty key = connectionProperties.keySet().stream()
+				.filter(cp -> cp.getClass().equals(connectionProperty)).findFirst().orElse(null);
+		return key == null ? null : connectionProperties.get(key);
 	}
 
-	@SuppressWarnings("unlikely-arg-type")
 	Object get(String name)
 	{
-		return connectionProperties.get(name);
+		ConnectionProperty key = connectionProperties.keySet().stream().filter(cp -> cp.name().equals(name)).findFirst()
+				.orElse(null);
+		return key == null ? null : connectionProperties.get(key);
 	}
 
 }

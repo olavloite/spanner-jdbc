@@ -5,15 +5,21 @@ import java.util.concurrent.Executor;
 
 import nl.topicus.java.sql2.ParameterizedOperation;
 import nl.topicus.java.sql2.SqlType;
+import nl.topicus.sql2.CloudSpannerConnection;
 
 public abstract class CloudSpannerParameterizedOperation<T> extends CloudSpannerOperation<T>
 		implements ParameterizedOperation<T>
 {
 	private ParameterStore parameterStore = new ParameterStore();
 
-	CloudSpannerParameterizedOperation(Executor exec)
+	CloudSpannerParameterizedOperation(Executor exec, CloudSpannerConnection connection)
 	{
-		super(exec);
+		super(exec, connection);
+	}
+
+	protected ParameterStore getParameterStore()
+	{
+		return parameterStore;
 	}
 
 	@Override
