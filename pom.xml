@@ -348,6 +348,17 @@
 							<to>${project.build.directory}/${project.build.finalName}.${project.packaging}/META-INF/native/nl_topicus_jdbc_shaded_netty_tcnative_windows_x86_64.dll</to>
 						</configuration>
 					</execution>
+					<execution>
+						<id>move-windows-lib-32</id>
+						<goals>
+							<goal>move</goal>
+						</goals>
+						<phase>post-integration-test</phase>
+						<configuration>
+							<from>${project.build.directory}/${project.build.finalName}.${project.packaging}/META-INF/native/netty_tcnative_windows_x86_32.dll</from>
+							<to>${project.build.directory}/${project.build.finalName}.${project.packaging}/META-INF/native/nl_topicus_jdbc_shaded_netty_tcnative_windows_x86_32.dll</to>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>
