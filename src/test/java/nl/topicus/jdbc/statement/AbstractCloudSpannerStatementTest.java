@@ -17,7 +17,11 @@ import org.mockito.Mockito;
 
 import com.google.cloud.spanner.DatabaseClient;
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.test.util.CloudSpannerTestObjects;
 
@@ -106,6 +110,49 @@ public class AbstractCloudSpannerStatementTest
 	{
 		thrown.expect(SQLFeatureNotSupportedException.class);
 		subject.getGeneratedKeys();
+	}
+
+	@Test
+	public void testCreateInsertSelectOnDuplicateKeyUpdateStatement() throws JSQLParserException, SQLException
+	{
+		String sql = "UPDATE FOO SET BAR=2 WHERE VALUE=1";
+		Update update = (Update) CCJSqlParserUtil.parse(sql);
+		String insert = subject.createInsertSelectOnDuplicateKeyUpdateStatement(update);
+		assertEquals("INSERT INTO `FOO`\n" + "(`ID`, `BAR`)\n" + "SELECT `FOO`.`ID`, 2\n" + "FROM `FOO`\n"
+				+ "WHERE VALUE = 1\n" + "ON DUPLICATE KEY UPDATE", insert);
+	}
+
+	@Test
+	public void testCreateInsertSelectOnDuplicateKeyUpdateStatementWithParameters()
+			throws JSQLParserException, SQLException
+	{
+		String sql = "UPDATE FOO SET BAR=? WHERE ID=? AND VALUE=?";
+		Update update = (Update) CCJSqlParserUtil.parse(sql);
+		String insert = subject.createInsertSelectOnDuplicateKeyUpdateStatement(update);
+		assertEquals("INSERT INTO `FOO`\n" + "(`ID`, `BAR`)\n" + "SELECT `FOO`.`ID`, ?\n" + "FROM `FOO`\n"
+				+ "WHERE ID = ? AND VALUE = ?\n" + "ON DUPLICATE KEY UPDATE", insert);
+	}
+
+	@Test
+	public void testCreateInsertSelectOnDuplicateKeyUpdateStatementWithParametersAndUpdateOnPartOfKey()
+			throws JSQLParserException, SQLException
+	{
+		String sql = "UPDATE BAR SET ID1=?, COL1=? WHERE ID2=? AND COL2=?";
+		Update update = (Update) CCJSqlParserUtil.parse(sql);
+		thrown.expect(CloudSpannerSQLException.class);
+		thrown.expectMessage("UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) ID1");
+		subject.createInsertSelectOnDuplicateKeyUpdateStatement(update);
+	}
+
+	@Test
+	public void testCreateInsertSelectOnDuplicateKeyUpdateStatementWithParametersAndUpdateOnPartOfKeyLowerCase()
+			throws JSQLParserException, SQLException
+	{
+		String sql = "UPDATE BAR SET id1=?, col1=? WHERE id2=? AND col2=?";
+		Update update = (Update) CCJSqlParserUtil.parse(sql);
+		thrown.expect(CloudSpannerSQLException.class);
+		thrown.expectMessage("UPDATE of a primary key value is not allowed, cannot UPDATE the column(s) ID1");
+		subject.createInsertSelectOnDuplicateKeyUpdateStatement(update);
 	}
 
 }
