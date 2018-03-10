@@ -96,7 +96,7 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		String tableName = unquoteIdentifier(update.getTables().get(0).getName());
 		TableKeyMetaData table = getConnection().getTable(tableName);
 		List<String> keyColumns = table.getKeyColumns();
-		List<String> updateColumns = update.getColumns().stream().map(Column::getColumnName)
+		List<String> updateColumns = update.getColumns().stream().map(Column::getColumnName).map(String::toUpperCase)
 				.collect(Collectors.toList());
 		List<String> quotedKeyColumns = keyColumns.stream().map(this::quoteIdentifier).collect(Collectors.toList());
 		List<String> quotedAndQualifiedKeyColumns = keyColumns.stream()
