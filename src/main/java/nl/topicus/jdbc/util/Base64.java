@@ -389,52 +389,48 @@ public class Base64
 	{
 		// Isolate options
 		int dontBreakLines = (options & DONT_BREAK_LINES);
+		return encodeBytes(source, off, len, dontBreakLines == 0);
+	}
 
-		// Else, don't compress. Better not to use streams at all then.
+	private static String encodeBytes(byte[] source, int off, int len, boolean breakLines)
+	{
+		int len43 = len * 4 / 3;
+		byte[] outBuff = new byte[(len43) // Main 4:3
+				+ ((len % 3) > 0 ? 4 : 0) // Account for padding
+				+ (breakLines ? (len43 / MAX_LINE_LENGTH) : 0)]; // New
+																	// lines
+		int d = 0;
+		int e = 0;
+		int len2 = len - 2;
+		int lineLength = 0;
+		for (; d < len2; d += 3, e += 4)
 		{
-			// Convert option to boolean in way that code likes it.
-			boolean breakLines = dontBreakLines == 0;
+			encode3to4(source, d + off, 3, outBuff, e);
 
-			int len43 = len * 4 / 3;
-			byte[] outBuff = new byte[(len43) // Main 4:3
-					+ ((len % 3) > 0 ? 4 : 0) // Account for padding
-					+ (breakLines ? (len43 / MAX_LINE_LENGTH) : 0)]; // New
-																		// lines
-			int d = 0;
-			int e = 0;
-			int len2 = len - 2;
-			int lineLength = 0;
-			for (; d < len2; d += 3, e += 4)
+			lineLength += 4;
+			if (breakLines && lineLength == MAX_LINE_LENGTH)
 			{
-				encode3to4(source, d + off, 3, outBuff, e);
+				outBuff[e + 4] = NEW_LINE;
+				e++;
+				lineLength = 0;
+			} // end if: end of line
+		} // en dfor: each piece of array
 
-				lineLength += 4;
-				if (breakLines && lineLength == MAX_LINE_LENGTH)
-				{
-					outBuff[e + 4] = NEW_LINE;
-					e++;
-					lineLength = 0;
-				} // end if: end of line
-			} // en dfor: each piece of array
+		if (d < len)
+		{
+			encode3to4(source, d + off, len - d, outBuff, e);
+			e += 4;
+		} // end if: some padding needed
 
-			if (d < len)
-			{
-				encode3to4(source, d + off, len - d, outBuff, e);
-				e += 4;
-			} // end if: some padding needed
-
-			// Return value according to relevant encoding.
-			try
-			{
-				return new String(outBuff, 0, e, PREFERRED_ENCODING);
-			}
-			catch (java.io.UnsupportedEncodingException uue)
-			{
-				return new String(outBuff, 0, e);
-			}
-
+		// Return value according to relevant encoding.
+		try
+		{
+			return new String(outBuff, 0, e, PREFERRED_ENCODING);
 		}
-
+		catch (java.io.UnsupportedEncodingException uue)
+		{
+			return new String(outBuff, 0, e);
+		}
 	}
 
 	/* ******** D E C O D I N G M E T H O D S ******** */
