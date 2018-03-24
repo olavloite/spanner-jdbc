@@ -71,12 +71,7 @@ public class RecoveredXid implements Xid
 		{
 			return false;
 		}
-		if (!Arrays.equals(branchQualifier, other.getBranchQualifier()))
-		{
-			return false;
-		}
-
-		return true;
+		return Arrays.equals(branchQualifier, other.getBranchQualifier());
 	}
 
 	/**
@@ -106,8 +101,8 @@ public class RecoveredXid implements Xid
 	{
 		RecoveredXid xid = new RecoveredXid();
 
-		int a = s.indexOf("_");
-		int b = s.lastIndexOf("_");
+		int a = s.indexOf('_');
+		int b = s.lastIndexOf('_');
 
 		if (a == b)
 		{

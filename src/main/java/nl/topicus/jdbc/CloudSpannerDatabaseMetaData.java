@@ -1,6 +1,7 @@
 package nl.topicus.jdbc;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
@@ -17,6 +18,8 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	private static final int JDBC_MINOR_VERSION = 2;
 
 	private static final String FROM_STATEMENT_WITHOUT_RESULTS = " FROM INFORMATION_SCHEMA.TABLES T WHERE 1=2 ";
+
+	private static final String VERSION_AND_IDENTIFIER_COLUMNS_SELECT_STATEMENT = "SELECT 0 AS SCOPE, '' AS COLUMN_NAME, 0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, 0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN ";
 
 	private CloudSpannerConnection connection;
 
@@ -866,18 +869,28 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
 			throws SQLException
 	{
-		String sql = "SELECT 0 AS SCOPE, '' AS COLUMN_NAME, 0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, "
-				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + FROM_STATEMENT_WITHOUT_RESULTS;
-
-		CloudSpannerPreparedStatement statement = prepareStatement(sql);
-		return statement.executeQuery();
+		return getVersionColumnsOrBestRowIdentifier();
 	}
 
 	@Override
 	public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException
 	{
-		String sql = "SELECT 0 AS SCOPE, '' AS COLUMN_NAME, 0 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS COLUMN_SIZE, 0 AS BUFFER_LENGTH, "
-				+ "0 AS DECIMAL_DIGITS, 0 AS PSEUDO_COLUMN " + FROM_STATEMENT_WITHOUT_RESULTS;
+		return getVersionColumnsOrBestRowIdentifier();
+	}
+
+	/**
+	 * A simple private method that combines the result of two methods that
+	 * return exactly the same result
+	 * 
+	 * @return An empty {@link ResultSet} containing the columns for the methods
+	 *         {@link DatabaseMetaData#getBestRowIdentifier(String, String, String, int, boolean)}
+	 *         and
+	 *         {@link DatabaseMetaData#getVersionColumns(String, String, String)}
+	 * @throws SQLException
+	 */
+	private ResultSet getVersionColumnsOrBestRowIdentifier() throws SQLException
+	{
+		String sql = VERSION_AND_IDENTIFIER_COLUMNS_SELECT_STATEMENT + FROM_STATEMENT_WITHOUT_RESULTS;
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();

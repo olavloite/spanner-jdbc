@@ -2,7 +2,9 @@ package nl.topicus.jdbc.resultset;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.sql.Date;
@@ -12,23 +14,32 @@ import java.sql.Timestamp;
 import java.sql.Types;
 
 import org.junit.Test;
+import org.mockito.internal.stubbing.answers.Returns;
 
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Type;
+
+import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 
 public class CloudSpannerResultSetMetaDataTest
 {
 	private CloudSpannerResultSetMetaData subject;
 
 	private ResultSet resultSet;
+	private CloudSpannerStatement statement;
 
-	public CloudSpannerResultSetMetaDataTest()
+	public CloudSpannerResultSetMetaDataTest() throws SQLException
 	{
 		resultSet = CloudSpannerResultSetTest.getMockResultSet();
 		when(resultSet.getColumnCount()).thenReturn(4);
+		statement = mock(CloudSpannerStatement.class);
+		CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
+		when(connection.isReportDefaultSchemaAsNull()).then(new Returns(true));
+		when(statement.getConnection()).then(new Returns(connection));
 
 		resultSet.next();
-		subject = new CloudSpannerResultSetMetaData(resultSet);
+		subject = new CloudSpannerResultSetMetaData(resultSet, statement);
 	}
 
 	@Test
@@ -108,7 +119,10 @@ public class CloudSpannerResultSetMetaDataTest
 	@Test
 	public void testGetSchemaName() throws SQLException
 	{
+		assertNull(subject.getSchemaName(1));
+		when(statement.getConnection().isReportDefaultSchemaAsNull()).then(new Returns(false));
 		assertEquals("", subject.getSchemaName(1));
+		when(statement.getConnection().isReportDefaultSchemaAsNull()).then(new Returns(true));
 	}
 
 	@Test

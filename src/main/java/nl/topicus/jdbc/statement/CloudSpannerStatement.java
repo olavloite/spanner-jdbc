@@ -64,20 +64,17 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	{
 		String result = removeComments(sql);
 		String[] parts = getTokens(sql, 0);
-		if (parts.length > 2)
+		if (parts.length > 2 && parts[0].equalsIgnoreCase("create") && parts[1].equalsIgnoreCase("table"))
 		{
-			if (parts[0].equalsIgnoreCase("create") && parts[1].equalsIgnoreCase("table"))
+			String sqlWithSingleSpaces = String.join(" ", parts);
+			int primaryKeyIndex = sqlWithSingleSpaces.toUpperCase().indexOf(", PRIMARY KEY (");
+			if (primaryKeyIndex > -1)
 			{
-				String sqlWithSingleSpaces = String.join(" ", parts);
-				int primaryKeyIndex = sqlWithSingleSpaces.toUpperCase().indexOf(", PRIMARY KEY (");
-				if (primaryKeyIndex > -1)
-				{
-					int endPrimaryKeyIndex = sqlWithSingleSpaces.indexOf(')', primaryKeyIndex);
-					String primaryKeySpec = sqlWithSingleSpaces.substring(primaryKeyIndex + 2, endPrimaryKeyIndex + 1);
-					sqlWithSingleSpaces = sqlWithSingleSpaces.replace(", " + primaryKeySpec, "");
-					sqlWithSingleSpaces = sqlWithSingleSpaces + " " + primaryKeySpec;
-					result = sqlWithSingleSpaces.replaceAll("\\s+\\)", ")");
-				}
+				int endPrimaryKeyIndex = sqlWithSingleSpaces.indexOf(')', primaryKeyIndex);
+				String primaryKeySpec = sqlWithSingleSpaces.substring(primaryKeyIndex + 2, endPrimaryKeyIndex + 1);
+				sqlWithSingleSpaces = sqlWithSingleSpaces.replace(", " + primaryKeySpec, "");
+				sqlWithSingleSpaces = sqlWithSingleSpaces + " " + primaryKeySpec;
+				result = sqlWithSingleSpaces.replaceAll("\\s+\\)", ")");
 			}
 		}
 

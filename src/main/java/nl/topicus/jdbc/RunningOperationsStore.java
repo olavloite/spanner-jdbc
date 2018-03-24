@@ -2,7 +2,6 @@ package nl.topicus.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +17,7 @@ import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 
 /**
  * This class maintains a list of all long running (DDL-)operations of a
@@ -110,7 +110,7 @@ class RunningOperationsStore
 	 * @return A result set of all DDL operations that have been issued on this
 	 *         connection since the last clear operation.
 	 */
-	ResultSet getOperations(Statement statement)
+	ResultSet getOperations(CloudSpannerStatement statement)
 	{
 		List<Struct> rows = new ArrayList<>(operations.size());
 		for (DdlOperation op : operations)

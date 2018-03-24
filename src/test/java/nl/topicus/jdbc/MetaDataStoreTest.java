@@ -54,11 +54,11 @@ public class MetaDataStoreTest
 			field.setAccessible(true);
 			@SuppressWarnings("unchecked")
 			Map<String, TableKeyMetaData> map = (Map<String, TableKeyMetaData>) field.get(subject);
-			assertEquals(map.size(), 2);
+			assertEquals(2, map.size());
 			subject.clearTable("Foo");
-			assertEquals(map.size(), 1);
+			assertEquals(1, map.size());
 			subject.clear();
-			assertEquals(map.size(), 0);
+			assertEquals(0, map.size());
 		}
 	}
 

@@ -3,6 +3,7 @@ package nl.topicus.jdbc.test.integration;
 import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
@@ -38,7 +39,7 @@ public class ConnectionPoolingTester
 		connection.close();
 		while (cpds.getNumBusyConnections() == 1)
 		{
-			Thread.sleep(100l);
+			TimeUnit.MILLISECONDS.sleep(100L);
 		}
 		Assert.assertEquals(0, cpds.getNumBusyConnectionsDefaultUser());
 

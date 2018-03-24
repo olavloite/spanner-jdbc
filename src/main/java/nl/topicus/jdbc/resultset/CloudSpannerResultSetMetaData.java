@@ -7,14 +7,18 @@ import java.sql.Types;
 import com.google.cloud.spanner.ResultSet;
 
 import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 
 public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper implements ResultSetMetaData
 {
 	private ResultSet resultSet;
 
-	public CloudSpannerResultSetMetaData(ResultSet resultSet)
+	private CloudSpannerStatement statement;
+
+	public CloudSpannerResultSetMetaData(ResultSet resultSet, CloudSpannerStatement statement)
 	{
 		this.resultSet = resultSet;
+		this.statement = statement;
 	}
 
 	@Override
@@ -102,7 +106,7 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public String getSchemaName(int column) throws SQLException
 	{
-		return "";
+		return statement.getConnection().isReportDefaultSchemaAsNull() ? null : "";
 	}
 
 	@Override
