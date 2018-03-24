@@ -101,8 +101,8 @@ public class RecoveredXid implements Xid
 	{
 		RecoveredXid xid = new RecoveredXid();
 
-		int a = s.indexOf("_");
-		int b = s.lastIndexOf("_");
+		int a = s.indexOf('_');
+		int b = s.lastIndexOf('_');
 
 		if (a == b)
 		{
