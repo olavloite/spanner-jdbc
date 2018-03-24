@@ -18,6 +18,16 @@ class DDLStatement
 	private static final Pattern IF_EXISTS_PATTERN = Pattern.compile("(?i)if\\s+exists");
 	private static final Pattern IF_NOT_EXISTS_PATTERN = Pattern.compile("(?i)if\\s+not\\s+exists");
 
+	private static final String CREATE_KEYWORD = "create";
+	private static final String DROP_KEYWORD = "drop";
+	private static final String TABLE_KEYWORD = "table";
+	private static final String INDEX_KEYWORD = "index";
+	private static final String UNIQUE_KEYWORD = "unique";
+	private static final String NULL_FILTERED_KEYWORD = "null_filtered";
+	private static final String EXISTS_KEYWORD = "exists";
+	private static final String IF_KEYWORD = "if";
+	private static final String NOT_KEYWORD = "not";
+
 	enum Command
 	{
 		UNKNOWN, DROP, CREATE;
@@ -140,29 +150,33 @@ class DDLStatement
 			// 'DROP TABLE IF EXISTS table_name
 			if (tokens.size() >= 3)
 			{
-				boolean create = tokens.get(0).equalsIgnoreCase("create");
-				boolean drop = tokens.get(0).equalsIgnoreCase("drop");
-				boolean table = tokens.get(1).equalsIgnoreCase("table");
-				boolean index = tokens.get(1).equalsIgnoreCase("index");
-				boolean uniqueIndex = tokens.get(1).equalsIgnoreCase("unique")
-						&& tokens.get(2).equalsIgnoreCase("index");
-				boolean nullFilteredIndex = tokens.get(1).equalsIgnoreCase("null_filtered")
-						&& tokens.get(2).equalsIgnoreCase("index");
-				boolean uniqueNullFilteredIndex = tokens.size() >= 4 && ((tokens.get(1).equalsIgnoreCase("unique")
-						&& tokens.get(2).equalsIgnoreCase("null_filtered") && tokens.get(3).equalsIgnoreCase("index"))
-						|| (tokens.get(1).equalsIgnoreCase("null_filtered") && tokens.get(2).equalsIgnoreCase("unique")
-								&& tokens.get(3).equalsIgnoreCase("index")));
+				boolean create = tokens.get(0).equalsIgnoreCase(CREATE_KEYWORD);
+				boolean drop = tokens.get(0).equalsIgnoreCase(DROP_KEYWORD);
+				boolean table = tokens.get(1).equalsIgnoreCase(TABLE_KEYWORD);
+				boolean index = tokens.get(1).equalsIgnoreCase(INDEX_KEYWORD);
+				boolean uniqueIndex = tokens.get(1).equalsIgnoreCase(UNIQUE_KEYWORD)
+						&& tokens.get(2).equalsIgnoreCase(INDEX_KEYWORD);
+				boolean nullFilteredIndex = tokens.get(1).equalsIgnoreCase(NULL_FILTERED_KEYWORD)
+						&& tokens.get(2).equalsIgnoreCase(INDEX_KEYWORD);
+				boolean uniqueNullFilteredIndex = tokens.size() >= 4 && ((tokens.get(1).equalsIgnoreCase(UNIQUE_KEYWORD)
+						&& tokens.get(2).equalsIgnoreCase(NULL_FILTERED_KEYWORD)
+						&& tokens.get(3).equalsIgnoreCase(INDEX_KEYWORD))
+						|| (tokens.get(1).equalsIgnoreCase(NULL_FILTERED_KEYWORD)
+								&& tokens.get(2).equalsIgnoreCase(UNIQUE_KEYWORD)
+								&& tokens.get(3).equalsIgnoreCase(INDEX_KEYWORD)));
 				int currentIndex = 2;
 				if (uniqueIndex || nullFilteredIndex)
 					currentIndex = 3;
 				else if (uniqueNullFilteredIndex)
 					currentIndex = 4;
 				// Check for exists statement
-				boolean exists = tokens.size() > currentIndex + 2 && tokens.get(currentIndex).equalsIgnoreCase("if")
-						&& tokens.get(currentIndex + 1).equalsIgnoreCase("exists");
-				boolean notExists = tokens.size() > currentIndex + 3 && tokens.get(currentIndex).equalsIgnoreCase("if")
-						&& tokens.get(currentIndex + 1).equalsIgnoreCase("not")
-						&& tokens.get(currentIndex + 2).equalsIgnoreCase("exists");
+				boolean exists = tokens.size() > currentIndex + 2
+						&& tokens.get(currentIndex).equalsIgnoreCase(IF_KEYWORD)
+						&& tokens.get(currentIndex + 1).equalsIgnoreCase(EXISTS_KEYWORD);
+				boolean notExists = tokens.size() > currentIndex + 3
+						&& tokens.get(currentIndex).equalsIgnoreCase(IF_KEYWORD)
+						&& tokens.get(currentIndex + 1).equalsIgnoreCase(NOT_KEYWORD)
+						&& tokens.get(currentIndex + 2).equalsIgnoreCase(EXISTS_KEYWORD);
 				if (exists)
 					currentIndex += 2;
 				if (notExists)
