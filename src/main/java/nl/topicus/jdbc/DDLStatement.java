@@ -181,14 +181,31 @@ class DDLStatement
 					currentIndex += 2;
 				if (notExists)
 					currentIndex += 3;
-
 				String name = tokens.size() > currentIndex ? tokens.get(currentIndex) : "";
-				Command command = create ? Command.CREATE : drop ? Command.DROP : Command.UNKNOWN;
-				ObjectType objectType = table ? ObjectType.TABLE
-						: index || uniqueIndex || nullFilteredIndex || uniqueNullFilteredIndex ? ObjectType.INDEX
-								: ObjectType.UNKNOWN;
-				ExistsStatement existsStatement = exists ? ExistsStatement.IF_EXISTS
-						: notExists ? ExistsStatement.IF_NOT_EXISTS : ExistsStatement.NONE;
+
+				Command command;
+				if (create)
+					command = Command.CREATE;
+				else if (drop)
+					command = Command.DROP;
+				else
+					command = Command.UNKNOWN;
+
+				ObjectType objectType;
+				if (table)
+					objectType = ObjectType.TABLE;
+				else if (index || uniqueIndex || nullFilteredIndex || uniqueNullFilteredIndex)
+					objectType = ObjectType.INDEX;
+				else
+					objectType = ObjectType.UNKNOWN;
+
+				ExistsStatement existsStatement;
+				if (exists)
+					existsStatement = ExistsStatement.IF_EXISTS;
+				else if (notExists)
+					existsStatement = ExistsStatement.IF_NOT_EXISTS;
+				else
+					existsStatement = ExistsStatement.NONE;
 
 				String commandSql = existsStatement.removeExistsStatement(sql);
 				res.add(new DDLStatement(command, objectType, existsStatement, name, commandSql));
