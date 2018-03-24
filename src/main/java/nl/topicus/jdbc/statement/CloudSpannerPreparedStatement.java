@@ -635,7 +635,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private DeleteWorker createDeleteWorker(Delete delete) throws SQLException
 	{
-		if (delete.getTable() == null || (delete.getTables() != null && delete.getTables().size() > 0))
+		if (delete.getTable() == null || (delete.getTables() != null && !delete.getTables().isEmpty()))
 		{
 			throw new CloudSpannerSQLException("DELETE statement must contain only one table", Code.INVALID_ARGUMENT);
 		}
