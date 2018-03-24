@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -23,6 +22,7 @@ import com.google.cloud.spanner.Operation;
 import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @Category(UnitTest.class)
@@ -70,7 +70,7 @@ public class RunningOperationsStoreTest
 		{
 			boolean exception = counter % 2 == 0;
 			subject.addOperation(Arrays.asList(sql), mockOperation(exception));
-			try (ResultSet rs = subject.getOperations(mock(Statement.class)))
+			try (ResultSet rs = subject.getOperations(mock(CloudSpannerStatement.class)))
 			{
 				assertNotNull(rs);
 				int count = 0;
@@ -96,7 +96,7 @@ public class RunningOperationsStoreTest
 		}
 		reportDone = true;
 		subject.clearFinishedOperations();
-		try (ResultSet rs = subject.getOperations(mock(Statement.class)))
+		try (ResultSet rs = subject.getOperations(mock(CloudSpannerStatement.class)))
 		{
 			assertFalse(rs.next());
 		}

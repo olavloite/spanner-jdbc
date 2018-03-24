@@ -381,7 +381,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 *            The statement that requested the operations
 	 * @return A ResultSet with the DDL-operations
 	 */
-	public ResultSet getRunningDDLOperations(Statement statement)
+	public ResultSet getRunningDDLOperations(CloudSpannerStatement statement)
 	{
 		return operations.getOperations(statement);
 	}
@@ -787,12 +787,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return x -> 0;
 	}
 
-	public ResultSet getDynamicConnectionProperties(Statement statement)
+	public ResultSet getDynamicConnectionProperties(CloudSpannerStatement statement)
 	{
 		return getDynamicConnectionProperty(statement, null);
 	}
 
-	public ResultSet getDynamicConnectionProperty(Statement statement, String propertyName)
+	public ResultSet getDynamicConnectionProperty(CloudSpannerStatement statement, String propertyName)
 	{
 		Map<String, String> values = new HashMap<>();
 		if (propertyName == null || propertyName
@@ -822,7 +822,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return createResultSet(statement, values);
 	}
 
-	private ResultSet createResultSet(Statement statement, Map<String, String> values)
+	private ResultSet createResultSet(CloudSpannerStatement statement, Map<String, String> values)
 	{
 		List<Struct> rows = new ArrayList<>(values.size());
 		for (Entry<String, String> entry : values.entrySet())

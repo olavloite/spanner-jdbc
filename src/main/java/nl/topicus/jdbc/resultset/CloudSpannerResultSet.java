@@ -24,6 +24,7 @@ import com.google.cloud.spanner.Type.Code;
 import nl.topicus.jdbc.CloudSpannerArray;
 import nl.topicus.jdbc.CloudSpannerDataType;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
@@ -42,9 +43,9 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private boolean nextCalledForMetaDataResult = false;
 
-	private Statement statement;
+	private CloudSpannerStatement statement;
 
-	public CloudSpannerResultSet(Statement statement, com.google.cloud.spanner.ResultSet resultSet)
+	public CloudSpannerResultSet(CloudSpannerStatement statement, com.google.cloud.spanner.ResultSet resultSet)
 	{
 		this.statement = statement;
 		this.resultSet = resultSet;
@@ -236,7 +237,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			beforeFirst = false;
 			nextCalledForMetaData = true;
 		}
-		return new CloudSpannerResultSetMetaData(resultSet);
+		return new CloudSpannerResultSetMetaData(resultSet, statement);
 	}
 
 	@Override
