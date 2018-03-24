@@ -30,10 +30,10 @@ public class CloudSpannerConversionUtil
 
 	public static com.google.cloud.Date toCloudSpannerDate(Date date)
 	{
-		@SuppressWarnings("deprecation")
-		com.google.cloud.Date res = com.google.cloud.Date.fromYearMonthDay(date.getYear() + 1900, date.getMonth() + 1,
-				date.getDate());
-		return res;
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		return com.google.cloud.Date.fromYearMonthDay(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
+				cal.get(Calendar.DAY_OF_MONTH));
 	}
 
 	public static List<com.google.cloud.Date> toCloudSpannerDates(Date[] dates)
@@ -57,8 +57,7 @@ public class CloudSpannerConversionUtil
 		long milliseconds = ts.getTime();
 		long seconds = milliseconds / 1000l;
 		int nanos = ts.getNanos();
-		com.google.cloud.Timestamp res = com.google.cloud.Timestamp.ofTimeSecondsAndNanos(seconds, nanos);
-		return res;
+		return com.google.cloud.Timestamp.ofTimeSecondsAndNanos(seconds, nanos);
 	}
 
 	public static List<com.google.cloud.Timestamp> toCloudSpannerTimestamps(Timestamp[] timestamps)
