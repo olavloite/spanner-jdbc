@@ -71,12 +71,7 @@ public class RecoveredXid implements Xid
 		{
 			return false;
 		}
-		if (!Arrays.equals(branchQualifier, other.getBranchQualifier()))
-		{
-			return false;
-		}
-
-		return true;
+		return Arrays.equals(branchQualifier, other.getBranchQualifier());
 	}
 
 	/**
