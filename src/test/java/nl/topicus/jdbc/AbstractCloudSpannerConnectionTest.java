@@ -170,6 +170,14 @@ public class AbstractCloudSpannerConnectionTest
 	}
 
 	@Test
+	public void testPrepareCall_2() throws SQLException
+	{
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		AbstractCloudSpannerConnection testSubject = createTestSubject();
+		testSubject.prepareCall("", 0, 0);
+	}
+
+	@Test
 	public void testCreateClob() throws Exception
 	{
 		thrown.expect(SQLFeatureNotSupportedException.class);
