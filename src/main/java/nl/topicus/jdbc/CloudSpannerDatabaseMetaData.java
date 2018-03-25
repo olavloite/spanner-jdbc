@@ -1060,7 +1060,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsBatchUpdates() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override
