@@ -1087,7 +1087,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsNamedParameters() throws SQLException
 	{
-		return true;
+		return false;
 	}
 
 	@Override
