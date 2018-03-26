@@ -23,9 +23,13 @@ public class AbstractCloudSpannerConnectionTest
 
 	private AbstractCloudSpannerConnection createTestSubject() throws SQLException
 	{
+		Properties props = new Properties();
+		props.setProperty("Project", "test");
+		props.setProperty("Instance", "test");
+		props.setProperty("Database", "test");
 		return new CloudSpannerConnection((CloudSpannerDriver) DriverManager.getDriver("jdbc:cloudspanner://localhost"),
-				"jdbc:cloudspanner://localhost", new CloudSpannerDatabaseSpecification("test", "test"), null, "oauth",
-				new Properties());
+				"jdbc:cloudspanner://localhost", new CloudSpannerDatabaseSpecification("test", "test", "test"), null,
+				"oauth", props);
 	}
 
 	@Test
