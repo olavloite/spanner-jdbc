@@ -1139,13 +1139,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsResultSetHoldability(int holdability) throws SQLException
 	{
-		return holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT;
+		return holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
 
 	@Override
 	public int getResultSetHoldability() throws SQLException
 	{
-		return ResultSet.CLOSE_CURSORS_AT_COMMIT;
+		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
 
 	@Override
