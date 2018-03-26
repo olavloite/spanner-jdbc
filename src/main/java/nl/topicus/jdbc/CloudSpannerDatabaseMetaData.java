@@ -773,7 +773,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		{
 			if (param != null)
 			{
-				statement.setString(paramIndex, param.toUpperCase());
+				statement.setString(paramIndex, param);
 				paramIndex++;
 			}
 		}
@@ -784,11 +784,11 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	{
 		StringBuilder res = new StringBuilder();
 		if (catalog != null)
-			res.append(String.format("AND UPPER(%s.TABLE_CATALOG) like ? ", alias));
+			res.append(String.format("AND %s.TABLE_CATALOG like ? ", alias));
 		if (schema != null)
-			res.append(String.format("AND UPPER(%s.TABLE_SCHEMA) like ? ", alias));
+			res.append(String.format("AND %s.TABLE_SCHEMA like ? ", alias));
 		if (table != null)
-			res.append(String.format("AND UPPER(%s.TABLE_NAME) like ? ", alias));
+			res.append(String.format("AND %s.TABLE_NAME like ? ", alias));
 		return res.toString();
 	}
 
@@ -835,7 +835,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		String sql = CloudSpannerDatabaseMetaDataConstants.GET_COLUMNS;
 		sql = sql + getCatalogSchemaTableWhereClause("C", catalog, schemaPattern, tableNamePattern);
 		if (columnNamePattern != null)
-			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
+			sql = sql + "AND COLUMN_NAME LIKE ? ";
 		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern,
@@ -1202,9 +1202,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 		String sql = "SELECT SCHEMA_NAME AS TABLE_SCHEM, CATALOG_NAME AS TABLE_CATALOG FROM INFORMATION_SCHEMA.SCHEMATA "
 				+ CloudSpannerDatabaseMetaDataConstants.WHERE_1_EQUALS_1;
 		if (catalog != null)
-			sql = sql + "AND UPPER(CATALOG_NAME) like ? ";
+			sql = sql + "AND CATALOG_NAME like ? ";
 		if (schemaPattern != null)
-			sql = sql + "AND UPPER(SCHEMA_NAME) like ? ";
+			sql = sql + "AND SCHEMA_NAME like ? ";
 		sql = sql + "ORDER BY SCHEMA_NAME";
 
 		PreparedStatement statement = prepareStatement(sql);
@@ -1274,7 +1274,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 
 		sql = sql + getCatalogSchemaTableWhereClause("T", catalog, schemaPattern, tableNamePattern);
 		if (columnNamePattern != null)
-			sql = sql + "AND UPPER(COLUMN_NAME) LIKE ? ";
+			sql = sql + "AND COLUMN_NAME LIKE ? ";
 		sql = sql + "ORDER BY TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION ";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql, catalog, schemaPattern, tableNamePattern,
