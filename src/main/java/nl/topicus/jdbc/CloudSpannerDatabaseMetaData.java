@@ -1207,7 +1207,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			sql = sql + "AND SCHEMA_NAME like ? ";
 		sql = sql + "ORDER BY SCHEMA_NAME";
 
-		PreparedStatement statement = prepareStatement(sql);
+		PreparedStatement statement = prepareStatement(sql, catalog, schemaPattern);
 		return statement.executeQuery();
 	}
 
