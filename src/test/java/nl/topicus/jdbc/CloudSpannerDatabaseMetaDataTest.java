@@ -2,16 +2,25 @@ package nl.topicus.jdbc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.withSettings;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.RowIdLifetime;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import nl.topicus.jdbc.test.category.UnitTest;
 
@@ -21,6 +30,9 @@ public class CloudSpannerDatabaseMetaDataTest
 	private static final String URL = "jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb;PvtKeyPath=C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json;SimulateProductName=PostgreSQL";
 
 	private final CloudSpannerDatabaseMetaData testSubject;
+
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	public CloudSpannerDatabaseMetaDataTest() throws SQLException
 	{
@@ -750,5 +762,211 @@ public class CloudSpannerDatabaseMetaDataTest
 	public void testDataDefinitionIgnoredInTransactions() throws SQLException
 	{
 		assertFalse(testSubject.dataDefinitionIgnoredInTransactions());
+	}
+
+	@Test
+	public void testGetCrossReference() throws SQLException
+	{
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		testSubject.getCrossReference("", "", "foo", "test", "test", "bar");
+	}
+
+	@Test
+	public void testSupportsResultSetType() throws SQLException
+	{
+		assertTrue(testSubject.supportsResultSetType(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.supportsResultSetType(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.supportsResultSetType(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testSupportsResultSetConcurrency() throws SQLException
+	{
+		assertTrue(testSubject.supportsResultSetConcurrency(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY));
+		assertFalse(testSubject.supportsResultSetConcurrency(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE));
+		assertFalse(testSubject.supportsResultSetConcurrency(ResultSet.TYPE_SCROLL_INSENSITIVE,
+				ResultSet.CONCUR_READ_ONLY));
+		assertFalse(testSubject.supportsResultSetConcurrency(ResultSet.TYPE_SCROLL_INSENSITIVE,
+				ResultSet.CONCUR_UPDATABLE));
+		assertFalse(
+				testSubject.supportsResultSetConcurrency(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY));
+		assertFalse(
+				testSubject.supportsResultSetConcurrency(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+	}
+
+	@Test
+	public void testOwnUpdatesAreVisible() throws SQLException
+	{
+		assertFalse(testSubject.ownUpdatesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.ownUpdatesAreVisible(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.ownUpdatesAreVisible(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testOwnDeletesAreVisible() throws SQLException
+	{
+		assertFalse(testSubject.ownDeletesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.ownDeletesAreVisible(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.ownDeletesAreVisible(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testOwnInsertsAreVisible() throws SQLException
+	{
+		assertFalse(testSubject.ownInsertsAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.ownInsertsAreVisible(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.ownInsertsAreVisible(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testOthersUpdatesAreVisible() throws SQLException
+	{
+		assertFalse(testSubject.othersUpdatesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.othersUpdatesAreVisible(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.othersUpdatesAreVisible(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testOthersDeletesAreVisible() throws SQLException
+	{
+		assertFalse(testSubject.othersDeletesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.othersDeletesAreVisible(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.othersDeletesAreVisible(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testOthersInsertsAreVisible() throws SQLException
+	{
+		assertFalse(testSubject.othersInsertsAreVisible(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.othersInsertsAreVisible(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.othersInsertsAreVisible(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testUpdatesAreDetected() throws SQLException
+	{
+		assertFalse(testSubject.updatesAreDetected(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.updatesAreDetected(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.updatesAreDetected(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testDeletesAreDetected() throws SQLException
+	{
+		assertFalse(testSubject.deletesAreDetected(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.deletesAreDetected(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.deletesAreDetected(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testInsertsAreDetected() throws SQLException
+	{
+		assertFalse(testSubject.insertsAreDetected(ResultSet.TYPE_FORWARD_ONLY));
+		assertFalse(testSubject.insertsAreDetected(ResultSet.TYPE_SCROLL_INSENSITIVE));
+		assertFalse(testSubject.insertsAreDetected(ResultSet.TYPE_SCROLL_SENSITIVE));
+	}
+
+	@Test
+	public void testSupportsBatchUpdates() throws SQLException
+	{
+		assertTrue(testSubject.supportsBatchUpdates());
+	}
+
+	@Test
+	public void testGetConnection() throws SQLException
+	{
+		assertNotNull(testSubject.getConnection());
+	}
+
+	@Test
+	public void testSupportsSavePoints() throws SQLException
+	{
+		assertFalse(testSubject.supportsSavepoints());
+
+		// Check that the connection actually throws an Exception
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		CloudSpannerConnection connection = mock(CloudSpannerConnection.class,
+				withSettings().useConstructor().defaultAnswer(CALLS_REAL_METHODS));
+		connection.setSavepoint();
+	}
+
+	@Test
+	public void testSupportsNamedParameters() throws SQLException
+	{
+		assertFalse(testSubject.supportsNamedParameters());
+	}
+
+	@Test
+	public void testSupportsMultipleOpenResults() throws SQLException
+	{
+		assertFalse(testSubject.supportsMultipleOpenResults());
+	}
+
+	@Test
+	public void testSupportsGetGeneratedKeys() throws SQLException
+	{
+		assertFalse(testSubject.supportsGetGeneratedKeys());
+	}
+
+	@Test
+	public void testSupportsResultSetHoldability() throws SQLException
+	{
+		assertTrue(testSubject.supportsResultSetHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT));
+		assertFalse(testSubject.supportsResultSetHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT));
+	}
+
+	@Test
+	public void testGetResultSetHoldability() throws SQLException
+	{
+		assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, testSubject.getResultSetHoldability());
+	}
+
+	@Test
+	public void testGetJDBCVersion() throws SQLException
+	{
+		assertEquals(4, testSubject.getJDBCMajorVersion());
+		assertEquals(2, testSubject.getJDBCMinorVersion());
+	}
+
+	@Test
+	public void testGetSqlStateType() throws SQLException
+	{
+		assertEquals(DatabaseMetaData.sqlStateSQL, testSubject.getSQLStateType());
+	}
+
+	@Test
+	public void testLocatorsUpdateCopy() throws SQLException
+	{
+		assertTrue(testSubject.locatorsUpdateCopy());
+	}
+
+	@Test
+	public void testSupportsStatementPooling() throws SQLException
+	{
+		assertFalse(testSubject.supportsStatementPooling());
+	}
+
+	@Test
+	public void testGetRowIdLifetime() throws SQLException
+	{
+		assertEquals(RowIdLifetime.ROWID_UNSUPPORTED, testSubject.getRowIdLifetime());
+	}
+
+	@Test
+	public void testSupportsStoredFunctionsUsingCallSyntax() throws SQLException
+	{
+		assertFalse(testSubject.supportsStoredFunctionsUsingCallSyntax());
+	}
+
+	@Test
+	public void testAutoCommitFailureClosesAllResultSets() throws SQLException
+	{
+		assertFalse(testSubject.autoCommitFailureClosesAllResultSets());
+	}
+
+	@Test
+	public void testGeneratedKeyAlwaysReturned() throws SQLException
+	{
+		assertFalse(testSubject.generatedKeyAlwaysReturned());
 	}
 }
