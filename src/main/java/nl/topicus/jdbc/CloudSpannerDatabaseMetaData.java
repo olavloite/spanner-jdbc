@@ -1181,7 +1181,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean locatorsUpdateCopy() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override
