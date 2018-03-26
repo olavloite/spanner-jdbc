@@ -1060,7 +1060,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsBatchUpdates() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override
@@ -1087,7 +1087,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsNamedParameters() throws SQLException
 	{
-		return true;
+		return false;
 	}
 
 	@Override
@@ -1139,13 +1139,13 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsResultSetHoldability(int holdability) throws SQLException
 	{
-		return holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT;
+		return holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
 
 	@Override
 	public int getResultSetHoldability() throws SQLException
 	{
-		return ResultSet.CLOSE_CURSORS_AT_COMMIT;
+		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
 
 	@Override
@@ -1181,7 +1181,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean locatorsUpdateCopy() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override
@@ -1207,7 +1207,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			sql = sql + "AND UPPER(SCHEMA_NAME) like ? ";
 		sql = sql + "ORDER BY SCHEMA_NAME";
 
-		PreparedStatement statement = prepareStatement(sql);
+		PreparedStatement statement = prepareStatement(sql, catalog, schemaPattern);
 		return statement.executeQuery();
 	}
 

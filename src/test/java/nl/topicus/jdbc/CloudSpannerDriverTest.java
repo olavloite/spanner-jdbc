@@ -8,11 +8,14 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import nl.topicus.jdbc.test.category.UnitTest;
@@ -41,7 +44,68 @@ public class CloudSpannerDriverTest
 		public void notAcceptsPostgreSQLURL() throws SQLException
 		{
 			Driver driver = getDriver();
-			assertEquals(false, driver.acceptsURL("jdbc:postgresql://localhost:5432/test"));
+			String pgUrl = "jdbc:postgresql://localhost:5432/test";
+			assertEquals(false, driver.acceptsURL(pgUrl));
+			assertNull(driver.connect(pgUrl, new Properties()));
+			assertEquals(0, driver.getPropertyInfo(pgUrl, new Properties()).length);
+		}
+	}
+
+	public static class RegisterTest
+	{
+		@Test
+		public void testRegister() throws SQLException
+		{
+			boolean exception = false;
+			try
+			{
+				// Should fail as the driver was already registered at class
+				// load
+				CloudSpannerDriver.register();
+			}
+			catch (IllegalStateException e)
+			{
+				// expected
+				exception = true;
+			}
+			assertTrue(exception);
+
+			// Should work
+			CloudSpannerDriver.deregister();
+			// Should work
+			CloudSpannerDriver.register();
+
+			// Should fail
+			exception = false;
+			try
+			{
+				// Should fail as the driver was already registered manually
+				CloudSpannerDriver.register();
+			}
+			catch (IllegalStateException e)
+			{
+				// expected
+				exception = true;
+			}
+			assertTrue(exception);
+
+			// Should work
+			CloudSpannerDriver.deregister();
+			// Should fail
+			exception = false;
+			try
+			{
+				// Should fail as the driver was already deregistered manually
+				CloudSpannerDriver.deregister();
+			}
+			catch (IllegalStateException e)
+			{
+				// expected
+				exception = true;
+			}
+			assertTrue(exception);
+			// Should work
+			CloudSpannerDriver.register();
 		}
 	}
 
@@ -132,6 +196,54 @@ public class CloudSpannerDriverTest
 			assertEquals("C:\\Users\\MyUserName\\Documents\\CloudSpannerKeys\\cloudspanner3.json", properties[3].value);
 			assertNull(properties[4].value);
 			assertEquals("PostgreSQL", properties[5].value);
+		}
+	}
+
+	public static class DriverTest
+	{
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
+		@Test
+		public void testGetMinorVersion() throws SQLException
+		{
+			assertEquals(CloudSpannerDriver.MINOR_VERSION, getDriver().getMinorVersion());
+		}
+
+		@Test
+		public void testGetMajorVersion() throws SQLException
+		{
+			assertEquals(CloudSpannerDriver.MAJOR_VERSION, getDriver().getMajorVersion());
+		}
+
+		@Test
+		public void testJdbcCompliant() throws SQLException
+		{
+			assertTrue(getDriver().jdbcCompliant());
+		}
+
+		@Test
+		public void testGetParentLogger() throws SQLException
+		{
+			thrown.expect(SQLFeatureNotSupportedException.class);
+			thrown.expectMessage("java.util.logging is not used");
+			getDriver().getParentLogger();
+		}
+
+		@Test
+		public void testQuoteIdentifier() throws SQLException
+		{
+			assertEquals("`FOO`", CloudSpannerDriver.quoteIdentifier("FOO"));
+			assertEquals("`FOO`", CloudSpannerDriver.quoteIdentifier("`FOO`"));
+			assertNull(CloudSpannerDriver.quoteIdentifier(null));
+		}
+
+		@Test
+		public void testUnquoteIdentifier() throws SQLException
+		{
+			assertEquals("FOO", CloudSpannerDriver.unquoteIdentifier("FOO"));
+			assertEquals("FOO", CloudSpannerDriver.unquoteIdentifier("`FOO`"));
+			assertNull(CloudSpannerDriver.unquoteIdentifier(null));
 		}
 	}
 

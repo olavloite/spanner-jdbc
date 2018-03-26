@@ -1,11 +1,12 @@
 package nl.topicus.jdbc;
 
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import java.sql.SQLException;
 
-import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 
 public class MockCloudSpannerConnection
@@ -25,8 +26,8 @@ public class MockCloudSpannerConnection
 
 	public static AbstractCloudSpannerConnection createAbstractConnection()
 	{
-		AbstractCloudSpannerConnection connection = Mockito.spy(AbstractCloudSpannerConnection.class);
-		return connection;
+		return mock(AbstractCloudSpannerConnection.class,
+				withSettings().useConstructor().defaultAnswer(CALLS_REAL_METHODS));
 	}
 
 }

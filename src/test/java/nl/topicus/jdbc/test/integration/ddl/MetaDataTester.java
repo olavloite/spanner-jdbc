@@ -182,9 +182,23 @@ public class MetaDataTester
 		}
 		try (ResultSet rs = metadata.getSchemas())
 		{
+			assertNumberOfResults(rs, 2);
 		}
 		try (ResultSet rs = metadata.getSchemas("", null))
 		{
+			assertNumberOfResults(rs, 2);
+		}
+		try (ResultSet rs = metadata.getSchemas("", ""))
+		{
+			assertNumberOfResults(rs, 1);
+		}
+		try (ResultSet rs = metadata.getSchemas("", "INFORMATION_SCHEMA"))
+		{
+			assertNumberOfResults(rs, 1);
+		}
+		try (ResultSet rs = metadata.getSchemas("", "FOO"))
+		{
+			assertNumberOfResults(rs, 0);
 		}
 		try (ResultSet rs = metadata.getSuperTypes("", "", null))
 		{
@@ -228,6 +242,9 @@ public class MetaDataTester
 			try (ResultSet rs = metadata.getPseudoColumns("", "", table, null))
 			{
 			}
+			try (ResultSet rs = metadata.getPseudoColumns("", "", table, "FOO"))
+			{
+			}
 			try (ResultSet rs = metadata.getSuperTables("", "", table))
 			{
 			}
@@ -238,6 +255,14 @@ public class MetaDataTester
 			{
 			}
 		}
+	}
+
+	private void assertNumberOfResults(ResultSet rs, int expectedCount) throws SQLException
+	{
+		int actualCount = 0;
+		while (rs.next())
+			actualCount++;
+		assertEquals(expectedCount, actualCount);
 	}
 
 	private void runParameterMetaDataTests() throws SQLException

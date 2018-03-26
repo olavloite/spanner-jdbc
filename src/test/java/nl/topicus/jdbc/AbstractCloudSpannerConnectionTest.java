@@ -1,5 +1,6 @@
 package nl.topicus.jdbc;
 
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -13,6 +14,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import nl.topicus.jdbc.CloudSpannerConnection.CloudSpannerDatabaseSpecification;
+
 public class AbstractCloudSpannerConnectionTest
 {
 	@Rule
@@ -20,7 +23,13 @@ public class AbstractCloudSpannerConnectionTest
 
 	private AbstractCloudSpannerConnection createTestSubject() throws SQLException
 	{
-		return MockCloudSpannerConnection.createAbstractConnection();
+		Properties props = new Properties();
+		props.setProperty("Project", "test");
+		props.setProperty("Instance", "test");
+		props.setProperty("Database", "test");
+		return new CloudSpannerConnection((CloudSpannerDriver) DriverManager.getDriver("jdbc:cloudspanner://localhost"),
+				"jdbc:cloudspanner://localhost", new CloudSpannerDatabaseSpecification("test", "test", "test"), null,
+				"oauth", props);
 	}
 
 	@Test
@@ -37,13 +46,10 @@ public class AbstractCloudSpannerConnectionTest
 	@Test
 	public void testGetCatalog() throws Exception
 	{
-		AbstractCloudSpannerConnection testSubject;
-		String result;
-
-		// default test
-		testSubject = createTestSubject();
-		result = testSubject.getCatalog();
-		Assert.assertEquals("", result);
+		AbstractCloudSpannerConnection testSubject = createTestSubject();
+		Assert.assertNull(testSubject.getCatalog());
+		testSubject.setReportDefaultSchemaAsNull(false);
+		Assert.assertEquals("", testSubject.getCatalog());
 	}
 
 	@Test
@@ -170,6 +176,14 @@ public class AbstractCloudSpannerConnectionTest
 	}
 
 	@Test
+	public void testPrepareCall_2() throws SQLException
+	{
+		thrown.expect(SQLFeatureNotSupportedException.class);
+		AbstractCloudSpannerConnection testSubject = createTestSubject();
+		testSubject.prepareCall("", 0, 0);
+	}
+
+	@Test
 	public void testCreateClob() throws Exception
 	{
 		thrown.expect(SQLFeatureNotSupportedException.class);
@@ -289,13 +303,10 @@ public class AbstractCloudSpannerConnectionTest
 	@Test
 	public void testGetSchema() throws Exception
 	{
-		AbstractCloudSpannerConnection testSubject;
-		String result;
-
-		// default test
-		testSubject = createTestSubject();
-		result = testSubject.getSchema();
-		Assert.assertEquals("", result);
+		AbstractCloudSpannerConnection testSubject = createTestSubject();
+		Assert.assertNull(testSubject.getSchema());
+		testSubject.setReportDefaultSchemaAsNull(false);
+		Assert.assertEquals("", testSubject.getSchema());
 	}
 
 	@Test

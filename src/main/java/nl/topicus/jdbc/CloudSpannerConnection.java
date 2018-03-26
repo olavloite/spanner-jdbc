@@ -45,6 +45,7 @@ import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.StructField;
 import com.google.cloud.spanner.Value;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.rpc.Code;
 import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
@@ -136,6 +137,16 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private final Logger logger;
 
 	private Map<String, Class<?>> typeMap = new HashMap<>();
+
+	@VisibleForTesting
+	CloudSpannerConnection()
+	{
+		this.driver = null;
+		this.database = null;
+		this.url = null;
+		this.suppliedProperties = null;
+		this.logger = null;
+	}
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, CloudSpannerDatabaseSpecification database,
 			String credentialsPath, String oauthToken, Properties suppliedProperties) throws SQLException
