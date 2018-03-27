@@ -74,17 +74,25 @@ public class CloudSpannerDataSourceFactoryTest
 			}
 
 			Submission<Long> createResult = connection.<Long> countOperation(
-					"create table wordcount (word string(100) not null, count int64 not null) primary key (word)")
+					"create table if not exists wordcount (word string(100) not null, count int64 not null) primary key (word)")
 					.submit();
 			// assertEquals(1l,
 			// createResult.toCompletableFuture().get().longValue());
 
-			Submission<Long> res = connection.<Long> countOperation("insert into wordcount (word, count) values (?, ?)")
-					.set("1", "test").set("2", 100).submit();
-			// assertEquals(1l, res.toCompletableFuture().get().longValue());
+			// Clear table
+			connection.<Long> countOperation("delete from wordcount").submit();
+
+			for (int i = 0; i < 100; i++)
+			{
+				Submission<Long> res = connection
+						.<Long> countOperation("insert into wordcount (word, count) values (?, ?)").set("1", "test" + i)
+						.set("2", 100 + i).submit();
+				// assertEquals(1l,
+				// res.toCompletableFuture().get().longValue());
+			}
 
 			Submission<List<Map<String, Object>>> selectSubmission = connection
-					.<List<Map<String, Object>>> rowOperation("select word, count from wordcount")
+					.<List<Map<String, Object>>> rowOperation("select word, count from wordcount order by count")
 					.initialValue(ArrayList::new).rowAggregator((list, row) -> {
 						Map<String, Object> map = new HashMap<>();
 						for (String key : row.getIdentifiers())
@@ -94,10 +102,34 @@ public class CloudSpannerDataSourceFactoryTest
 						list.add(map);
 						return list;
 					}).submit();
-			List<Map<String, Object>> list = selectSubmission.toCompletableFuture().get();
-			assertEquals(1l, list.size());
-			assertEquals("test", list.get(0).get("word"));
-			assertEquals(100L, list.get(0).get("count"));
+			List<Map<String, Object>> queryResult = selectSubmission.toCompletableFuture().get();
+			assertEquals(100l, queryResult.size());
+			for (int i = 0; i < 100; i++)
+			{
+				assertEquals("test" + i, queryResult.get(i).get("word"));
+				assertEquals(100L + i, queryResult.get(i).get("count"));
+			}
+
+			int maxCount = 150;
+			selectSubmission = connection
+					.<List<Map<String, Object>>> rowOperation(
+							"select word, count from wordcount where count<? order by count")
+					.set("1", maxCount).initialValue(ArrayList::new).rowAggregator((list, row) -> {
+						Map<String, Object> map = new HashMap<>();
+						for (String key : row.getIdentifiers())
+						{
+							map.put(key, row.get(key, Object.class));
+						}
+						list.add(map);
+						return list;
+					}).submit();
+			queryResult = selectSubmission.toCompletableFuture().get();
+			assertEquals(200l - maxCount, queryResult.size());
+			for (int i = 0; i < (200 - maxCount); i++)
+			{
+				assertEquals("test" + i, queryResult.get(i).get("word"));
+				assertEquals(100L + i, queryResult.get(i).get("count"));
+			}
 		}
 		finally
 		{
