@@ -135,13 +135,14 @@ public class CloudSpannerStatementTest
 	{
 		CloudSpannerConnection connection = createConnection();
 		CloudSpannerStatement statement = connection.createStatement();
-		Assert.assertTrue(statement.isDDLStatement(statement
+		Assert.assertTrue(statement.parser.isDDLStatement(statement.parser
 				.getTokens("CREATE TABLE FOO (ID INT64 NOT NULL, COL1 STRING(100) NOT NULL) PRIMARY KEY (ID)")));
+		Assert.assertTrue(statement.parser
+				.isDDLStatement(statement.parser.getTokens("ALTER TABLE FOO ADD COLUMN COL2 STRING(100) NOT NULL")));
+		Assert.assertTrue(statement.parser.isDDLStatement(statement.parser.getTokens("DROP TABLE FOO")));
 		Assert.assertTrue(
-				statement.isDDLStatement(statement.getTokens("ALTER TABLE FOO ADD COLUMN COL2 STRING(100) NOT NULL")));
-		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP TABLE FOO")));
-		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("CREATE INDEX IDX_FOO ON FOO (COL1)")));
-		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP INDEX IDX_FOO")));
+				statement.parser.isDDLStatement(statement.parser.getTokens("CREATE INDEX IDX_FOO ON FOO (COL1)")));
+		Assert.assertTrue(statement.parser.isDDLStatement(statement.parser.getTokens("DROP INDEX IDX_FOO")));
 	}
 
 	@Test
@@ -166,19 +167,20 @@ public class CloudSpannerStatementTest
 		CloudSpannerConnection connection = createConnection();
 		CloudSpannerStatement statement = connection.createStatement();
 		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
-				statement.getTokens("   CREATE  TABLE FOO (ID INT64)"));
+				statement.parser.getTokens("   CREATE  TABLE FOO (ID INT64)"));
 		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
-				statement.getTokens("CREATE TABLE FOO (ID INT64)"));
+				statement.parser.getTokens("CREATE TABLE FOO (ID INT64)"));
 		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
-				statement.getTokens("\t\nCREATE TABLE\n\tFOO (ID INT64)   "));
+				statement.parser.getTokens("\t\nCREATE TABLE\n\tFOO (ID INT64)   "));
 		Assert.assertArrayEquals(new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true" },
-				statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true"));
+				statement.parser.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true"));
 		Assert.assertArrayEquals(new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true" },
-				statement.getTokens("\t\tSET_CONNECTION_PROPERTY     AsyncDdlOperations\t=\ttrue"));
+				statement.parser.getTokens("\t\tSET_CONNECTION_PROPERTY     AsyncDdlOperations\t=\ttrue"));
 		Assert.assertArrayEquals(
 				new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true",
 						"AND AllowExtendedMode=true" },
-				statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
+				statement.parser
+						.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
 	}
 
 	private static final String BATCH_DML = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (1,2,3)";

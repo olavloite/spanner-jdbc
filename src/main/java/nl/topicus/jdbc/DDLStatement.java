@@ -13,7 +13,7 @@ import com.google.rpc.Code;
 
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
-class DDLStatement
+public class DDLStatement
 {
 	private static final Pattern IF_EXISTS_PATTERN = Pattern.compile("(?i)if\\s+exists");
 	private static final Pattern IF_NOT_EXISTS_PATTERN = Pattern.compile("(?i)if\\s+not\\s+exists");
@@ -136,6 +136,20 @@ class DDLStatement
 		this.existsStatement = existsStatement;
 		this.objectName = objectName;
 		this.sql = sql;
+	}
+
+	public static List<String> getActualSql(CloudSpannerConnection connection, List<String> sql) throws SQLException
+	{
+		List<DDLStatement> statements = DDLStatement.parseDdlStatements(sql);
+		List<String> actualSql = new ArrayList<>(sql.size());
+		for (DDLStatement statement : statements)
+		{
+			if (statement.shouldExecute(connection))
+			{
+				actualSql.add(statement.getSql());
+			}
+		}
+		return actualSql;
 	}
 
 	static List<DDLStatement> parseDdlStatements(List<String> sqlList) throws SQLException

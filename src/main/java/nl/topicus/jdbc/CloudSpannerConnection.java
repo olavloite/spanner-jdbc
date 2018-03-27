@@ -315,7 +315,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		if (!getAutoCommit())
 			commit();
 		// Check for IF [NOT] EXISTS statements
-		List<String> sql = getActualSql(inputSql);
+		List<String> sql = DDLStatement.getActualSql(this, inputSql);
 		if (!sql.isEmpty())
 		{
 			try
@@ -343,20 +343,6 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			}
 		}
 		return null;
-	}
-
-	private List<String> getActualSql(List<String> sql) throws SQLException
-	{
-		List<DDLStatement> statements = DDLStatement.parseDdlStatements(sql);
-		List<String> actualSql = new ArrayList<>(sql.size());
-		for (DDLStatement statement : statements)
-		{
-			if (statement.shouldExecute(this))
-			{
-				actualSql.add(statement.getSql());
-			}
-		}
-		return actualSql;
 	}
 
 	/**

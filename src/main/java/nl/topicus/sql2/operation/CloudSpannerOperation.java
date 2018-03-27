@@ -1,5 +1,6 @@
 package nl.topicus.sql2.operation;
 
+import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -35,7 +36,7 @@ public abstract class CloudSpannerOperation<T> implements Operation<T>, Supplier
 		return connection;
 	}
 
-	protected DatabaseClient getDbClient()
+	protected DatabaseClient getDbClient() throws SQLException
 	{
 		return connection.getDbClient();
 	}

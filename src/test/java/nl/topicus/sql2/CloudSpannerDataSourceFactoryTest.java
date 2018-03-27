@@ -7,9 +7,12 @@ import static nl.topicus.sql2.connectionproperty.CloudSpannerProjectConnectionPr
 import static org.junit.Assert.assertEquals;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.junit.Test;
@@ -48,6 +51,12 @@ public class CloudSpannerDataSourceFactoryTest
 
 	}
 
+	private static class Word
+	{
+
+	}
+
+	private static final boolean CREATE_DB = false;
 	private static final String PROJECT_ID = "gothic-calling-193809";
 	private static final String INSTANCE_ID = "test-instance";
 	private static final String DATABASE_ID = "test";
@@ -62,18 +71,38 @@ public class CloudSpannerDataSourceFactoryTest
 		Spanner spanner = null;
 		try (CloudSpannerConnection connection = ds.getConnection(PrintErrorMessageHandler.INSTANCE))
 		{
-			connection.waitForConnect(10000L, TimeUnit.MILLISECONDS);
-			spanner = connection.getSpanner();
-			createInstance(spanner, PROJECT_ID, INSTANCE_ID);
-			createDatabase(spanner, INSTANCE_ID, DATABASE_ID);
+			if (CREATE_DB)
+			{
+				spanner = connection.getSpanner();
+				createInstance(spanner, PROJECT_ID, INSTANCE_ID);
+				createDatabase(spanner, INSTANCE_ID, DATABASE_ID);
+			}
 
-			connection.<Long> countOperation(
+			Submission<Long> createResult = connection.<Long> countOperation(
 					"create table wordcount (word string(100) not null, count int64 not null) primary key (word)")
 					.submit();
+			// assertEquals(1l,
+			// createResult.toCompletableFuture().get().longValue());
+
 			Submission<Long> res = connection.<Long> countOperation("insert into wordcount (word, count) values (?, ?)")
 					.set("1", "test").set("2", 100).submit();
-			long count = res.toCompletableFuture().get();
-			assertEquals(1l, count);
+			// assertEquals(1l, res.toCompletableFuture().get().longValue());
+
+			Submission<List<Map<String, Object>>> selectSubmission = connection
+					.<List<Map<String, Object>>> rowOperation("select word, count from wordcount")
+					.initialValue(ArrayList::new).rowAggregator((list, row) -> {
+						Map<String, Object> map = new HashMap<>();
+						for (String key : row.getIdentifiers())
+						{
+							map.put(key, row.get(key, Object.class));
+						}
+						list.add(map);
+						return list;
+					}).submit();
+			List<Map<String, Object>> list = selectSubmission.toCompletableFuture().get();
+			assertEquals(1l, list.size());
+			assertEquals("test", list.get(0).get("word"));
+			assertEquals(100L, list.get(0).get("count"));
 		}
 		finally
 		{

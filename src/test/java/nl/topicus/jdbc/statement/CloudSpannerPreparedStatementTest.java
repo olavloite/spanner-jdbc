@@ -697,30 +697,30 @@ public class CloudSpannerPreparedStatementTest
 			try (CloudSpannerPreparedStatement ps = new CloudSpannerPreparedStatement("FOO", null, null))
 			{
 				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-						ps.formatDDLStatement("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)"));
+						ps.parser.formatDDLStatement("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)"));
 				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-						ps.formatDDLStatement("CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
+						ps.parser.formatDDLStatement("CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
 				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-						ps.formatDDLStatement("CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
+						ps.parser.formatDDLStatement("CREATE TABLE TEST (ID INT64, PRIMARY KEY (ID))"));
 				Assert.assertEquals("CREATE TABLE TEST (ID INT64) PRIMARY KEY (ID)",
-						ps.formatDDLStatement("CREATE TABLE TEST\n\t(ID INT64,   PRIMARY  KEY  (ID) )"));
-				Assert.assertEquals("CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)", ps
+						ps.parser.formatDDLStatement("CREATE TABLE TEST\n\t(ID INT64,   PRIMARY  KEY  (ID) )"));
+				Assert.assertEquals("CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)", ps.parser
 						.formatDDLStatement("CREATE TABLE TEST (Id INT64, Description String(100)) PRIMARY KEY (Id)"));
 				Assert.assertEquals("CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)",
-						ps.formatDDLStatement(
+						ps.parser.formatDDLStatement(
 								"CREATE TABLE TEST (`Id` INT64, `Description` String(100)) PRIMARY KEY (`Id`)"));
 				String sql = "CREATE TABLE TestTableViaDBeaver(\n" + "TestId INT64 NOT NULL,\n" + "Foo STRING(10)\n"
 						+ ") PRIMARY KEY (TestId);";
-				Assert.assertEquals(sql, ps.formatDDLStatement(sql));
+				Assert.assertEquals(sql, ps.parser.formatDDLStatement(sql));
 
 				Assert.assertEquals("CREATE TABLE Account (id INT64 NOT NULL, name STRING(100)) primary key (id)",
-						ps.formatDDLStatement(
+						ps.parser.formatDDLStatement(
 								"CREATE TABLE Account (id INT64 NOT NULL, name STRING(100), primary key (id))"));
 				Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)",
-						ps.formatDDLStatement(
+						ps.parser.formatDDLStatement(
 								"/* CREATE A TEST TABLE */\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
 				Assert.assertEquals("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)",
-						ps.formatDDLStatement(
+						ps.parser.formatDDLStatement(
 								"-- CREATE A TEST TABLE \nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)"));
 			}
 		}
@@ -869,7 +869,7 @@ public class CloudSpannerPreparedStatementTest
 		{
 			String sql = "-- test adding not null column\nCREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)";
 			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
-			String sqlWithoutComments = ps.removeComments(sql);
+			String sqlWithoutComments = ps.parser.removeComments(sql);
 			Assert.assertEquals("CREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)",
 					sqlWithoutComments);
 		}
@@ -879,7 +879,7 @@ public class CloudSpannerPreparedStatementTest
 		{
 			String sql = "/* test adding not null column */\nCREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)";
 			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
-			String sqlWithoutComments = ps.removeComments(sql);
+			String sqlWithoutComments = ps.parser.removeComments(sql);
 			Assert.assertEquals("CREATE TABLE TEST (ID INT64 NOT NULL, NAME STRING(100)) PRIMARY KEY (ID)",
 					sqlWithoutComments);
 		}
@@ -988,7 +988,7 @@ public class CloudSpannerPreparedStatementTest
 			com.google.cloud.spanner.Statement.Builder res = null;
 			try
 			{
-				Statement statement = CCJSqlParserUtil.parse(ps.sanitizeSQL(sql));
+				Statement statement = CCJSqlParserUtil.parse(ps.parser.sanitizeSQL(sql));
 				Method createSelectBuilder = CloudSpannerPreparedStatement.class
 						.getDeclaredMethod("createSelectBuilder", Statement.class, String.class);
 				createSelectBuilder.setAccessible(true);

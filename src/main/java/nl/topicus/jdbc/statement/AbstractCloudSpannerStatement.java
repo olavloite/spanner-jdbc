@@ -16,17 +16,13 @@ import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 import com.google.rpc.Code;
 
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.FromItemVisitorAdapter;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.sql.SqlParser;
 
 /**
  * 
@@ -35,6 +31,8 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
  */
 abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher implements Statement
 {
+	protected final SqlParser parser = new SqlParser();
+
 	private DatabaseClient dbClient;
 
 	/**
@@ -63,20 +61,6 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	{
 		this.connection = connection;
 		this.dbClient = dbClient;
-	}
-
-	protected String sanitizeSQL(String sql)
-	{
-		// Add a pseudo update to the end if no columns have been specified in
-		// an 'on duplicate key update'-statement
-		if (sql.matches("(?is)\\s*INSERT\\s+.*\\s+ON\\s+DUPLICATE\\s+KEY\\s+UPDATE\\s*"))
-		{
-			sql = sql + " FOO=BAR";
-		}
-		// Remove @{FORCE_INDEX...} statements
-		sql = sql.replaceAll("(?is)\\@\\{\\s*FORCE_INDEX.*\\}", "");
-
-		return sql;
 	}
 
 	/**
@@ -135,45 +119,6 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	protected String unquoteIdentifier(String identifier)
 	{
 		return CloudSpannerDriver.unquoteIdentifier(identifier);
-	}
-
-	/**
-	 * Determines whether the given sql statement must be executed in a single
-	 * use read context. This must be done for queries against the information
-	 * schema. This method sets the <code>forceSingleUseReadContext</code> to
-	 * true if necessary.
-	 * 
-	 * @param select
-	 *            The sql statement to be examined.
-	 */
-	protected void determineForceSingleUseReadContext(Select select)
-	{
-		if (select.getSelectBody() != null)
-		{
-			select.getSelectBody().accept(new SelectVisitorAdapter()
-			{
-				@Override
-				public void visit(PlainSelect plainSelect)
-				{
-					if (plainSelect.getFromItem() != null)
-					{
-						plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
-						{
-							@Override
-							public void visit(Table table)
-							{
-								if (table.getSchemaName() != null
-										&& table.getSchemaName().equalsIgnoreCase("INFORMATION_SCHEMA"))
-								{
-									setForceSingleUseReadContext(true);
-								}
-							}
-						});
-					}
-				}
-
-			});
-		}
 	}
 
 	public boolean isForceSingleUseReadContext()

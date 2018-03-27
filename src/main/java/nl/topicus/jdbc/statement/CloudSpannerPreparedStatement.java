@@ -69,7 +69,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	{
 		super(connection, dbClient);
 		this.sql = sql;
-		this.sqlTokens = getTokens(sql);
+		this.sqlTokens = parser.getTokens(sql);
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		Statement statement;
 		try
 		{
-			statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
+			statement = CCJSqlParserUtil.parse(parser.sanitizeSQL(sql));
 		}
 		catch (JSQLParserException | TokenMgrError e)
 		{
@@ -100,7 +100,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		if (statement instanceof Select)
 		{
-			determineForceSingleUseReadContext((Select) statement);
+			setForceSingleUseReadContext(parser.determineForceSingleUseReadContext((Select) statement));
 			com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement, sql);
 			try (ReadContext context = getReadContext())
 			{
@@ -231,7 +231,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
 	private boolean isDDLStatement()
 	{
-		return isDDLStatement(sqlTokens);
+		return parser.isDDLStatement(sqlTokens);
 	}
 
 	@Override
@@ -246,7 +246,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			throw new SQLFeatureNotSupportedException("DDL statements may not be batched");
 		}
-		if (isSelectStatement(sqlTokens))
+		if (parser.isSelectStatement(sqlTokens))
 		{
 			throw new SQLFeatureNotSupportedException("SELECT statements may not be batched");
 		}
@@ -287,7 +287,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		if (isDDLStatement())
 		{
-			String ddl = formatDDLStatement(sql);
+			String ddl = parser.formatDDLStatement(sql);
 			return executeDDL(ddl);
 		}
 		Mutations mutations = createMutations();
@@ -315,7 +315,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 						"Cannot create mutation for DDL statement. Expected INSERT, UPDATE or DELETE",
 						Code.INVALID_ARGUMENT);
 			}
-			Statement statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
+			Statement statement = CCJSqlParserUtil.parse(parser.sanitizeSQL(sql));
 			if (statement instanceof Insert)
 			{
 				Insert insertStatement = (Insert) statement;
@@ -558,7 +558,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			try
 			{
-				statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
+				statement = CCJSqlParserUtil.parse(parser.sanitizeSQL(sql));
 			}
 			catch (JSQLParserException | TokenMgrError e)
 			{
@@ -591,7 +591,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				throw new CloudSpannerSQLException("Cannot get parameter meta data for DDL statement",
 						Code.INVALID_ARGUMENT);
 			}
-			Statement statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
+			Statement statement = CCJSqlParserUtil.parse(parser.sanitizeSQL(sql));
 			if (statement instanceof Insert || statement instanceof Update || statement instanceof Delete)
 			{
 				// Create mutation, but don't do anything with it. This

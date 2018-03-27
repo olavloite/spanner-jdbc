@@ -45,26 +45,27 @@ public class AbstractCloudSpannerStatementTest
 	public void testSanitizeSQL()
 	{
 		assertEquals("SELECT * FROM FOO WHERE ID=?",
-				subject.sanitizeSQL("SELECT * FROM FOO@{FORCE_INDEX=BAR_INDEX} WHERE ID=?"));
+				subject.parser.sanitizeSQL("SELECT * FROM FOO@{FORCE_INDEX=BAR_INDEX} WHERE ID=?"));
 		assertEquals("SELECT *\nFROM FOO\nWHERE ID=?",
-				subject.sanitizeSQL("SELECT *\nFROM FOO@{FORCE_INDEX=BAR_INDEX}\nWHERE ID=?"));
+				subject.parser.sanitizeSQL("SELECT *\nFROM FOO@{FORCE_INDEX=BAR_INDEX}\nWHERE ID=?"));
 		assertEquals("SELECT *\n\tFROM FOO\n\tWHERE ID=?",
-				subject.sanitizeSQL("SELECT *\n\tFROM FOO@{FORCE_INDEX=BAR_INDEX}\n\tWHERE ID=?"));
+				subject.parser.sanitizeSQL("SELECT *\n\tFROM FOO@{FORCE_INDEX=BAR_INDEX}\n\tWHERE ID=?"));
 		assertEquals("SELECT *\n\t   FROM  FOO\n\t   WHERE ID = ?",
-				subject.sanitizeSQL("SELECT *\n\t   FROM  FOO@{FORCE_INDEX = BAR_INDEX }\n\t   WHERE ID = ?"));
+				subject.parser.sanitizeSQL("SELECT *\n\t   FROM  FOO@{FORCE_INDEX = BAR_INDEX }\n\t   WHERE ID = ?"));
 		assertEquals("SELECT *\n\t   FROM  FOO\n\t   WHERE ID = ?",
-				subject.sanitizeSQL("SELECT *\n\t   FROM  FOO@{ FORCE_INDEX = BAR_INDEX }\n\t   WHERE ID = ?"));
+				subject.parser.sanitizeSQL("SELECT *\n\t   FROM  FOO@{ FORCE_INDEX = BAR_INDEX }\n\t   WHERE ID = ?"));
 		assertEquals("SELECT *\n\t   FROM  FOO\n\t   WHERE ID = ?",
-				subject.sanitizeSQL("SELECT *\n\t   FROM  FOO@{ force_index = BAR_INDEX }\n\t   WHERE ID = ?"));
-		assertEquals("SELECT *\n\t   FROM  FOO\n\t   WHERE ID = ?",
-				subject.sanitizeSQL("SELECT *\n\t   FROM  FOO@{ force_index =\n BAR_INDEX }\n\t   WHERE ID = ?"));
+				subject.parser.sanitizeSQL("SELECT *\n\t   FROM  FOO@{ force_index = BAR_INDEX }\n\t   WHERE ID = ?"));
+		assertEquals("SELECT *\n\t   FROM  FOO\n\t   WHERE ID = ?", subject.parser
+				.sanitizeSQL("SELECT *\n\t   FROM  FOO@{ force_index =\n BAR_INDEX }\n\t   WHERE ID = ?"));
 
 		assertEquals("INSERT INTO TAB (ID, COL1) VALUES (?, ?) ON DUPLICATE KEY UPDATE FOO=BAR",
-				subject.sanitizeSQL("INSERT INTO TAB (ID, COL1) VALUES (?, ?) ON DUPLICATE KEY UPDATE"));
+				subject.parser.sanitizeSQL("INSERT INTO TAB (ID, COL1) VALUES (?, ?) ON DUPLICATE KEY UPDATE"));
 		assertEquals("INSERT INTO TAB (ID, COL1)\nVALUES (?, ?)\nON DUPLICATE KEY UPDATE FOO=BAR",
-				subject.sanitizeSQL("INSERT INTO TAB (ID, COL1)\nVALUES (?, ?)\nON DUPLICATE KEY UPDATE"));
-		assertEquals("\tINSERT INTO\n\tTAB (ID, COL1)\n\tVALUES (?, ?)\nON DUPLICATE KEY\nUPDATE\n\t   FOO=BAR", subject
-				.sanitizeSQL("\tINSERT INTO\n\tTAB (ID, COL1)\n\tVALUES (?, ?)\nON DUPLICATE KEY\nUPDATE\n\t  "));
+				subject.parser.sanitizeSQL("INSERT INTO TAB (ID, COL1)\nVALUES (?, ?)\nON DUPLICATE KEY UPDATE"));
+		assertEquals("\tINSERT INTO\n\tTAB (ID, COL1)\n\tVALUES (?, ?)\nON DUPLICATE KEY\nUPDATE\n\t   FOO=BAR",
+				subject.parser.sanitizeSQL(
+						"\tINSERT INTO\n\tTAB (ID, COL1)\n\tVALUES (?, ?)\nON DUPLICATE KEY\nUPDATE\n\t  "));
 	}
 
 	@Test

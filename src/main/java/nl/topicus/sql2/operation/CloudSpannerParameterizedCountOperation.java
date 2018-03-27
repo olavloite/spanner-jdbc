@@ -1,6 +1,7 @@
 package nl.topicus.sql2.operation;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -41,6 +42,7 @@ import nl.topicus.java.sql2.SqlType;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.sql.SqlParser;
 import nl.topicus.sql2.CloudSpannerConnection;
 
 public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerParameterizedOperation<T>
@@ -50,7 +52,11 @@ public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerPara
 	private static final String INVALID_WHERE_CLAUSE_UPDATE_MESSAGE = "The UPDATE statement does not contain a valid WHERE clause. UPDATE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form 'ID=value' or 'ID1=value1 AND ID2=value2'";
 	static final String PARSE_ERROR = "Error while parsing sql statement ";
 
+	private final SqlParser parser = new SqlParser();
+
 	private final String sql;
+
+	private final String[] sqlTokens;
 
 	private Function<Count, T> processor;
 
@@ -60,6 +66,7 @@ public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerPara
 	{
 		super(exec, connection);
 		this.sql = sql;
+		this.sqlTokens = parser.getTokens(sql);
 	}
 
 	@Override
@@ -67,6 +74,11 @@ public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerPara
 	{
 		try
 		{
+			if (isDDLStatement())
+			{
+				String ddl = parser.formatDDLStatement(sql);
+				return (T) executeDDL(ddl);
+			}
 			Mutations mutations = createMutations();
 			return (T) writeMutations(mutations);
 		}
@@ -75,6 +87,21 @@ public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerPara
 			handle(e);
 		}
 		return null;
+	}
+
+	private boolean isDDLStatement()
+	{
+		return parser.isDDLStatement(sqlTokens);
+	}
+
+	private Long executeDDL(String ddl) throws SQLException
+	{
+		return executeDDL(Arrays.asList(ddl));
+	}
+
+	protected Long executeDDL(List<String> ddl) throws SQLException
+	{
+		return getConnection().executeDDL(ddl);
 	}
 
 	protected Long writeMutations(Mutations mutations) throws SQLException
@@ -131,7 +158,7 @@ public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerPara
 	{
 		try
 		{
-			Statement statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
+			Statement statement = CCJSqlParserUtil.parse(parser.sanitizeSQL(sql));
 			if (statement instanceof Insert)
 			{
 				Insert insertStatement = (Insert) statement;
@@ -469,20 +496,6 @@ public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerPara
 
 			});
 		}
-	}
-
-	protected String sanitizeSQL(String sql)
-	{
-		// Add a pseudo update to the end if no columns have been specified in
-		// an 'on duplicate key update'-statement
-		if (sql.matches("(?is)\\s*INSERT\\s+.*\\s+ON\\s+DUPLICATE\\s+KEY\\s+UPDATE\\s*"))
-		{
-			sql = sql + " FOO=BAR";
-		}
-		// Remove @{FORCE_INDEX...} statements
-		sql = sql.replaceAll("(?is)\\@\\{\\s*FORCE_INDEX.*\\}", "");
-
-		return sql;
 	}
 
 	@Override

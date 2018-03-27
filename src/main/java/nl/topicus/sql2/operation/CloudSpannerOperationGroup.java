@@ -113,8 +113,7 @@ public class CloudSpannerOperationGroup<S, T> extends CloudSpannerOperation<T> i
 	@Override
 	public <R extends S> ParameterizedRowOperation<R> rowOperation(String sql)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new CloudSpannerParameterizedRowOperation<>(getExecutor(), getConnection(), sql);
 	}
 
 	@Override

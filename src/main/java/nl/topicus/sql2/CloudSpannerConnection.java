@@ -10,10 +10,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.TimeUnit;
 
+import javax.sql.DataSource;
+
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.SpannerException;
 import com.google.rpc.Code;
+import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
 import nl.topicus.java.sql2.Connection;
 import nl.topicus.java.sql2.ConnectionProperty;
@@ -21,6 +25,8 @@ import nl.topicus.java.sql2.Operation;
 import nl.topicus.java.sql2.OperationGroup;
 import nl.topicus.java.sql2.Transaction;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.sql2.connectionproperty.CloudSpannerDatabaseConnectionProperty;
+import nl.topicus.sql2.connectionproperty.CloudSpannerInstanceConnectionProperty;
 import nl.topicus.sql2.operation.CloudSpannerOperationGroup;
 
 public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, Object> implements Connection
@@ -61,9 +67,11 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 
 		private Executor createDefaultExecutor()
 		{
-			// Default 1 thread as execution directly on the connection should
-			// be sequential
-			return Executors.newFixedThreadPool(1);
+			/**
+			 * Default to an Executor that runs 1 task at a time
+			 * (corePoolSize=1), but can queue an unlimited number of tasks.
+			 */
+			return Executors.newSingleThreadScheduledExecutor();
 		}
 
 	}
@@ -148,8 +156,9 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		return new CloudSpannerConnectOperation(getExecutor(), this, connectionProperties);
 	}
 
-	Spanner getSpanner()
+	Spanner getSpanner() throws SQLException
 	{
+		waitForConnect();
 		return spanner;
 	}
 
@@ -178,6 +187,29 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		lifecycleListeners.stream().forEach(listener -> listener.lifecycleEvent(this, prev, lc));
 	}
 
+	/**
+	 * Convenience method for waiting for a connect operation to finish. When
+	 * using the {@link DataSource#getConnection()}, the method may return
+	 * before the connection is actually ready for use. Calling this method will
+	 * block until the connection is ready.
+	 * 
+	 * @throws SQLException
+	 */
+	public void waitForConnect() throws SQLException
+	{
+		waitForConnect(DEFAULT_WAIT_FOR_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS);
+	}
+
+	/**
+	 * Convenience method for waiting for a connect operation to finish. When
+	 * using the {@link DataSource#getConnection()}, the method may return
+	 * before the connection is actually ready for use. Calling this method will
+	 * block until the connection is ready.
+	 * 
+	 * @param timeout
+	 * @param unit
+	 * @throws SQLException
+	 */
 	public void waitForConnect(long timeout, TimeUnit unit) throws SQLException
 	{
 		WaitForConnectOperationListener.waitForConnection(this, timeout, unit);
@@ -188,9 +220,12 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		return true;
 	}
 
+	private static final long DEFAULT_WAIT_FOR_CONNECT_TIMEOUT = 10000l;
+
 	@Override
-	public DatabaseClient getDbClient()
+	public DatabaseClient getDbClient() throws SQLException
 	{
+		waitForConnect(DEFAULT_WAIT_FOR_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS);
 		return dbClient;
 	}
 
@@ -276,6 +311,54 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	/**
+	 * Execute one or more DDL-statements on the database and wait for it to
+	 * finish or return after syntax check (when running in async mode). Calling
+	 * this method will also automatically commit the currently running
+	 * transaction.
+	 * 
+	 * @param inputSql
+	 *            The DDL-statement(s) to execute. Some statements may end up
+	 *            not being sent to Cloud Spanner if they contain IF [NOT]
+	 *            EXISTS clauses. The driver will check whether the condition is
+	 *            met, and only then will it be sent to Cloud Spanner.
+	 * @return The number of statements executed
+	 * @throws SQLException
+	 *             If an error occurs during the execution of the statement.
+	 */
+	public Long executeDDL(List<String> inputSql) throws SQLException
+	{
+		if (!getAutoCommit())
+			commit();
+		// Check for IF [NOT] EXISTS statements
+		// TODO: Implement
+		// List<String> sql = DDLStatement.getActualSql(this, inputSql);
+		List<String> sql = inputSql;
+		if (!sql.isEmpty())
+		{
+			try
+			{
+				com.google.cloud.spanner.Operation<Void, UpdateDatabaseDdlMetadata> operation = adminClient
+						.updateDatabaseDdl(
+								(String) connectionProperties.get(CloudSpannerInstanceConnectionProperty.class),
+								(String) connectionProperties.get(CloudSpannerDatabaseConnectionProperty.class), sql,
+								null);
+				do
+				{
+					operation = operation.waitFor();
+				}
+				while (!operation.isDone());
+				return Long.valueOf(sql.size());
+			}
+			catch (SpannerException e)
+			{
+				throw new CloudSpannerSQLException(
+						"Could not execute DDL statement(s) " + String.join("\n;\n", sql) + ": " + e.getMessage(), e);
+			}
+		}
+		return 0L;
 	}
 
 }
