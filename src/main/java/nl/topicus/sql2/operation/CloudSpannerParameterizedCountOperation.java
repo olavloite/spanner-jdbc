@@ -498,6 +498,20 @@ public class CloudSpannerParameterizedCountOperation<T> extends CloudSpannerPara
 		}
 	}
 
+	protected String sanitizeSQL(String sql)
+	{
+		// Add a pseudo update to the end if no columns have been specified in
+		// an 'on duplicate key update'-statement
+		if (sql.matches("(?is)\\s*INSERT\\s+.*\\s+ON\\s+DUPLICATE\\s+KEY\\s+UPDATE\\s*"))
+		{
+			sql = sql + " FOO=BAR";
+		}
+		// Remove @{FORCE_INDEX...} statements
+		sql = sql.replaceAll("(?is)\\@\\{\\s*FORCE_INDEX.*\\}", "");
+
+		return sql;
+	}
+
 	@Override
 	public RowOperation<T> returning(String... keys)
 	{

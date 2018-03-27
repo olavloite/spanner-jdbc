@@ -51,11 +51,6 @@ public class CloudSpannerDataSourceFactoryTest
 
 	}
 
-	private static class Word
-	{
-
-	}
-
 	private static final boolean CREATE_DB = false;
 	private static final String PROJECT_ID = "gothic-calling-193809";
 	private static final String INSTANCE_ID = "test-instance";
