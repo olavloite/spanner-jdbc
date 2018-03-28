@@ -187,6 +187,8 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		lifecycleListeners.stream().forEach(listener -> listener.lifecycleEvent(this, prev, lc));
 	}
 
+	private static final long DEFAULT_WAIT_FOR_CONNECT_TIMEOUT = 10000l;
+
 	/**
 	 * Convenience method for waiting for a connect operation to finish. When
 	 * using the {@link DataSource#getConnection()}, the method may return
@@ -220,12 +222,10 @@ public class CloudSpannerConnection extends CloudSpannerOperationGroup<Object, O
 		return true;
 	}
 
-	private static final long DEFAULT_WAIT_FOR_CONNECT_TIMEOUT = 10000l;
-
 	@Override
 	public DatabaseClient getDbClient() throws SQLException
 	{
-		waitForConnect(DEFAULT_WAIT_FOR_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS);
+		waitForConnect();
 		return dbClient;
 	}
 

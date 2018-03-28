@@ -46,7 +46,7 @@ public abstract class CloudSpannerOperation<T> implements Operation<T>, Supplier
 		return submission != null;
 	}
 
-	private void checkIsSubmitted()
+	protected void checkIsSubmitted()
 	{
 		if (isSubmitted())
 			throw new IllegalStateException("This operation has already been submitted");
