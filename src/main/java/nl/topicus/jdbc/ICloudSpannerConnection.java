@@ -1,6 +1,7 @@
 package nl.topicus.jdbc;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import com.google.cloud.Timestamp;
@@ -45,5 +46,9 @@ public interface ICloudSpannerConnection extends Connection
 	public String getClientId();
 
 	public Timestamp getLastCommitTimestamp();
+
+	public boolean isBatchReadOnly();
+
+	public int setBatchReadOnly(boolean batchReadOnly) throws SQLException;
 
 }

@@ -338,7 +338,7 @@ public class CloudSpannerDatabaseMetaDataTest
 	@Test
 	public void testSupportsMultipleResultSets() throws SQLException
 	{
-		assertEquals(false, testSubject.supportsMultipleResultSets());
+		assertTrue(testSubject.supportsMultipleResultSets());
 	}
 
 	@Test

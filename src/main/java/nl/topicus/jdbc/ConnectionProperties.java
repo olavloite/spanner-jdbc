@@ -10,6 +10,8 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 final class ConnectionProperties
 {
+	public static final int NUMBER_OF_PROPERTIES = 13;
+
 	static String getPropertyName(String propertyPart)
 	{
 		return propertyPart.substring(0, propertyPart.length() - 1);
@@ -33,6 +35,7 @@ final class ConnectionProperties
 	static final String ASYNC_DDL_OPERATIONS = "AsyncDdlOperations=";
 	static final String AUTO_BATCH_DDL_OPERATIONS = "AutoBatchDdlOperations=";
 	static final String REPORT_DEFAULT_SCHEMA_AS_NULL = "ReportDefaultSchemaAsNull=";
+	static final String BATCH_READ_ONLY_MODE = "BatchReadOnlyMode=";
 
 	String project = null;
 	String instance = null;
@@ -46,6 +49,7 @@ final class ConnectionProperties
 	boolean asyncDdlOperations = false;
 	boolean autoBatchDdlOperations = false;
 	boolean reportDefaultSchemaAsNull = true;
+	boolean batchReadOnlyMode = false;
 
 	static ConnectionProperties parse(String url) throws SQLException
 	{
@@ -84,6 +88,8 @@ final class ConnectionProperties
 				else if (conPartLower.startsWith(REPORT_DEFAULT_SCHEMA_AS_NULL.toLowerCase()))
 					res.reportDefaultSchemaAsNull = Boolean
 							.valueOf(conPart.substring(REPORT_DEFAULT_SCHEMA_AS_NULL.length()));
+				else if (conPartLower.startsWith(BATCH_READ_ONLY_MODE.toLowerCase()))
+					res.batchReadOnlyMode = Boolean.valueOf(conPart.substring(BATCH_READ_ONLY_MODE.length()));
 				else
 					throw new CloudSpannerSQLException("Unknown URL parameter " + conPart, Code.INVALID_ARGUMENT);
 			}
@@ -153,6 +159,9 @@ final class ConnectionProperties
 									REPORT_DEFAULT_SCHEMA_AS_NULL
 											.substring(0, REPORT_DEFAULT_SCHEMA_AS_NULL.length() - 1).toLowerCase(),
 									String.valueOf(reportDefaultSchemaAsNull)));
+			batchReadOnlyMode = Boolean.valueOf(lowerCaseInfo.getProperty(
+					BATCH_READ_ONLY_MODE.substring(0, BATCH_READ_ONLY_MODE.length() - 1).toLowerCase(),
+					String.valueOf(batchReadOnlyMode)));
 			if (!CloudSpannerDriver.logLevelSet)
 				CloudSpannerDriver.setLogLevel(CloudSpannerDriver.OFF);
 		}
@@ -160,7 +169,7 @@ final class ConnectionProperties
 
 	DriverPropertyInfo[] getPropertyInfo()
 	{
-		DriverPropertyInfo[] res = new DriverPropertyInfo[12];
+		DriverPropertyInfo[] res = new DriverPropertyInfo[NUMBER_OF_PROPERTIES];
 		res[0] = new DriverPropertyInfo(PROJECT_URL_PART.substring(0, PROJECT_URL_PART.length() - 1), project);
 		res[0].description = "Google Cloud Project id";
 		res[1] = new DriverPropertyInfo(INSTANCE_URL_PART.substring(0, INSTANCE_URL_PART.length() - 1), instance);
@@ -196,6 +205,9 @@ final class ConnectionProperties
 				REPORT_DEFAULT_SCHEMA_AS_NULL.substring(0, REPORT_DEFAULT_SCHEMA_AS_NULL.length() - 1),
 				String.valueOf(reportDefaultSchemaAsNull));
 		res[11].description = "Report the default schema and catalog as null (true) or as an empty string (false).";
+		res[12] = new DriverPropertyInfo(BATCH_READ_ONLY_MODE.substring(0, BATCH_READ_ONLY_MODE.length() - 1),
+				String.valueOf(batchReadOnlyMode));
+		res[12].description = "Run queries in batch-read-only-mode. Use this mode when downloading large amounts of data from Cloud Spanner in combination with the methods Statement#execute(String) or PreparedStatement#execute()";
 
 		return res;
 	}

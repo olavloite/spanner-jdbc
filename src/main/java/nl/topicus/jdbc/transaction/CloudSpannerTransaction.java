@@ -1,18 +1,26 @@
 package nl.topicus.jdbc.transaction;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import com.google.cloud.Timestamp;
+import com.google.cloud.spanner.BatchClient;
+import com.google.cloud.spanner.BatchReadOnlyTransaction;
+import com.google.cloud.spanner.BatchTransactionId;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Options.QueryOption;
 import com.google.cloud.spanner.Options.ReadOption;
+import com.google.cloud.spanner.Partition;
+import com.google.cloud.spanner.PartitionOptions;
 import com.google.cloud.spanner.ReadOnlyTransaction;
 import com.google.cloud.spanner.ResultSet;
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
+import com.google.cloud.spanner.TimestampBound;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.rpc.Code;
 
@@ -25,7 +33,7 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
  * @author loite
  *
  */
-public class CloudSpannerTransaction implements TransactionContext
+public class CloudSpannerTransaction implements TransactionContext, BatchReadOnlyTransaction
 {
 	public static class TransactionException extends RuntimeException
 	{
@@ -41,19 +49,24 @@ public class CloudSpannerTransaction implements TransactionContext
 
 	private ReadOnlyTransaction readOnlyTransaction;
 
+	private BatchReadOnlyTransaction batchReadOnlyTransaction;
+
 	private DatabaseClient dbClient;
+
+	private BatchClient batchClient;
 
 	private CloudSpannerConnection connection;
 
-	public CloudSpannerTransaction(DatabaseClient dbClient, CloudSpannerConnection connection)
+	public CloudSpannerTransaction(DatabaseClient dbClient, BatchClient batchClient, CloudSpannerConnection connection)
 	{
 		this.dbClient = dbClient;
+		this.batchClient = batchClient;
 		this.connection = connection;
 	}
 
 	public boolean isRunning()
 	{
-		return readOnlyTransaction != null || transactionThread != null;
+		return batchReadOnlyTransaction != null || readOnlyTransaction != null || transactionThread != null;
 	}
 
 	public boolean hasBufferedMutations()
@@ -63,7 +76,14 @@ public class CloudSpannerTransaction implements TransactionContext
 
 	public void begin() throws SQLException
 	{
-		if (connection.isReadOnly())
+		if (connection.isBatchReadOnly())
+		{
+			if (batchReadOnlyTransaction == null)
+			{
+				batchReadOnlyTransaction = batchClient.batchReadOnlyTransaction(TimestampBound.strong());
+			}
+		}
+		else if (connection.isReadOnly())
 		{
 			if (readOnlyTransaction == null)
 			{
@@ -85,7 +105,14 @@ public class CloudSpannerTransaction implements TransactionContext
 		Timestamp res = null;
 		try
 		{
-			if (connection.isReadOnly())
+			if (connection.isBatchReadOnly())
+			{
+				if (batchReadOnlyTransaction != null)
+				{
+					batchReadOnlyTransaction.close();
+				}
+			}
+			else if (connection.isReadOnly())
 			{
 				if (readOnlyTransaction != null)
 				{
@@ -104,6 +131,7 @@ public class CloudSpannerTransaction implements TransactionContext
 		{
 			transactionThread = null;
 			readOnlyTransaction = null;
+			batchReadOnlyTransaction = null;
 		}
 		return res;
 	}
@@ -112,7 +140,14 @@ public class CloudSpannerTransaction implements TransactionContext
 	{
 		try
 		{
-			if (connection.isReadOnly())
+			if (connection.isBatchReadOnly())
+			{
+				if (batchReadOnlyTransaction != null)
+				{
+					batchReadOnlyTransaction.close();
+				}
+			}
+			else if (connection.isReadOnly())
 			{
 				if (readOnlyTransaction != null)
 				{
@@ -131,6 +166,7 @@ public class CloudSpannerTransaction implements TransactionContext
 		{
 			transactionThread = null;
 			readOnlyTransaction = null;
+			batchReadOnlyTransaction = null;
 		}
 	}
 
@@ -177,12 +213,13 @@ public class CloudSpannerTransaction implements TransactionContext
 		{
 			transactionThread = null;
 			readOnlyTransaction = null;
+			batchReadOnlyTransaction = null;
 		}
 	}
 
 	private void checkTransaction()
 	{
-		if (transactionThread == null && readOnlyTransaction == null)
+		if (transactionThread == null && readOnlyTransaction == null && batchReadOnlyTransaction == null)
 		{
 			try
 			{
@@ -217,7 +254,9 @@ public class CloudSpannerTransaction implements TransactionContext
 	public ResultSet executeQuery(Statement statement, QueryOption... options)
 	{
 		checkTransaction();
-		if (readOnlyTransaction != null)
+		if (batchReadOnlyTransaction != null)
+			return batchReadOnlyTransaction.executeQuery(statement, options);
+		else if (readOnlyTransaction != null)
 			return readOnlyTransaction.executeQuery(statement, options);
 		else if (transactionThread != null)
 			return transactionThread.executeQuery(statement);
@@ -263,6 +302,69 @@ public class CloudSpannerTransaction implements TransactionContext
 	public void close()
 	{
 		// no-op as there is nothing to close or throw away
+	}
+
+	@Override
+	public Timestamp getReadTimestamp()
+	{
+		if (batchReadOnlyTransaction != null)
+			return batchReadOnlyTransaction.getReadTimestamp();
+		if (readOnlyTransaction != null)
+			return readOnlyTransaction.getReadTimestamp();
+		return null;
+	}
+
+	@Override
+	public List<Partition> partitionRead(PartitionOptions partitionOptions, String table, KeySet keys,
+			Iterable<String> columns, ReadOption... options) throws SpannerException
+	{
+		return null;
+	}
+
+	@Override
+	public List<Partition> partitionReadUsingIndex(PartitionOptions partitionOptions, String table, String index,
+			KeySet keys, Iterable<String> columns, ReadOption... options) throws SpannerException
+	{
+		return null;
+	}
+
+	@Override
+	public List<Partition> partitionQuery(PartitionOptions partitionOptions, Statement statement,
+			QueryOption... options) throws SpannerException
+	{
+		checkTransaction();
+		if (batchReadOnlyTransaction != null)
+		{
+			return batchReadOnlyTransaction.partitionQuery(partitionOptions, statement, options);
+		}
+		return null;
+	}
+
+	@Override
+	public ResultSet execute(Partition partition) throws SpannerException
+	{
+		checkTransaction();
+		if (batchReadOnlyTransaction != null)
+		{
+			return batchReadOnlyTransaction.execute(partition);
+		}
+		return null;
+	}
+
+	@Override
+	public BatchTransactionId getBatchTransactionId()
+	{
+		checkTransaction();
+		if (batchReadOnlyTransaction != null)
+		{
+			return batchReadOnlyTransaction.getBatchTransactionId();
+		}
+		return null;
+	}
+
+	public BatchReadOnlyTransaction getBatchReadOnlyTransaction()
+	{
+		return batchReadOnlyTransaction;
 	}
 
 }

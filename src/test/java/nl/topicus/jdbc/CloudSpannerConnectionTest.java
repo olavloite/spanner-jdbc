@@ -274,11 +274,12 @@ public class CloudSpannerConnectionTest
 		Properties properties = createDefaultProperties();
 		try (CloudSpannerConnection connection = createConnection(properties))
 		{
-			testGetDynamicConnectionProperty(connection, null, 4);
+			testGetDynamicConnectionProperty(connection, null, 5);
 			testGetDynamicConnectionProperty(connection, "ALLOWEXTENDEDMODE", 1);
 			testGetDynamicConnectionProperty(connection, "ASYNCDDLOPERATIONS", 1);
 			testGetDynamicConnectionProperty(connection, "AUTOBATCHDDLOPERATIONS", 1);
 			testGetDynamicConnectionProperty(connection, "REPORTDEFAULTSCHEMAASNULL", 1);
+			testGetDynamicConnectionProperty(connection, "BATCHREADONLYMODE", 1);
 			testGetDynamicConnectionProperty(connection, "NOT_A_PROPERTY", 0);
 		}
 	}

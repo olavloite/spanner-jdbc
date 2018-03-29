@@ -24,7 +24,7 @@ public class CloudSpannerTransactionTest
 	public void testInterfaceMethods() throws SQLException
 	{
 		CloudSpannerConnection connection = CloudSpannerTestObjects.createConnection();
-		try (CloudSpannerTransaction tx = new CloudSpannerTransaction(null, connection))
+		try (CloudSpannerTransaction tx = new CloudSpannerTransaction(null, null, connection))
 		{
 			Assert.assertNull(tx.read(null, null, null));
 			Assert.assertNull(tx.readUsingIndex(null, null, null, null));

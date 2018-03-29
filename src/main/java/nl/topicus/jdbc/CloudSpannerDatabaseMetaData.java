@@ -313,7 +313,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsMultipleResultSets() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override

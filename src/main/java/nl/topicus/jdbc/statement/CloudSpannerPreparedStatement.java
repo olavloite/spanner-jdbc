@@ -5,12 +5,14 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
+import com.google.cloud.spanner.Partition;
 import com.google.cloud.spanner.ReadContext;
 import com.google.rpc.Code;
 
@@ -37,6 +39,7 @@ import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.jdbc.resultset.CloudSpannerPartitionResultSet;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 import nl.topicus.jdbc.statement.AbstractTablePartWorker.DMLOperation;
 
@@ -83,6 +86,13 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 	@Override
 	public ResultSet executeQuery() throws SQLException
 	{
+		if (getConnection().isBatchReadOnly())
+		{
+			throw new CloudSpannerSQLException(
+					"The executeQuery()-method may not be called when in batch read-only mode",
+					Code.FAILED_PRECONDITION);
+		}
+
 		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
 		if (custom != null && custom.isQuery())
 		{
@@ -568,14 +578,34 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		}
 		if (!ddl && statement instanceof Select)
 		{
-			lastResultSet = executeQuery();
-			lastUpdateCount = -1;
+			determineForceSingleUseReadContext((Select) statement);
+			com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement, sql);
+			if (!isForceSingleUseReadContext() && getConnection().isBatchReadOnly())
+			{
+				List<Partition> partitions = partitionQuery(builder.build());
+				currentResultSets = new ArrayList<>(partitions.size());
+				for (Partition p : partitions)
+				{
+					currentResultSets.add(new CloudSpannerPartitionResultSet(this, getBatchReadOnlyTransaction(), p));
+				}
+			}
+			else
+			{
+				try (ReadContext context = getReadContext())
+				{
+					com.google.cloud.spanner.ResultSet rs = context.executeQuery(builder.build());
+					currentResultSets = Arrays.asList(new CloudSpannerResultSet(this, rs));
+					currentResultSetIndex = 0;
+					lastUpdateCount = -1;
+				}
+			}
 			return true;
 		}
 		else
 		{
 			lastUpdateCount = executeUpdate();
-			lastResultSet = null;
+			currentResultSets = null;
+			currentResultSetIndex = 0;
 			return false;
 		}
 	}

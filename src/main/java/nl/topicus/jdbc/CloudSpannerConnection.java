@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.json.JSONException;
@@ -31,6 +30,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.auth.oauth2.UserCredentials;
 import com.google.cloud.Timestamp;
+import com.google.cloud.spanner.BatchClient;
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
@@ -102,6 +102,14 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private boolean closed;
 
 	private boolean readOnly;
+
+	/**
+	 * Special mode for Cloud Spanner: When the connection is in this mode,
+	 * queries will be executed using the {@link BatchClient} instead of the
+	 * default {@link DatabaseClient}
+	 */
+	private boolean originalBatchReadOnly;
+	private boolean batchReadOnly;
 
 	private final RunningOperationsStore operations = new RunningOperationsStore();
 
@@ -195,8 +203,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			spanner = options.getService();
 			dbClient = spanner
 					.getDatabaseClient(DatabaseId.of(options.getProjectId(), database.instance, database.database));
+			BatchClient batchClient = spanner
+					.getBatchClient(DatabaseId.of(options.getProjectId(), database.instance, database.database));
 			adminClient = spanner.getDatabaseAdminClient();
-			transaction = new CloudSpannerTransaction(dbClient, this);
+			transaction = new CloudSpannerTransaction(dbClient, batchClient, this);
 			metaDataStore = new MetaDataStore(this);
 		}
 		catch (SpannerException e)
@@ -437,6 +447,15 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void setAutoCommit(boolean autoCommit) throws SQLException
 	{
 		checkClosed();
+		if (autoCommit != this.autoCommit)
+		{
+			if (isBatchReadOnly())
+			{
+				throw new CloudSpannerSQLException(
+						"The connection is currently in batch read-only mode. Please turn off batch read-only before changing auto-commit mode.",
+						Code.FAILED_PRECONDITION);
+			}
+		}
 		this.autoCommit = autoCommit;
 	}
 
@@ -493,10 +512,21 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void setReadOnly(boolean readOnly) throws SQLException
 	{
 		checkClosed();
-		if (transaction.isRunning())
-			throw new CloudSpannerSQLException(
-					"There is currently a transaction running. Commit or rollback the running transaction before changing read-only mode.",
-					Code.FAILED_PRECONDITION);
+		if (readOnly != this.readOnly)
+		{
+			if (transaction.isRunning())
+			{
+				throw new CloudSpannerSQLException(
+						"There is currently a transaction running. Commit or rollback the running transaction before changing read-only mode.",
+						Code.FAILED_PRECONDITION);
+			}
+			if (isBatchReadOnly())
+			{
+				throw new CloudSpannerSQLException(
+						"The connection is currently in batch read-only mode. Please turn off batch read-only before changing read-only mode.",
+						Code.FAILED_PRECONDITION);
+			}
+		}
 		this.readOnly = readOnly;
 	}
 
@@ -726,8 +756,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 *            The value to set
 	 * @return 1 if the property was set, 0 if not (this complies with the
 	 *         normal behaviour of executeUpdate(...) methods)
+	 * @throws SQLException
 	 */
-	public int setDynamicConnectionProperty(String propertyName, String propertyValue)
+	public int setDynamicConnectionProperty(String propertyName, String propertyValue) throws SQLException
 	{
 		return getPropertySetter(propertyName).apply(Boolean.valueOf(propertyValue));
 	}
@@ -740,8 +771,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 *            The name of the dynamic connection property
 	 * @return 1 if the property was reset, 0 if not (this complies with the
 	 *         normal behaviour of executeUpdate(...) methods)
+	 * @throws SQLException
 	 */
-	public int resetDynamicConnectionProperty(String propertyName)
+	public int resetDynamicConnectionProperty(String propertyName) throws SQLException
 	{
 		return getPropertySetter(propertyName).apply(getOriginalValueGetter(propertyName).get());
 	}
@@ -768,11 +800,22 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		{
 			return this::isOriginalReportDefaultSchemaAsNull;
 		}
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.BATCH_READ_ONLY_MODE)))
+		{
+			return this::isOriginalBatchReadOnly;
+		}
 		// Return a no-op to avoid null checks
 		return () -> false;
 	}
 
-	private Function<Boolean, Integer> getPropertySetter(String propertyName)
+	@FunctionalInterface
+	static interface SqlFunction<T, R>
+	{
+		R apply(T t) throws SQLException;
+	}
+
+	private SqlFunction<Boolean, Integer> getPropertySetter(String propertyName) throws SQLException
 	{
 		if (propertyName
 				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
@@ -793,6 +836,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 				ConnectionProperties.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL)))
 		{
 			return this::setReportDefaultSchemaAsNull;
+		}
+		if (propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.BATCH_READ_ONLY_MODE)))
+		{
+			return this::setBatchReadOnly;
 		}
 		// Return a no-op to avoid null checks
 		return x -> 0;
@@ -829,6 +877,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		{
 			values.put(ConnectionProperties.getPropertyName(ConnectionProperties.REPORT_DEFAULT_SCHEMA_AS_NULL),
 					String.valueOf(isReportDefaultSchemaAsNull()));
+		}
+		if (propertyName == null || propertyName
+				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.BATCH_READ_ONLY_MODE)))
+		{
+			values.put(ConnectionProperties.getPropertyName(ConnectionProperties.BATCH_READ_ONLY_MODE),
+					String.valueOf(isBatchReadOnly()));
 		}
 		return createResultSet(statement, values);
 	}
@@ -969,6 +1023,45 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void addAutoBatchedDdlOperation(String sql)
 	{
 		autoBatchedDdlOperations.add(sql);
+	}
+
+	@Override
+	public boolean isBatchReadOnly()
+	{
+		return batchReadOnly;
+	}
+
+	@Override
+	public int setBatchReadOnly(boolean batchReadOnly) throws SQLException
+	{
+		checkClosed();
+		if (batchReadOnly != this.batchReadOnly)
+		{
+			if (getAutoCommit())
+			{
+				throw new CloudSpannerSQLException(
+						"The connection is currently in auto-commit mode. Please turn off auto-commit before changing batch read-only mode.",
+						Code.FAILED_PRECONDITION);
+			}
+			if (transaction.isRunning())
+			{
+				throw new CloudSpannerSQLException(
+						"There is currently a transaction running. Commit or rollback the running transaction before changing batch read-only mode.",
+						Code.FAILED_PRECONDITION);
+			}
+		}
+		this.batchReadOnly = batchReadOnly;
+		return 1;
+	}
+
+	boolean isOriginalBatchReadOnly()
+	{
+		return originalBatchReadOnly;
+	}
+
+	void setOriginalBatchReadOnly(boolean originalBatchReadOnly)
+	{
+		this.originalBatchReadOnly = originalBatchReadOnly;
 	}
 
 }

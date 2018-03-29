@@ -8,7 +8,10 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.cloud.spanner.BatchReadOnlyTransaction;
 import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.Partition;
+import com.google.cloud.spanner.PartitionOptions;
 import com.google.cloud.spanner.ReadContext;
 import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.TransactionContext;
@@ -193,6 +196,17 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 			return dbClient.singleUse();
 		}
 		return connection.getTransaction();
+	}
+
+	protected List<Partition> partitionQuery(com.google.cloud.spanner.Statement statement) throws SQLException
+	{
+		PartitionOptions po = PartitionOptions.getDefaultInstance();
+		return connection.getTransaction().partitionQuery(po, statement);
+	}
+
+	protected BatchReadOnlyTransaction getBatchReadOnlyTransaction()
+	{
+		return connection.getTransaction().getBatchReadOnlyTransaction();
 	}
 
 	protected long writeMutations(Mutations mutations) throws SQLException
