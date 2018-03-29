@@ -470,14 +470,14 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void commit() throws SQLException
 	{
 		checkClosed();
-		lastCommitTimestamp = transaction.commit();
+		lastCommitTimestamp = getTransaction().commit();
 	}
 
 	@Override
 	public void rollback() throws SQLException
 	{
 		checkClosed();
-		transaction.rollback();
+		getTransaction().rollback();
 	}
 
 	public CloudSpannerTransaction getTransaction()
@@ -490,7 +490,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	{
 		if (closed)
 			return;
-		transaction.rollback();
+		getTransaction().rollback();
 		closed = true;
 		driver.closeConnection(this);
 	}
@@ -514,7 +514,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		checkClosed();
 		if (readOnly != this.readOnly)
 		{
-			if (transaction.isRunning())
+			if (getTransaction().isRunning())
 			{
 				throw new CloudSpannerSQLException(
 						"There is currently a transaction running. Commit or rollback the running transaction before changing read-only mode.",
@@ -980,7 +980,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 */
 	public void prepareTransaction(String xid) throws SQLException
 	{
-		transaction.prepareTransaction(xid);
+		getTransaction().prepareTransaction(xid);
 	}
 
 	/**
@@ -993,7 +993,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 */
 	public void commitPreparedTransaction(String xid) throws SQLException
 	{
-		transaction.commitPreparedTransaction(xid);
+		getTransaction().commitPreparedTransaction(xid);
 	}
 
 	/**
@@ -1007,7 +1007,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 */
 	public void rollbackPreparedTransaction(String xid) throws SQLException
 	{
-		transaction.rollbackPreparedTransaction(xid);
+		getTransaction().rollbackPreparedTransaction(xid);
 	}
 
 	public List<String> getAutoBatchedDdlOperations()
@@ -1043,7 +1043,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 						"The connection is currently in auto-commit mode. Please turn off auto-commit before changing batch read-only mode.",
 						Code.FAILED_PRECONDITION);
 			}
-			if (transaction.isRunning())
+			if (getTransaction().isRunning())
 			{
 				throw new CloudSpannerSQLException(
 						"There is currently a transaction running. Commit or rollback the running transaction before changing batch read-only mode.",
