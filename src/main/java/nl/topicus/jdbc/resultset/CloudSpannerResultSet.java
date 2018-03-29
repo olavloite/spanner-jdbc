@@ -111,7 +111,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public void close() throws SQLException
 	{
-		resultSet.close();
+		if (resultSet != null)
+			resultSet.close();
 		closed = true;
 	}
 

@@ -1,6 +1,10 @@
 package nl.topicus.jdbc.statement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
@@ -92,6 +96,53 @@ public class CloudSpannerStatementTest
 		CloudSpannerStatement statement = connection.createStatement();
 
 		return statement;
+	}
+
+	@Test
+	public void testExecuteNormalMode() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+		boolean res = statement.execute("SELECT * FROM FOO");
+		assertTrue(res);
+		ResultSet rs = statement.getResultSet();
+		assertNotNull(rs);
+		assertFalse(rs.isClosed());
+		assertFalse(statement.getMoreResults());
+		assertNull(statement.getResultSet());
+	}
+
+	@Test
+	public void testExecuteBatchReadOnlyMode() throws SQLException
+	{
+		testExecuteBatchReadOnlyMode(false);
+		testExecuteBatchReadOnlyMode(true);
+	}
+
+	private void testExecuteBatchReadOnlyMode(boolean keepCurrent) throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		connection.setAutoCommit(false);
+		connection.setBatchReadOnly(true);
+		CloudSpannerStatement statement = connection.createStatement();
+		boolean res = statement.execute("SELECT * FROM FOO");
+		int count = 0;
+		ResultSet prev = null;
+		assertTrue(res);
+		do
+		{
+			if (prev != null)
+				assertEquals(keepCurrent, !prev.isClosed());
+			ResultSet rs = statement.getResultSet();
+			assertNotNull(rs);
+			assertFalse(rs.isClosed());
+			prev = rs;
+			count++;
+		}
+		while (keepCurrent ? statement.getMoreResults(Statement.KEEP_CURRENT_RESULT) : statement.getMoreResults());
+		assertFalse(statement.getMoreResults());
+		assertNull(statement.getResultSet());
+		assertEquals(3, count);
 	}
 
 	@Test

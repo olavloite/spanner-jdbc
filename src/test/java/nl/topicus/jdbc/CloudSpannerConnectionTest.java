@@ -247,6 +247,14 @@ public class CloudSpannerConnectionTest
 		assertFalse(connection.isReportDefaultSchemaAsNull());
 		connection.resetDynamicConnectionProperty("ReportDefaultSchemaAsNull");
 		assertTrue(connection.isReportDefaultSchemaAsNull());
+
+		// Turn off autocommit, otherwise batch read-only mode will fail
+		connection.setAutoCommit(false);
+		connection.setBatchReadOnly(true);
+		assertFalse(connection.isOriginalBatchReadOnly());
+		assertTrue(connection.isBatchReadOnly());
+		connection.resetDynamicConnectionProperty("BatchReadOnlyMode");
+		assertFalse(connection.isBatchReadOnly());
 	}
 
 	@Test
