@@ -8,7 +8,10 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.cloud.spanner.BatchReadOnlyTransaction;
 import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.Partition;
+import com.google.cloud.spanner.PartitionOptions;
 import com.google.cloud.spanner.ReadContext;
 import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.TransactionContext;
@@ -35,6 +38,8 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
  */
 abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher implements Statement
 {
+	protected static final String NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION = "The connection is in read-only mode. Mutations are not allowed.";
+
 	private DatabaseClient dbClient;
 
 	/**
@@ -195,12 +200,22 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		return connection.getTransaction();
 	}
 
+	protected List<Partition> partitionQuery(com.google.cloud.spanner.Statement statement) throws SQLException
+	{
+		PartitionOptions po = PartitionOptions.getDefaultInstance();
+		return connection.getTransaction().partitionQuery(po, statement);
+	}
+
+	protected BatchReadOnlyTransaction getBatchReadOnlyTransaction()
+	{
+		return connection.getTransaction().getBatchReadOnlyTransaction();
+	}
+
 	protected long writeMutations(Mutations mutations) throws SQLException
 	{
 		if (connection.isReadOnly())
 		{
-			throw new CloudSpannerSQLException("Connection is in read-only mode. Mutations are not allowed",
-					Code.FAILED_PRECONDITION);
+			throw new CloudSpannerSQLException(NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION, Code.FAILED_PRECONDITION);
 		}
 		if (mutations.isWorker())
 		{

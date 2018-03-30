@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.Partition;
 import com.google.cloud.spanner.ReadContext;
 import com.google.rpc.Code;
 
@@ -21,6 +22,7 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.jdbc.resultset.CloudSpannerPartitionResultSet;
 import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
 
 /**
@@ -30,7 +32,9 @@ import nl.topicus.jdbc.resultset.CloudSpannerResultSet;
  */
 public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 {
-	protected ResultSet lastResultSet = null;
+	protected List<ResultSet> currentResultSets = null;
+
+	protected int currentResultSetIndex = 0;
 
 	protected int lastUpdateCount = -1;
 
@@ -248,14 +252,34 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		}
 		if (!ddl && statement instanceof Select)
 		{
-			lastResultSet = executeQuery(sql);
-			lastUpdateCount = -1;
+			determineForceSingleUseReadContext((Select) statement);
+			if (!isForceSingleUseReadContext() && getConnection().isBatchReadOnly())
+			{
+				List<Partition> partitions = partitionQuery(com.google.cloud.spanner.Statement.of(sql));
+				currentResultSets = new ArrayList<>(partitions.size());
+				for (Partition p : partitions)
+				{
+					currentResultSets.add(new CloudSpannerPartitionResultSet(this, getBatchReadOnlyTransaction(), p));
+				}
+			}
+			else
+			{
+				try (ReadContext context = getReadContext())
+				{
+					com.google.cloud.spanner.ResultSet rs = context
+							.executeQuery(com.google.cloud.spanner.Statement.of(sql));
+					currentResultSets = Arrays.asList(new CloudSpannerResultSet(this, rs));
+					currentResultSetIndex = 0;
+					lastUpdateCount = -1;
+				}
+			}
 			return true;
 		}
 		else
 		{
 			lastUpdateCount = executeUpdate(sql);
-			lastResultSet = null;
+			currentResultSetIndex = 0;
+			currentResultSets = null;
 			return false;
 		}
 	}
@@ -344,13 +368,15 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		{
 			if (query)
 			{
-				lastResultSet = executeQuery(sqlTokens);
+				currentResultSets = Arrays.asList(executeQuery(sqlTokens));
+				currentResultSetIndex = 0;
 				lastUpdateCount = -1;
 				return true;
 			}
 			else
 			{
-				lastResultSet = null;
+				currentResultSets = null;
+				currentResultSetIndex = 0;
 				lastUpdateCount = executeUpdate(sqlTokens);
 				return false;
 			}
@@ -539,7 +565,8 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public ResultSet getResultSet() throws SQLException
 	{
-		return lastResultSet;
+		return currentResultSets == null || currentResultSetIndex >= currentResultSets.size() ? null
+				: currentResultSets.get(currentResultSetIndex);
 	}
 
 	@Override
@@ -551,23 +578,32 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public boolean getMoreResults() throws SQLException
 	{
-		moveToNextResult(CLOSE_CURRENT_RESULT);
-		return false;
+		return moveToNextResult(CLOSE_CURRENT_RESULT);
 	}
 
 	@Override
 	public boolean getMoreResults(int current) throws SQLException
 	{
-		moveToNextResult(current);
-		return false;
+		return moveToNextResult(current);
 	}
 
-	private void moveToNextResult(int current) throws SQLException
+	private boolean moveToNextResult(int current) throws SQLException
 	{
-		if (current != java.sql.Statement.KEEP_CURRENT_RESULT && lastResultSet != null)
-			lastResultSet.close();
-		lastResultSet = null;
+		if (current != java.sql.Statement.KEEP_CURRENT_RESULT && currentResultSets != null
+				&& currentResultSets.size() > currentResultSetIndex
+				&& currentResultSets.get(currentResultSetIndex) != null)
+		{
+			currentResultSets.get(currentResultSetIndex).close();
+		}
+		if (currentResultSets != null && currentResultSets.size() > currentResultSetIndex
+				&& currentResultSets.get(currentResultSetIndex) != null)
+		{
+			currentResultSets.set(currentResultSetIndex, null);
+		}
+		currentResultSetIndex++;
 		lastUpdateCount = -1;
+
+		return currentResultSets != null && currentResultSetIndex < currentResultSets.size();
 	}
 
 	@Override

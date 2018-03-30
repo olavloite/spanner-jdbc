@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.test.util;
 
+import static org.mockito.Mockito.mock;
+
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -12,6 +14,8 @@ import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+import com.google.cloud.spanner.Partition;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDatabaseMetaData;
@@ -31,6 +35,11 @@ public class CloudSpannerTestObjects
 		Mockito.doCallRealMethod().when(connection).setAutoCommit(Mockito.anyBoolean());
 		Mockito.when(connection.getAutoCommit()).thenCallRealMethod();
 		connection.setAutoCommit(false);
+		Mockito.doCallRealMethod().when(connection).setBatchReadOnly(Mockito.anyBoolean());
+		Mockito.when(connection.isBatchReadOnly()).thenCallRealMethod();
+		Mockito.doCallRealMethod().when(connection).setReadOnly(Mockito.anyBoolean());
+		Mockito.when(connection.isReadOnly()).thenCallRealMethod();
+
 		Mockito.when(connection.isAllowExtendedMode()).thenAnswer(new Returns(true));
 		Mockito.when(connection.createArrayOf(Mockito.anyString(), Mockito.any())).thenCallRealMethod();
 		CloudSpannerDatabaseMetaData metadata = createMetaData();
@@ -38,6 +47,8 @@ public class CloudSpannerTestObjects
 		CloudSpannerTransaction transaction = Mockito.mock(CloudSpannerTransaction.class);
 		Mockito.when(transaction.executeQuery(Mockito.any()))
 				.thenReturn(Mockito.mock(com.google.cloud.spanner.ResultSet.class));
+		Mockito.when(transaction.partitionQuery(Mockito.any(), Mockito.any()))
+				.thenReturn(Arrays.asList(mock(Partition.class), mock(Partition.class), mock(Partition.class)));
 		Mockito.when(connection.getTransaction()).thenReturn(transaction);
 
 		TableKeyMetaData tableFoo = Mockito.mock(TableKeyMetaData.class);

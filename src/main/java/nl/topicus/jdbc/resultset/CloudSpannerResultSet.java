@@ -45,10 +45,20 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private CloudSpannerStatement statement;
 
+	CloudSpannerResultSet(CloudSpannerStatement statement)
+	{
+		this.statement = statement;
+	}
+
 	public CloudSpannerResultSet(CloudSpannerStatement statement, com.google.cloud.spanner.ResultSet resultSet)
 	{
 		this.statement = statement;
 		this.resultSet = resultSet;
+	}
+
+	void setResultSet(com.google.cloud.spanner.ResultSet rs)
+	{
+		this.resultSet = rs;
 	}
 
 	@Override
@@ -76,7 +86,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			throw new CloudSpannerSQLException("After last record", com.google.rpc.Code.FAILED_PRECONDITION);
 	}
 
-	private void ensureOpen() throws SQLException
+	protected void ensureOpen() throws SQLException
 	{
 		if (closed)
 			throw new CloudSpannerSQLException("Resultset is closed", com.google.rpc.Code.FAILED_PRECONDITION);
@@ -101,7 +111,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	@Override
 	public void close() throws SQLException
 	{
-		resultSet.close();
+		if (resultSet != null)
+			resultSet.close();
 		closed = true;
 	}
 

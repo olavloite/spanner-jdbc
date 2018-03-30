@@ -88,6 +88,8 @@ public class CloudSpannerDriver implements Driver
 		connection.setOriginalAutoBatchDdlOperations(properties.autoBatchDdlOperations);
 		connection.setReportDefaultSchemaAsNull(properties.reportDefaultSchemaAsNull);
 		connection.setOriginalReportDefaultSchemaAsNull(properties.reportDefaultSchemaAsNull);
+		connection.setBatchReadOnly(properties.batchReadOnlyMode);
+		connection.setOriginalBatchReadOnly(properties.batchReadOnlyMode);
 		registerConnection(connection);
 
 		return connection;
