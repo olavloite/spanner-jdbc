@@ -36,8 +36,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.mockito.internal.stubbing.answers.Returns;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.ByteArray;
@@ -506,10 +504,10 @@ public class CloudSpannerPreparedStatementTest
 		public void testSingleInsertStatementOnReadOnlyConnection() throws SQLException
 		{
 			thrown.expect(CloudSpannerSQLException.class);
-			thrown.expectMessage("The connection is in read-only mode. Mutations are not allowed.");
+			thrown.expectMessage(AbstractCloudSpannerStatement.NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION);
 			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
 			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
-			Mockito.when(ps.getConnection().isReadOnly()).thenAnswer(new Returns(true));
+			ps.getConnection().setReadOnly(true);
 			ps.executeUpdate();
 		}
 
@@ -517,10 +515,10 @@ public class CloudSpannerPreparedStatementTest
 		public void testBulkInsertStatementOnReadOnlyConnection() throws SQLException
 		{
 			thrown.expect(CloudSpannerSQLException.class);
-			thrown.expectMessage("The connection is in read-only mode. Mutations are not allowed.");
+			thrown.expectMessage(AbstractCloudSpannerStatement.NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION);
 			String sql = "INSERT INTO FOO (ID, COL1, COL2) SELECT 1, 2, 3 FROM FOO";
 			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
-			Mockito.when(ps.getConnection().isReadOnly()).thenAnswer(new Returns(true));
+			ps.getConnection().setReadOnly(true);
 			ps.executeUpdate();
 		}
 
@@ -656,11 +654,11 @@ public class CloudSpannerPreparedStatementTest
 		public void testBatchedInsertStatementOnReadOnlyConnection() throws SQLException
 		{
 			thrown.expect(CloudSpannerSQLException.class);
-			thrown.expectMessage("Connection is in read-only mode. Mutations are not allowed");
+			thrown.expectMessage(AbstractCloudSpannerStatement.NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION);
 			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
 			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
 			ps.addBatch();
-			Mockito.when(ps.getConnection().isReadOnly()).thenAnswer(new Returns(true));
+			ps.getConnection().setReadOnly(true);
 			ps.executeBatch();
 		}
 

@@ -38,6 +38,8 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
  */
 abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher implements Statement
 {
+	protected static final String NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION = "The connection is in read-only mode. Mutations are not allowed.";
+
 	private DatabaseClient dbClient;
 
 	/**
@@ -213,8 +215,7 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	{
 		if (connection.isReadOnly())
 		{
-			throw new CloudSpannerSQLException("Connection is in read-only mode. Mutations are not allowed",
-					Code.FAILED_PRECONDITION);
+			throw new CloudSpannerSQLException(NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION, Code.FAILED_PRECONDITION);
 		}
 		if (mutations.isWorker())
 		{

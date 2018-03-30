@@ -316,8 +316,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			if (getConnection().isReadOnly())
 			{
-				throw new CloudSpannerSQLException("The connection is in read-only mode. Mutations are not allowed.",
-						Code.FAILED_PRECONDITION);
+				throw new CloudSpannerSQLException(NO_MUTATIONS_IN_READ_ONLY_MODE_EXCEPTION, Code.FAILED_PRECONDITION);
 			}
 			if (isDDLStatement())
 			{
