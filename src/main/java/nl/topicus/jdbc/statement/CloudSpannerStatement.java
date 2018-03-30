@@ -197,13 +197,6 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException
 	{
-		if (getConnection().isBatchReadOnly())
-		{
-			throw new CloudSpannerSQLException(
-					"The executeQuery()-method may not be called when in batch read-only mode",
-					Code.FAILED_PRECONDITION);
-		}
-
 		String[] sqlTokens = getTokens(sql);
 		CustomDriverStatement custom = getCustomDriverStatement(sqlTokens);
 		if (custom != null && custom.isQuery())
