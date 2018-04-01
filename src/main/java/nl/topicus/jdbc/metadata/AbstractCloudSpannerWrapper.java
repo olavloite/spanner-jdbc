@@ -79,6 +79,42 @@ public abstract class AbstractCloudSpannerWrapper implements Wrapper
 		return null;
 	}
 
+	public static String getClassName(Type type)
+	{
+		if (type == Type.bool())
+			return Boolean.class.getName();
+		if (type == Type.bytes())
+			return Byte[].class.getName();
+		if (type == Type.date())
+			return Date.class.getName();
+		if (type == Type.float64())
+			return Double.class.getName();
+		if (type == Type.int64())
+			return Long.class.getName();
+		if (type == Type.string())
+			return String.class.getName();
+		if (type == Type.timestamp())
+			return Timestamp.class.getName();
+		if (type.getCode() == Code.ARRAY)
+		{
+			if (type.getArrayElementType() == Type.bool())
+				return Boolean[].class.getName();
+			if (type.getArrayElementType() == Type.bytes())
+				return Byte[][].class.getName();
+			if (type.getArrayElementType() == Type.date())
+				return Date[].class.getName();
+			if (type.getArrayElementType() == Type.float64())
+				return Double[].class.getName();
+			if (type.getArrayElementType() == Type.int64())
+				return Long[].class.getName();
+			if (type.getArrayElementType() == Type.string())
+				return String[].class.getName();
+			if (type.getArrayElementType() == Type.timestamp())
+				return Timestamp[].class.getName();
+		}
+		return null;
+	}
+
 	@Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException
 	{

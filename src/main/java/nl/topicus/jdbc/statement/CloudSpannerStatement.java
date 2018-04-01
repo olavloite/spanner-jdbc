@@ -206,7 +206,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		try (ReadContext context = getReadContext())
 		{
 			com.google.cloud.spanner.ResultSet rs = context.executeQuery(com.google.cloud.spanner.Statement.of(sql));
-			return new CloudSpannerResultSet(this, rs);
+			return new CloudSpannerResultSet(this, rs, sql);
 		}
 	}
 
@@ -259,7 +259,8 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 				currentResultSets = new ArrayList<>(partitions.size());
 				for (Partition p : partitions)
 				{
-					currentResultSets.add(new CloudSpannerPartitionResultSet(this, getBatchReadOnlyTransaction(), p));
+					currentResultSets
+							.add(new CloudSpannerPartitionResultSet(this, getBatchReadOnlyTransaction(), p, sql));
 				}
 			}
 			else
@@ -268,7 +269,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 				{
 					com.google.cloud.spanner.ResultSet rs = context
 							.executeQuery(com.google.cloud.spanner.Statement.of(sql));
-					currentResultSets = Arrays.asList(new CloudSpannerResultSet(this, rs));
+					currentResultSets = Arrays.asList(new CloudSpannerResultSet(this, rs, sql));
 					currentResultSetIndex = 0;
 					lastUpdateCount = -1;
 				}

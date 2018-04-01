@@ -85,7 +85,7 @@ public class CloudSpannerDataTypeTest
 		when(googleResultSet.next()).thenReturn(true);
 
 		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(Mockito.mock(CloudSpannerStatement.class),
-				googleResultSet))
+				googleResultSet, "SELECT * FROM FOO"))
 		{
 			rs.next();
 			for (CloudSpannerDataType type : CloudSpannerDataType.values())

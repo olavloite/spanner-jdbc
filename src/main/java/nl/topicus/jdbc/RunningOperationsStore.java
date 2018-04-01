@@ -136,7 +136,7 @@ class RunningOperationsStore
 		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(Type.struct(StructField.of("NAME", Type.string()),
 				StructField.of("TIME_STARTED", Type.timestamp()), StructField.of("STATEMENT", Type.string()),
 				StructField.of("DONE", Type.bool()), StructField.of("EXCEPTION", Type.string())), rows);
-		return new CloudSpannerResultSet(statement, rs);
+		return new CloudSpannerResultSet(statement, rs, null);
 	}
 
 }

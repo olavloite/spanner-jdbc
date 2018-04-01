@@ -24,9 +24,9 @@ public class CloudSpannerPartitionResultSet extends CloudSpannerResultSet
 	private boolean executed = false;
 
 	public CloudSpannerPartitionResultSet(CloudSpannerStatement statement, BatchReadOnlyTransaction transaction,
-			Partition partition)
+			Partition partition, String sql)
 	{
-		super(statement);
+		super(statement, sql);
 		this.transaction = transaction;
 		this.partition = partition;
 	}

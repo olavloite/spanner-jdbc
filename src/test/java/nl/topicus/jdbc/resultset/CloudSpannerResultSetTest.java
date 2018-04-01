@@ -278,7 +278,7 @@ public class CloudSpannerResultSetTest
 
 	public CloudSpannerResultSetTest() throws SQLException
 	{
-		subject = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet());
+		subject = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(), "SELECT * FROM FOO");
 		subject.next();
 	}
 
@@ -298,8 +298,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testNext() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
-				getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
 		{
 			assertTrue(rs.isBeforeFirst());
 			assertEquals(false, rs.isAfterLast());
@@ -317,8 +317,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testClose() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
-				getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
 		{
 			assertEquals(false, rs.isClosed());
 			rs.next();
@@ -675,8 +675,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testIsClosed() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
-				getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
 		{
 			assertFalse(rs.isClosed());
 			rs.close();
@@ -823,8 +823,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testIsBeforeFirst() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
-				getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
 		{
 			assertTrue(rs.isBeforeFirst());
 			rs.next();
@@ -835,8 +835,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testIsAfterLast() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
-				getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
 		{
 			assertFalse(rs.isAfterLast());
 			while (rs.next())
@@ -962,8 +962,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testGetBeforeNext() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
-				getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
 		{
 			thrown.expect(SQLException.class);
 			thrown.expectMessage("Before first record");
@@ -974,8 +974,8 @@ public class CloudSpannerResultSetTest
 	@Test
 	public void testGetAfterLast() throws SQLException
 	{
-		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class),
-				getMockResultSet()))
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
 		{
 			while (rs.next())
 			{
