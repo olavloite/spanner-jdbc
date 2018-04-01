@@ -897,7 +897,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		}
 		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(
 				Type.struct(StructField.of("NAME", Type.string()), StructField.of("VALUE", Type.string())), rows);
-		return new CloudSpannerResultSet(statement, rs);
+		return new CloudSpannerResultSet(statement, rs, null);
 	}
 
 	/**

@@ -1,6 +1,5 @@
 package nl.topicus.jdbc;
 
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -58,13 +57,14 @@ public class CloudSpannerDriver implements Driver
 	 *            ;Database=databaseName;PvtKeyPath
 	 *            =path_to_key_file;SimulateProductName=product_name
 	 * @param info
-	 *            not used
-	 * @return A CloudSpannerConnection
+	 *            Additional connection properties that will be set on the new
+	 *            connection
+	 * @return An open {@link CloudSpannerConnection}
 	 * @throws SQLException
 	 *             if an error occurs while connecting to Google Cloud Spanner
 	 */
 	@Override
-	public Connection connect(String url, Properties info) throws SQLException
+	public CloudSpannerConnection connect(String url, Properties info) throws SQLException
 	{
 		if (!acceptsURL(url))
 			return null;

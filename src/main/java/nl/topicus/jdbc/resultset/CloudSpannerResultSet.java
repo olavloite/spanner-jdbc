@@ -43,17 +43,22 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private boolean nextCalledForMetaDataResult = false;
 
-	private CloudSpannerStatement statement;
+	private final CloudSpannerStatement statement;
 
-	CloudSpannerResultSet(CloudSpannerStatement statement)
+	private final String sql;
+
+	CloudSpannerResultSet(CloudSpannerStatement statement, String sql)
 	{
 		this.statement = statement;
+		this.sql = sql;
 	}
 
-	public CloudSpannerResultSet(CloudSpannerStatement statement, com.google.cloud.spanner.ResultSet resultSet)
+	public CloudSpannerResultSet(CloudSpannerStatement statement, com.google.cloud.spanner.ResultSet resultSet,
+			String sql)
 	{
 		this.statement = statement;
 		this.resultSet = resultSet;
+		this.sql = sql;
 	}
 
 	void setResultSet(com.google.cloud.spanner.ResultSet rs)
@@ -248,7 +253,7 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			beforeFirst = false;
 			nextCalledForMetaData = true;
 		}
-		return new CloudSpannerResultSetMetaData(resultSet, statement);
+		return new CloudSpannerResultSetMetaData(resultSet, statement, sql);
 	}
 
 	@Override

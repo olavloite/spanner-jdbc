@@ -108,7 +108,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			try (ReadContext context = getReadContext())
 			{
 				com.google.cloud.spanner.ResultSet rs = context.executeQuery(builder.build());
-				return new CloudSpannerResultSet(this, rs);
+				return new CloudSpannerResultSet(this, rs, sql);
 			}
 		}
 		throw new CloudSpannerSQLException("SQL statement not suitable for executeQuery. Expected SELECT-statement.",
@@ -578,7 +578,8 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				currentResultSets = new ArrayList<>(partitions.size());
 				for (Partition p : partitions)
 				{
-					currentResultSets.add(new CloudSpannerPartitionResultSet(this, getBatchReadOnlyTransaction(), p));
+					currentResultSets
+							.add(new CloudSpannerPartitionResultSet(this, getBatchReadOnlyTransaction(), p, sql));
 				}
 			}
 			else
@@ -586,7 +587,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				try (ReadContext context = getReadContext())
 				{
 					com.google.cloud.spanner.ResultSet rs = context.executeQuery(builder.build());
-					currentResultSets = Arrays.asList(new CloudSpannerResultSet(this, rs));
+					currentResultSets = Arrays.asList(new CloudSpannerResultSet(this, rs, sql));
 					currentResultSetIndex = 0;
 					lastUpdateCount = -1;
 				}
