@@ -26,11 +26,11 @@ public class SelectStatementsTester
 	{
 		testSelect("SELECT * FROM TEST ORDER BY UUID");
 		testSelect("SELECT * FROM TEST ORDER BY UUID DESC");
-		testSelect("SELECT ID, UUID, UPDATED FROM TEST ORDER BY UUID DESC, ID");
+		testSelect("SELECT ID, UUID, LAST_UPDATED FROM TEST ORDER BY UUID DESC, ID");
 		testSelect("SELECT * FROM TEST WHERE ID=?", 1L);
 		testSelect("SELECT * FROM TEST LIMIT ? OFFSET ? ORDER BY ID", 2L, 10L);
-		testSelect("SELECT `ID`, `UUID`, `UPDATED` FROM `TEST` ORDER BY `UUID` DESC, `ID`");
-		testSelect("SELECT ID, UUID, UPDATED FROM TEST WHERE ID=? ORDER BY UUID DESC, ID", 1L);
+		testSelect("SELECT `ID`, `UUID`, `LAST_UPDATED` FROM `TEST` ORDER BY `UUID` DESC, `ID`");
+		testSelect("SELECT ID, UUID, LAST_UPDATED FROM TEST WHERE ID=? ORDER BY UUID DESC, ID", 1L);
 		testSelect("SELECT * FROM TEST WHERE ID IN (SELECT CHILDID FROM TESTCHILD)", 1L);
 		testSelect("SELECT * FROM TESTCHILD@{FORCE_INDEX=IDX_TESTCHILD_DESCRIPTION} WHERE DESCRIPTION LIKE ?",
 				"%CHILD%");
@@ -68,6 +68,10 @@ public class SelectStatementsTester
 				metadata.isSearchable(i);
 				metadata.isSigned(i);
 				metadata.isWritable(i);
+			}
+			while (rs.next())
+			{
+				// do nothing
 			}
 		}
 	}
