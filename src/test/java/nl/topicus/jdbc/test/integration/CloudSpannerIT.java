@@ -86,7 +86,7 @@ public class CloudSpannerIT
 	 * Run the different tests on the configured database.
 	 */
 	@Test
-	public void performDatabaseTests()
+	public void performDatabaseTests() throws Exception
 	{
 		try
 		{
@@ -100,10 +100,6 @@ public class CloudSpannerIT
 			log.info("Starting JDBC tests");
 			performJdbcTests();
 			log.info("JDBC tests completed");
-		}
-		catch (Exception e)
-		{
-			throw new RuntimeException("Tests failed", e);
 		}
 		finally
 		{
