@@ -147,6 +147,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	private Map<String, Class<?>> typeMap = new HashMap<>();
 
 	@VisibleForTesting
+	CloudSpannerConnection()
+	{
+		this(null);
+	}
+
+	@VisibleForTesting
 	CloudSpannerConnection(CloudSpannerDatabaseSpecification database)
 	{
 		this.driver = null;
