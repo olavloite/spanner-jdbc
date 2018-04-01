@@ -3,9 +3,11 @@ package nl.topicus.jdbc.transaction;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -72,6 +74,8 @@ class TransactionThread extends Thread
 			Arrays.asList(TransactionStopStatement.values()).stream().map(x -> x.name()).collect(Collectors.toList()));
 
 	private List<Mutation> mutations = new ArrayList<>(40);
+
+	private Map<CloudSpannerSavepoint, Integer> savepoints = new HashMap<>();
 
 	private BlockingQueue<Statement> statements = new LinkedBlockingQueue<>();
 
@@ -202,6 +206,11 @@ class TransactionThread extends Thread
 		Iterator<Mutation> it = mutations.iterator();
 		while (it.hasNext())
 			buffer(it.next());
+	}
+
+	void setSavepoint()
+	{
+
 	}
 
 	Timestamp commit() throws SQLException
