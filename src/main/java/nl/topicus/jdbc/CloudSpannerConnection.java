@@ -125,7 +125,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private boolean originalAutoBatchDdlOperations;
 	private boolean autoBatchDdlOperations;
-	private List<String> autoBatchedDdlOperations = new ArrayList<>();
+	private final List<String> autoBatchedDdlOperations = new ArrayList<>();
 
 	private boolean originalReportDefaultSchemaAsNull = true;
 	private boolean reportDefaultSchemaAsNull = true;
@@ -149,11 +149,19 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	@VisibleForTesting
 	CloudSpannerConnection()
 	{
+		this(null);
+	}
+
+	@VisibleForTesting
+	CloudSpannerConnection(CloudSpannerDatabaseSpecification database)
+	{
 		this.driver = null;
-		this.database = null;
+		this.database = database;
 		this.url = null;
 		this.suppliedProperties = null;
 		this.logger = null;
+		this.transaction = new CloudSpannerTransaction(null, null, this);
+		this.metaDataStore = new MetaDataStore(this);
 	}
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, CloudSpannerDatabaseSpecification database,
