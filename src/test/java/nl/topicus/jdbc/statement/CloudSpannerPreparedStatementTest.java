@@ -1,5 +1,6 @@
 package nl.topicus.jdbc.statement;
 
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -36,6 +37,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 import com.google.api.client.util.Lists;
 import com.google.cloud.ByteArray;
@@ -478,6 +480,67 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertNotNull(mutations.getWorker());
 			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
 		}
+
+		private static final String TEST_SQL = "UPDATE FOO SET COL1=1, COL2=2";
+
+		@Test
+		public void testExecuteSql() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).execute(TEST_SQL);
+		}
+
+		@Test
+		public void testExecuteSqlInt() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).execute(TEST_SQL, 0);
+		}
+
+		@Test
+		public void testExecuteSqlIntArray() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).execute(TEST_SQL, new int[3]);
+		}
+
+		@Test
+		public void testExecuteSqlStringArray() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).execute(TEST_SQL, new String[3]);
+		}
+
+		@Test
+		public void testExecuteUpdateSql() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).executeUpdate(TEST_SQL);
+		}
+
+		@Test
+		public void testExecuteUpdateSqlInt() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).executeUpdate(TEST_SQL, 0);
+		}
+
+		@Test
+		public void testExecuteUpdateSqlIntArray() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).executeUpdate(TEST_SQL, new int[3]);
+		}
+
+		@Test
+		public void testExecuteUpdateSqlStringArray() throws SQLException
+		{
+			prepareUnsupportedStatementTest(TEST_SQL).executeUpdate(TEST_SQL, new String[3]);
+		}
+
+		private CloudSpannerPreparedStatement prepareUnsupportedStatementTest(String sql) throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("may not be called on a PreparedStatement");
+			CloudSpannerConnection connection = Mockito.mock(CloudSpannerConnection.class, CALLS_REAL_METHODS);
+			CloudSpannerPreparedStatement statement = connection.prepareStatement(sql);
+
+			return statement;
+		}
+
 	}
 
 	public static class InsertStatementTests
