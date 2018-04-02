@@ -313,7 +313,6 @@ public class CloudSpannerConnectionTest
 		testClosed(AbstractCloudSpannerConnection.class, "getWarnings");
 		testClosed(AbstractCloudSpannerConnection.class, "clearWarnings");
 		testClosed(AbstractCloudSpannerConnection.class, "getHoldability");
-		testClosed(AbstractCloudSpannerConnection.class, "setSavepoint");
 		testClosed(AbstractCloudSpannerConnection.class, "createClob");
 		testClosed(AbstractCloudSpannerConnection.class, "createBlob");
 		testClosed(AbstractCloudSpannerConnection.class, "createNClob");
@@ -327,12 +326,6 @@ public class CloudSpannerConnectionTest
 				new Object[] { "TEST" });
 		testClosed(AbstractCloudSpannerConnection.class, "prepareCall",
 				new Class<?>[] { String.class, int.class, int.class }, new Object[] { "TEST", 0, 0 });
-		testClosed(AbstractCloudSpannerConnection.class, "setSavepoint", new Class<?>[] { String.class },
-				new Object[] { "TEST" });
-		testClosed(AbstractCloudSpannerConnection.class, "rollback", new Class<?>[] { Savepoint.class },
-				new Object[] { null });
-		testClosed(AbstractCloudSpannerConnection.class, "releaseSavepoint", new Class<?>[] { Savepoint.class },
-				new Object[] { null });
 		testClosed(AbstractCloudSpannerConnection.class, "prepareCall",
 				new Class<?>[] { String.class, int.class, int.class, int.class }, new Object[] { "TEST", 0, 0, 0 });
 		testClosed(AbstractCloudSpannerConnection.class, "setClientInfo", new Class<?>[] { String.class, String.class },
@@ -361,6 +354,7 @@ public class CloudSpannerConnectionTest
 		testClosed(CloudSpannerConnection.class, "getMetaData");
 		testClosed(CloudSpannerConnection.class, "isReadOnly");
 		testClosed(CloudSpannerConnection.class, "getTransactionIsolation");
+		testClosed(CloudSpannerConnection.class, "setSavepoint");
 
 		testClosed(CloudSpannerConnection.class, "setTypeMap", new Class<?>[] { Map.class },
 				new Object[] { Collections.EMPTY_MAP });
@@ -393,6 +387,12 @@ public class CloudSpannerConnectionTest
 				new Object[] { "TEST", new String[] { "COL1" } });
 		testClosed(CloudSpannerConnection.class, "createArrayOf", new Class<?>[] { String.class, Object[].class },
 				new Object[] { "TEST", new Object[] { "COL1" } });
+
+		testClosed(CloudSpannerConnection.class, "setSavepoint", new Class<?>[] { String.class },
+				new Object[] { "TEST" });
+		testClosed(CloudSpannerConnection.class, "rollback", new Class<?>[] { Savepoint.class }, new Object[] { null });
+		testClosed(CloudSpannerConnection.class, "releaseSavepoint", new Class<?>[] { Savepoint.class },
+				new Object[] { null });
 	}
 
 	private void testClosed(Class<? extends AbstractCloudSpannerConnection> clazz, String name)

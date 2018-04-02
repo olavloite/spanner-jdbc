@@ -1,11 +1,14 @@
 package nl.topicus.jdbc.transaction;
 
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,6 +24,7 @@ import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
+import com.google.common.base.Preconditions;
 import com.google.rpc.Code;
 
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
@@ -72,6 +76,8 @@ class TransactionThread extends Thread
 			Arrays.asList(TransactionStopStatement.values()).stream().map(x -> x.name()).collect(Collectors.toList()));
 
 	private List<Mutation> mutations = new ArrayList<>(40);
+
+	private Map<Savepoint, Integer> savepoints = new HashMap<>();
 
 	private BlockingQueue<Statement> statements = new LinkedBlockingQueue<>();
 
@@ -190,6 +196,11 @@ class TransactionThread extends Thread
 		return !mutations.isEmpty();
 	}
 
+	int numberOfBufferedMutations()
+	{
+		return mutations.size();
+	}
+
 	void buffer(Mutation mutation)
 	{
 		if (mutation == null)
@@ -202,6 +213,40 @@ class TransactionThread extends Thread
 		Iterator<Mutation> it = mutations.iterator();
 		while (it.hasNext())
 			buffer(it.next());
+	}
+
+	void setSavepoint(Savepoint savepoint)
+	{
+		Preconditions.checkNotNull(savepoint);
+		savepoints.put(savepoint, mutations.size());
+	}
+
+	void rollbackSavepoint(Savepoint savepoint) throws CloudSpannerSQLException
+	{
+		Preconditions.checkNotNull(savepoint);
+		Integer index = savepoints.get(savepoint);
+		if (index == null)
+		{
+			throw new CloudSpannerSQLException("Unknown savepoint: " + savepoint.toString(), Code.INVALID_ARGUMENT);
+		}
+		mutations.subList(index.intValue(), mutations.size()).clear();
+		removeSavepointsAfter(index.intValue());
+	}
+
+	void releaseSavepoint(Savepoint savepoint) throws CloudSpannerSQLException
+	{
+		Preconditions.checkNotNull(savepoint);
+		Integer index = savepoints.get(savepoint);
+		if (index == null)
+		{
+			throw new CloudSpannerSQLException("Unknown savepoint: " + savepoint.toString(), Code.INVALID_ARGUMENT);
+		}
+		removeSavepointsAfter(index.intValue());
+	}
+
+	private void removeSavepointsAfter(int index)
+	{
+		savepoints.entrySet().removeIf(e -> e.getValue() >= index);
 	}
 
 	Timestamp commit() throws SQLException

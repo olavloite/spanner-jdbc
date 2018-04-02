@@ -1,6 +1,7 @@
 package nl.topicus.jdbc.transaction;
 
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.List;
 
 import com.google.cloud.Timestamp;
@@ -22,6 +23,7 @@ import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
 import com.google.cloud.spanner.TransactionContext;
+import com.google.common.base.Preconditions;
 import com.google.rpc.Code;
 
 import nl.topicus.jdbc.CloudSpannerConnection;
@@ -72,6 +74,11 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 	public boolean hasBufferedMutations()
 	{
 		return transactionThread != null && transactionThread.hasBufferedMutations();
+	}
+
+	public int getNumberOfBufferedMutations()
+	{
+		return transactionThread == null ? 0 : transactionThread.numberOfBufferedMutations();
 	}
 
 	public void begin() throws SQLException
@@ -168,6 +175,36 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 			readOnlyTransaction = null;
 			batchReadOnlyTransaction = null;
 		}
+	}
+
+	public void setSavepoint(Savepoint savepoint) throws SQLException
+	{
+		Preconditions.checkNotNull(savepoint);
+		checkTransaction();
+		if (transactionThread == null)
+			throw new CloudSpannerSQLException("Savepoints are not allowed in read-only mode",
+					Code.FAILED_PRECONDITION);
+		transactionThread.setSavepoint(savepoint);
+	}
+
+	public void rollbackSavepoint(Savepoint savepoint) throws SQLException
+	{
+		Preconditions.checkNotNull(savepoint);
+		checkTransaction();
+		if (transactionThread == null)
+			throw new CloudSpannerSQLException("Savepoints are not allowed in read-only mode",
+					Code.FAILED_PRECONDITION);
+		transactionThread.rollbackSavepoint(savepoint);
+	}
+
+	public void releaseSavepoint(Savepoint savepoint) throws SQLException
+	{
+		Preconditions.checkNotNull(savepoint);
+		checkTransaction();
+		if (transactionThread == null)
+			throw new CloudSpannerSQLException("Savepoints are not allowed in read-only mode",
+					Code.FAILED_PRECONDITION);
+		transactionThread.releaseSavepoint(savepoint);
 	}
 
 	@FunctionalInterface

@@ -881,12 +881,11 @@ public class CloudSpannerDatabaseMetaDataTest
 	@Test
 	public void testSupportsSavePoints() throws SQLException
 	{
-		assertFalse(testSubject.supportsSavepoints());
-
-		// Check that the connection actually throws an Exception
-		thrown.expect(SQLFeatureNotSupportedException.class);
+		assertTrue(testSubject.supportsSavepoints());
+		// Check that the connection does not throw an Exception
 		CloudSpannerConnection connection = mock(CloudSpannerConnection.class,
 				withSettings().useConstructor().defaultAnswer(CALLS_REAL_METHODS));
+		connection.setAutoCommit(false);
 		connection.setSavepoint();
 	}
 

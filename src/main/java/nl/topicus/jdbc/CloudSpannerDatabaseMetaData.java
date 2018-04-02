@@ -1081,7 +1081,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public boolean supportsSavepoints() throws SQLException
 	{
-		return false;
+		return true;
 	}
 
 	@Override

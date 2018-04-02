@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
-import java.sql.Savepoint;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -111,53 +110,6 @@ public class AbstractCloudSpannerConnectionTest
 		testSubject = createTestSubject();
 		result = testSubject.getHoldability();
 		Assert.assertEquals(ResultSet.CLOSE_CURSORS_AT_COMMIT, result);
-	}
-
-	@Test
-	public void testSetSavepoint() throws Exception
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		AbstractCloudSpannerConnection testSubject;
-
-		// default test
-		testSubject = createTestSubject();
-		testSubject.setSavepoint();
-	}
-
-	@Test
-	public void testSetSavepoint_1() throws Exception
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		AbstractCloudSpannerConnection testSubject;
-		String name = "";
-
-		// default test
-		testSubject = createTestSubject();
-		testSubject.setSavepoint(name);
-	}
-
-	@Test
-	public void testRollback() throws Exception
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		AbstractCloudSpannerConnection testSubject;
-		Savepoint savepoint = null;
-
-		// default test
-		testSubject = createTestSubject();
-		testSubject.rollback(savepoint);
-	}
-
-	@Test
-	public void testReleaseSavepoint() throws Exception
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		AbstractCloudSpannerConnection testSubject;
-		Savepoint savepoint = null;
-
-		// default test
-		testSubject = createTestSubject();
-		testSubject.releaseSavepoint(savepoint);
 	}
 
 	@Test
