@@ -1,4 +1,4 @@
-package nl.topicus.jdbc.transaction;
+package nl.topicus.jdbc;
 
 import java.sql.SQLException;
 import java.sql.Savepoint;
@@ -15,7 +15,7 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
  * @author loite
  *
  */
-public class CloudSpannerSavepoint implements Savepoint
+class CloudSpannerSavepoint implements Savepoint
 {
 	private static final AtomicInteger CURRENT_ID = new AtomicInteger(0);
 
@@ -55,6 +55,17 @@ public class CloudSpannerSavepoint implements Savepoint
 	public int hashCode()
 	{
 		return isNamed() ? name.hashCode() : id.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (!(o instanceof CloudSpannerSavepoint))
+			return false;
+		CloudSpannerSavepoint other = (CloudSpannerSavepoint) o;
+		if (this.isNamed())
+			return other.isNamed() && this.name.equals(other.name);
+		return this.id.equals(other.id);
 	}
 
 	@Override

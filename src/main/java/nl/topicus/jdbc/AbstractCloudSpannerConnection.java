@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
-import java.sql.Savepoint;
 import java.sql.Struct;
 import java.util.Collections;
 import java.util.Properties;
@@ -101,30 +100,6 @@ public abstract class AbstractCloudSpannerConnection extends AbstractCloudSpanne
 	{
 		checkClosed();
 		return ResultSet.CLOSE_CURSORS_AT_COMMIT;
-	}
-
-	@Override
-	public Savepoint setSavepoint() throws SQLException
-	{
-		return checkClosedAndThrowUnsupportedException();
-	}
-
-	@Override
-	public Savepoint setSavepoint(String name) throws SQLException
-	{
-		return checkClosedAndThrowUnsupportedException();
-	}
-
-	@Override
-	public void rollback(Savepoint savepoint) throws SQLException
-	{
-		checkClosedAndThrowUnsupportedException();
-	}
-
-	@Override
-	public void releaseSavepoint(Savepoint savepoint) throws SQLException
-	{
-		checkClosedAndThrowUnsupportedException();
 	}
 
 	@Override

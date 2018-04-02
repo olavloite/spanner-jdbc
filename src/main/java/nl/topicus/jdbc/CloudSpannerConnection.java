@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +47,7 @@ import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.StructField;
 import com.google.cloud.spanner.Value;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.rpc.Code;
 import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
@@ -150,6 +152,19 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	CloudSpannerConnection()
 	{
 		this(null);
+	}
+
+	@VisibleForTesting
+	CloudSpannerConnection(DatabaseClient dbClient, BatchClient batchClient)
+	{
+		this.driver = null;
+		this.database = null;
+		this.url = null;
+		this.suppliedProperties = null;
+		this.logger = null;
+		this.dbClient = dbClient;
+		this.transaction = new CloudSpannerTransaction(dbClient, batchClient, this);
+		this.metaDataStore = new MetaDataStore(this);
 	}
 
 	@VisibleForTesting
@@ -1070,6 +1085,52 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	void setOriginalBatchReadOnly(boolean originalBatchReadOnly)
 	{
 		this.originalBatchReadOnly = originalBatchReadOnly;
+	}
+
+	private void checkSavepointPossible() throws SQLException
+	{
+		checkClosed();
+		if (getAutoCommit())
+			throw new CloudSpannerSQLException("Savepoints are not supported in autocommit mode",
+					Code.FAILED_PRECONDITION);
+		if (isReadOnly() || isBatchReadOnly())
+			throw new CloudSpannerSQLException("Savepoints are not supported in read-only mode",
+					Code.FAILED_PRECONDITION);
+	}
+
+	@Override
+	public Savepoint setSavepoint() throws SQLException
+	{
+		checkSavepointPossible();
+		CloudSpannerSavepoint savepoint = CloudSpannerSavepoint.generated();
+		transaction.setSavepoint(savepoint);
+		return savepoint;
+	}
+
+	@Override
+	public Savepoint setSavepoint(String name) throws SQLException
+	{
+		checkSavepointPossible();
+		Preconditions.checkNotNull(name);
+		CloudSpannerSavepoint savepoint = CloudSpannerSavepoint.named(name);
+		transaction.setSavepoint(savepoint);
+		return savepoint;
+	}
+
+	@Override
+	public void rollback(Savepoint savepoint) throws SQLException
+	{
+		checkSavepointPossible();
+		Preconditions.checkNotNull(savepoint);
+		transaction.rollbackSavepoint(savepoint);
+	}
+
+	@Override
+	public void releaseSavepoint(Savepoint savepoint) throws SQLException
+	{
+		checkSavepointPossible();
+		Preconditions.checkNotNull(savepoint);
+		transaction.releaseSavepoint(savepoint);
 	}
 
 }
