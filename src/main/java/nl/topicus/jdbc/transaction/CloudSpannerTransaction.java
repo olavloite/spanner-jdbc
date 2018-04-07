@@ -37,6 +37,8 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
  */
 public class CloudSpannerTransaction implements TransactionContext, BatchReadOnlyTransaction
 {
+	private static final String SAVEPOINTS_NOT_IN_READ_ONLY = "Savepoints are not allowed in read-only mode";
+
 	public static class TransactionException extends RuntimeException
 	{
 		private static final long serialVersionUID = 1L;
@@ -182,8 +184,7 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 		Preconditions.checkNotNull(savepoint);
 		checkTransaction();
 		if (transactionThread == null)
-			throw new CloudSpannerSQLException("Savepoints are not allowed in read-only mode",
-					Code.FAILED_PRECONDITION);
+			throw new CloudSpannerSQLException(SAVEPOINTS_NOT_IN_READ_ONLY, Code.FAILED_PRECONDITION);
 		transactionThread.setSavepoint(savepoint);
 	}
 
@@ -192,8 +193,7 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 		Preconditions.checkNotNull(savepoint);
 		checkTransaction();
 		if (transactionThread == null)
-			throw new CloudSpannerSQLException("Savepoints are not allowed in read-only mode",
-					Code.FAILED_PRECONDITION);
+			throw new CloudSpannerSQLException(SAVEPOINTS_NOT_IN_READ_ONLY, Code.FAILED_PRECONDITION);
 		transactionThread.rollbackSavepoint(savepoint);
 	}
 
@@ -202,8 +202,7 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 		Preconditions.checkNotNull(savepoint);
 		checkTransaction();
 		if (transactionThread == null)
-			throw new CloudSpannerSQLException("Savepoints are not allowed in read-only mode",
-					Code.FAILED_PRECONDITION);
+			throw new CloudSpannerSQLException(SAVEPOINTS_NOT_IN_READ_ONLY, Code.FAILED_PRECONDITION);
 		transactionThread.releaseSavepoint(savepoint);
 	}
 
