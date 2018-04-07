@@ -357,12 +357,6 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	}
 
 	@Override
-	public ResultSet getGeneratedKeys() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public int getResultSetHoldability() throws SQLException
 	{
 		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
