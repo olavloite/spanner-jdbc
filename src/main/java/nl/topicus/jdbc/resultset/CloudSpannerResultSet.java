@@ -611,4 +611,32 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
 
+	@Override
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException
+	{
+		return convertObject(getObject(columnIndex), type, resultSet.getColumnType(columnIndex - 1));
+	}
+
+	@Override
+	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException
+	{
+		return convertObject(getObject(columnLabel), type, resultSet.getColumnType(columnLabel));
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> T convertObject(Object o, Class<T> javaType, Type type) throws SQLException
+	{
+		if (javaType == null)
+			throw new CloudSpannerSQLException("Type may not be null", com.google.rpc.Code.INVALID_ARGUMENT);
+		if (o == null)
+			return null;
+		if (o.getClass().equals(javaType))
+			return (T) o;
+		if (javaType.equals(String.class))
+			return (T) o.toString();
+
+		throw new CloudSpannerSQLException("Unsupported conversion from Cloud Spanner type " + type.getCode().name()
+				+ " to Java type " + javaType.getName(), com.google.rpc.Code.INVALID_ARGUMENT);
+	}
+
 }
