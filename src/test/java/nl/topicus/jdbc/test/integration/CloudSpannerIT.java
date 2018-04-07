@@ -44,6 +44,8 @@ public class CloudSpannerIT
 {
 	private static final Logger log = Logger.getLogger(CloudSpannerIT.class.getName());
 
+	private static final int ERROR = 1;
+
 	private static final boolean CREATE_INSTANCE = true;
 
 	private static final boolean CREATE_DATABASE = true;
@@ -100,6 +102,10 @@ public class CloudSpannerIT
 			log.info("Starting JDBC tests");
 			performJdbcTests();
 			log.info("JDBC tests completed");
+		}
+		catch (Exception e)
+		{
+			System.exit(ERROR);
 		}
 		finally
 		{
