@@ -101,15 +101,7 @@ public class AbstractCloudSpannerStatementTest
 	@Test
 	public void testSetCursorName() throws SQLException
 	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
 		subject.setCursorName("TEST");
-	}
-
-	@Test
-	public void testGetGeneratedKeys() throws SQLException
-	{
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		subject.getGeneratedKeys();
 	}
 
 	@Test

@@ -324,4 +324,15 @@ public class CloudSpannerStatementTest
 		assertEquals(0, connection.getAutoBatchedDdlOperations().size());
 	}
 
+	@Test
+	public void testGetGeneratedKeys() throws SQLException
+	{
+		CloudSpannerConnection connection = createConnection();
+		CloudSpannerStatement statement = connection.createStatement();
+		try (ResultSet rs = statement.getGeneratedKeys())
+		{
+			assertFalse(rs.next());
+		}
+	}
+
 }
