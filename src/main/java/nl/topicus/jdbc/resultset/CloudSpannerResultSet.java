@@ -6,6 +6,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
@@ -128,6 +130,20 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	}
 
 	@Override
+	public URL getURL(int columnIndex) throws SQLException
+	{
+		try
+		{
+			return isNull(columnIndex) ? null : new URL(resultSet.getString(columnIndex - 1));
+		}
+		catch (MalformedURLException e)
+		{
+			throw new CloudSpannerSQLException("Invalid URL: " + resultSet.getString(columnIndex - 1),
+					com.google.rpc.Code.INVALID_ARGUMENT);
+		}
+	}
+
+	@Override
 	public boolean getBoolean(int columnIndex) throws SQLException
 	{
 		return isNull(columnIndex) ? false : resultSet.getBoolean(columnIndex - 1);
@@ -192,6 +208,20 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public String getString(String columnLabel) throws SQLException
 	{
 		return isNull(columnLabel) ? null : resultSet.getString(columnLabel);
+	}
+
+	@Override
+	public URL getURL(String columnLabel) throws SQLException
+	{
+		try
+		{
+			return isNull(columnLabel) ? null : new URL(resultSet.getString(columnLabel));
+		}
+		catch (MalformedURLException e)
+		{
+			throw new CloudSpannerSQLException("Invalid URL: " + resultSet.getString(columnLabel),
+					com.google.rpc.Code.INVALID_ARGUMENT);
+		}
 	}
 
 	@Override
