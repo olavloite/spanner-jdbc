@@ -47,6 +47,8 @@ public interface ICloudSpannerConnection extends Connection
 
 	public Timestamp getLastCommitTimestamp();
 
+	public Timestamp getReadTimestamp();
+
 	public boolean isBatchReadOnly();
 
 	public int setBatchReadOnly(boolean batchReadOnly) throws SQLException;

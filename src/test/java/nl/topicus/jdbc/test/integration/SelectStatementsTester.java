@@ -1,10 +1,14 @@
 package nl.topicus.jdbc.test.integration;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+
+import com.google.cloud.Timestamp;
 
 import nl.topicus.jdbc.ICloudSpannerConnection;
 
@@ -49,6 +53,11 @@ public class SelectStatementsTester
 			testSelect("SELECT * FROM TEST WHERE ID IN (SELECT CHILDID FROM TESTCHILD)", 1L);
 			testSelect("SELECT * FROM TESTCHILD@{FORCE_INDEX=IDX_TESTCHILD_DESCRIPTION} WHERE DESCRIPTION LIKE ?",
 					"%CHILD%");
+			if (batchReadOnly == BATCH_READ_ONLY_TEST.YES)
+			{
+				Timestamp ts = connection.unwrap(ICloudSpannerConnection.class).getReadTimestamp();
+				assertNotNull(ts);
+			}
 			connection.commit();
 		}
 		connection.setAutoCommit(wasAutocommit);

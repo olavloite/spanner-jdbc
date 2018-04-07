@@ -936,6 +936,17 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	/**
 	 * 
+	 * @return The read timestamp for the current read-only transaction, or null
+	 *         if there is no read-only transaction
+	 */
+	@Override
+	public Timestamp getReadTimestamp()
+	{
+		return transaction == null ? null : transaction.getReadTimestamp();
+	}
+
+	/**
+	 * 
 	 * @return A new connection with the same URL and properties as this
 	 *         connection. You can use this method if you want to open a new
 	 *         connection to the same database, for example to run a number of
