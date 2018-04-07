@@ -40,6 +40,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private boolean beforeFirst = true;
 
+	private int currentRowIndex = -1;
+
 	private boolean afterLast = false;
 
 	private boolean nextCalledForMetaData = false;
@@ -110,10 +112,23 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			return nextCalledForMetaDataResult;
 		}
 		beforeFirst = false;
+		currentRowIndex++;
 		boolean res = resultSet.next();
 		afterLast = !res;
 
 		return res;
+	}
+
+	@Override
+	public boolean isFirst() throws SQLException
+	{
+		return currentRowIndex == 0;
+	}
+
+	@Override
+	public int getRow() throws SQLException
+	{
+		return currentRowIndex + 1;
 	}
 
 	@Override
