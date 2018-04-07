@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.sql.Date;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
@@ -602,6 +603,12 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public Reader getNCharacterStream(String columnLabel) throws SQLException
 	{
 		return getCharacterStream(columnLabel);
+	}
+
+	@Override
+	public int getHoldability() throws SQLException
+	{
+		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
 
 }
