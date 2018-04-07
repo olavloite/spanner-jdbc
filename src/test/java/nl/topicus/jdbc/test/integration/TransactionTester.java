@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.test.integration;
 
+import static org.junit.Assert.assertEquals;
+
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -7,9 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Assert;
 
@@ -32,6 +36,7 @@ public class TransactionTester
 		runReadOnlyTests();
 		runAutoCommitTests();
 		runRepeatableReadTest();
+		runSavepointTests();
 	}
 
 	private void runAutoCommitTests() throws SQLException
@@ -110,6 +115,24 @@ public class TransactionTester
 		Assert.assertEquals(originalRows.size() + 1, newRows.size());
 	}
 
+	private void runSavepointTests() throws SQLException
+	{
+		final long BEGIN_ID = 200000l;
+		final long NUMBER_OF_RECORDS = 100l;
+		List<Savepoint> savepoints = new ArrayList<>();
+		for (long id = BEGIN_ID; id < BEGIN_ID + NUMBER_OF_RECORDS; id++)
+		{
+			savepoints.add(connection.setSavepoint());
+			insertRowInTest(id);
+		}
+		Random rnd = new Random();
+		int index = rnd.nextInt(savepoints.size());
+		connection.rollback(savepoints.get(index));
+		connection.commit();
+		List<Object[]> rows = getResultList("SELECT * FROM TEST WHERE ID>=?", BEGIN_ID);
+		assertEquals(index, rows.size());
+	}
+
 	private void insertRowInTest(long id) throws SQLException
 	{
 		PreparedStatement ps = connection.prepareStatement(
@@ -124,10 +147,20 @@ public class TransactionTester
 		ps.executeUpdate();
 	}
 
-	private List<Object[]> getResultList(String sql) throws SQLException
+	private List<Object[]> getResultList(String sql, Object... params) throws SQLException
 	{
 		List<Object[]> res = new ArrayList<>();
-		try (ResultSet rs = connection.prepareStatement(sql).executeQuery())
+		PreparedStatement statement = connection.prepareStatement(sql);
+		if (params != null)
+		{
+			int index = 1;
+			for (Object param : params)
+			{
+				statement.setObject(index, param);
+				index++;
+			}
+		}
+		try (ResultSet rs = statement.executeQuery())
 		{
 			ResultSetMetaData metadata = rs.getMetaData();
 			while (rs.next())

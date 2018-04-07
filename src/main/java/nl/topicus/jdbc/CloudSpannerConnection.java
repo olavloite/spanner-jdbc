@@ -780,6 +780,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * @return 1 if the property was set, 0 if not (this complies with the
 	 *         normal behaviour of executeUpdate(...) methods)
 	 * @throws SQLException
+	 *             Throws {@link SQLException} if a database error occurs
 	 */
 	public int setDynamicConnectionProperty(String propertyName, String propertyValue) throws SQLException
 	{
@@ -795,6 +796,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * @return 1 if the property was reset, 0 if not (this complies with the
 	 *         normal behaviour of executeUpdate(...) methods)
 	 * @throws SQLException
+	 *             Throws {@link SQLException} if a database error occurs
 	 */
 	public int resetDynamicConnectionProperty(String propertyName) throws SQLException
 	{
@@ -932,6 +934,17 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public Timestamp getLastCommitTimestamp()
 	{
 		return lastCommitTimestamp;
+	}
+
+	/**
+	 * 
+	 * @return The read timestamp for the current read-only transaction, or null
+	 *         if there is no read-only transaction
+	 */
+	@Override
+	public Timestamp getReadTimestamp()
+	{
+		return transaction == null ? null : transaction.getReadTimestamp();
 	}
 
 	/**

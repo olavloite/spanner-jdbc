@@ -1,10 +1,16 @@
 package nl.topicus.jdbc.test.integration;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+
+import com.google.cloud.Timestamp;
+
+import nl.topicus.jdbc.ICloudSpannerConnection;
 
 /**
  * Test a variety of SELECT-statements
@@ -22,18 +28,39 @@ public class SelectStatementsTester
 		this.connection = connection;
 	}
 
+	private enum BATCH_READ_ONLY_TEST
+	{
+		YES, NO;
+	}
+
 	public void runSelectTests() throws SQLException
 	{
-		testSelect("SELECT * FROM TEST ORDER BY UUID");
-		testSelect("SELECT * FROM TEST ORDER BY UUID DESC");
-		testSelect("SELECT ID, UUID, LAST_UPDATED FROM TEST ORDER BY UUID DESC, ID");
-		testSelect("SELECT * FROM TEST WHERE ID=?", 1L);
-		testSelect("SELECT * FROM TEST ORDER BY ID LIMIT ? OFFSET ?", 2L, 10L);
-		testSelect("SELECT `ID`, `UUID`, `LAST_UPDATED` FROM `TEST` ORDER BY `UUID` DESC, `ID`");
-		testSelect("SELECT ID, UUID, LAST_UPDATED FROM TEST WHERE ID=? ORDER BY UUID DESC, ID", 1L);
-		testSelect("SELECT * FROM TEST WHERE ID IN (SELECT CHILDID FROM TESTCHILD)", 1L);
-		testSelect("SELECT * FROM TESTCHILD@{FORCE_INDEX=IDX_TESTCHILD_DESCRIPTION} WHERE DESCRIPTION LIKE ?",
-				"%CHILD%");
+		// Turn off auto commit
+		boolean wasAutocommit = connection.getAutoCommit();
+		connection.setAutoCommit(false);
+		connection.commit();
+		for (BATCH_READ_ONLY_TEST batchReadOnly : BATCH_READ_ONLY_TEST.values())
+		{
+			connection.unwrap(ICloudSpannerConnection.class)
+					.setBatchReadOnly(batchReadOnly == BATCH_READ_ONLY_TEST.YES);
+			testSelect("SELECT * FROM TEST ORDER BY UUID");
+			testSelect("SELECT * FROM TEST ORDER BY UUID DESC");
+			testSelect("SELECT ID, UUID, LAST_UPDATED FROM TEST ORDER BY UUID DESC, ID");
+			testSelect("SELECT * FROM TEST WHERE ID=?", 1L);
+			testSelect("SELECT * FROM TEST ORDER BY ID LIMIT ? OFFSET ?", 2L, 10L);
+			testSelect("SELECT `ID`, `UUID`, `LAST_UPDATED` FROM `TEST` ORDER BY `UUID` DESC, `ID`");
+			testSelect("SELECT ID, UUID, LAST_UPDATED FROM TEST WHERE ID=? ORDER BY UUID DESC, ID", 1L);
+			testSelect("SELECT * FROM TEST WHERE ID IN (SELECT CHILDID FROM TESTCHILD)", 1L);
+			testSelect("SELECT * FROM TESTCHILD@{FORCE_INDEX=IDX_TESTCHILD_DESCRIPTION} WHERE DESCRIPTION LIKE ?",
+					"%CHILD%");
+			if (batchReadOnly == BATCH_READ_ONLY_TEST.YES)
+			{
+				Timestamp ts = connection.unwrap(ICloudSpannerConnection.class).getReadTimestamp();
+				assertNotNull(ts);
+			}
+			connection.commit();
+		}
+		connection.setAutoCommit(wasAutocommit);
 	}
 
 	private void testSelect(String sql, Object... parameters) throws SQLException
