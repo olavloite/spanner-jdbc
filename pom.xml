@@ -11,7 +11,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.topicus</groupId>
 	<artifactId>spanner-jdbc</artifactId>
-	<version>0.27-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>spanner-jdbc</name>
 	<description>JDBC Driver for Google Cloud Spanner</description>
 	<url>https://github.com/olavloite/spanner-jdbc</url>
@@ -38,12 +38,6 @@
 	</scm>
 
 	<dependencies>
-		<!-- <dependency> <groupId>com.google.cloud</groupId> <artifactId>google-cloud-spanner</artifactId> 
-			<version>0.21.1-beta</version> <exclusions> <exclusion> <groupId>com.google.guava</groupId> 
-			<artifactId>guava-jdk5</artifactId> </exclusion> </exclusions> </dependency> 
-			<dependency> <groupId>com.google.guava</groupId> <artifactId>guava</artifactId> 
-			<version>20.0</version> </dependency> -->
-
 		<dependency>
 			<groupId>com.google.cloud</groupId>
 			<artifactId>google-cloud-spanner</artifactId>
@@ -252,8 +246,6 @@
 								<relocation>
 									<pattern>io.netty</pattern>
 									<shadedPattern>nl.topicus.jdbc.shaded.io.netty</shadedPattern>
-									<!-- <excludes> <exclude>io.netty.internal.tcnative.*</exclude> 
-										</excludes> -->
 								</relocation>
 								<relocation>
 									<pattern>autovalue.shaded.</pattern>

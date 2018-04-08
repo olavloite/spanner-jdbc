@@ -64,6 +64,10 @@ public class AbstractCloudSpannerResultSetTest
 			{
 				SUPPORTED_METHODS.add(AbstractCloudSpannerResultSet.class.getMethod("getType"));
 				SUPPORTED_METHODS.add(AbstractCloudSpannerResultSet.class.getMethod("getConcurrency"));
+				SUPPORTED_METHODS.add(AbstractCloudSpannerResultSet.class.getMethod("getCursorName"));
+				SUPPORTED_METHODS.add(AbstractCloudSpannerResultSet.class.getMethod("rowUpdated"));
+				SUPPORTED_METHODS.add(AbstractCloudSpannerResultSet.class.getMethod("rowInserted"));
+				SUPPORTED_METHODS.add(AbstractCloudSpannerResultSet.class.getMethod("rowDeleted"));
 			}
 			catch (NoSuchMethodException e)
 			{

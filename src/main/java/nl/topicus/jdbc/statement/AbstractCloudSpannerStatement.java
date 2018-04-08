@@ -335,7 +335,8 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	@Override
 	public void setCursorName(String name) throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		checkClosed();
+		// noop
 	}
 
 	@Override
@@ -354,12 +355,6 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 	public CloudSpannerConnection getConnection() throws SQLException
 	{
 		return connection;
-	}
-
-	@Override
-	public ResultSet getGeneratedKeys() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
 	}
 
 	@Override

@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Partition;
 import com.google.cloud.spanner.ReadContext;
+import com.google.cloud.spanner.ResultSets;
+import com.google.cloud.spanner.Type;
+import com.google.cloud.spanner.Type.StructField;
 import com.google.rpc.Code;
 
 import net.sf.jsqlparser.JSQLParserException;
@@ -641,6 +644,15 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 	public boolean execute(String sql, String[] columnNames) throws SQLException
 	{
 		return execute(sql);
+	}
+
+	@Override
+	public ResultSet getGeneratedKeys() throws SQLException
+	{
+		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(
+				Type.struct(StructField.of("COLUMN_NAME", Type.string()), StructField.of("VALUE", Type.int64())),
+				Collections.emptyList());
+		return new CloudSpannerResultSet(this, rs, null);
 	}
 
 }

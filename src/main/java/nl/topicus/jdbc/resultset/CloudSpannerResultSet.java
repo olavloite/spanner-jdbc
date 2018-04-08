@@ -6,10 +6,13 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.sql.Date;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
@@ -36,6 +39,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	private boolean wasNull = false;
 
 	private boolean beforeFirst = true;
+
+	private int currentRowIndex = -1;
 
 	private boolean afterLast = false;
 
@@ -107,10 +112,23 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 			return nextCalledForMetaDataResult;
 		}
 		beforeFirst = false;
+		currentRowIndex++;
 		boolean res = resultSet.next();
 		afterLast = !res;
 
 		return res;
+	}
+
+	@Override
+	public boolean isFirst() throws SQLException
+	{
+		return currentRowIndex == 0;
+	}
+
+	@Override
+	public int getRow() throws SQLException
+	{
+		return currentRowIndex + 1;
 	}
 
 	@Override
@@ -125,6 +143,20 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public String getString(int columnIndex) throws SQLException
 	{
 		return isNull(columnIndex) ? null : resultSet.getString(columnIndex - 1);
+	}
+
+	@Override
+	public URL getURL(int columnIndex) throws SQLException
+	{
+		try
+		{
+			return isNull(columnIndex) ? null : new URL(resultSet.getString(columnIndex - 1));
+		}
+		catch (MalformedURLException e)
+		{
+			throw new CloudSpannerSQLException("Invalid URL: " + resultSet.getString(columnIndex - 1),
+					com.google.rpc.Code.INVALID_ARGUMENT);
+		}
 	}
 
 	@Override
@@ -192,6 +224,20 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public String getString(String columnLabel) throws SQLException
 	{
 		return isNull(columnLabel) ? null : resultSet.getString(columnLabel);
+	}
+
+	@Override
+	public URL getURL(String columnLabel) throws SQLException
+	{
+		try
+		{
+			return isNull(columnLabel) ? null : new URL(resultSet.getString(columnLabel));
+		}
+		catch (MalformedURLException e)
+		{
+			throw new CloudSpannerSQLException("Invalid URL: " + resultSet.getString(columnLabel),
+					com.google.rpc.Code.INVALID_ARGUMENT);
+		}
 	}
 
 	@Override
@@ -572,6 +618,40 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public Reader getNCharacterStream(String columnLabel) throws SQLException
 	{
 		return getCharacterStream(columnLabel);
+	}
+
+	@Override
+	public int getHoldability() throws SQLException
+	{
+		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
+	}
+
+	@Override
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException
+	{
+		return convertObject(getObject(columnIndex), type, resultSet.getColumnType(columnIndex - 1));
+	}
+
+	@Override
+	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException
+	{
+		return convertObject(getObject(columnLabel), type, resultSet.getColumnType(columnLabel));
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> T convertObject(Object o, Class<T> javaType, Type type) throws SQLException
+	{
+		if (javaType == null)
+			throw new CloudSpannerSQLException("Type may not be null", com.google.rpc.Code.INVALID_ARGUMENT);
+		if (o == null)
+			return null;
+		if (o.getClass().equals(javaType))
+			return (T) o;
+		if (javaType.equals(String.class))
+			return (T) o.toString();
+
+		throw new CloudSpannerSQLException("Unsupported conversion from Cloud Spanner type " + type.getCode().name()
+				+ " to Java type " + javaType.getName(), com.google.rpc.Code.INVALID_ARGUMENT);
 	}
 
 }

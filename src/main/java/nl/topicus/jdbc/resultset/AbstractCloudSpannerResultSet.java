@@ -3,7 +3,6 @@ package nl.topicus.jdbc.resultset;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -23,11 +22,12 @@ import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 
 abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher implements ResultSet
 {
+	private static final String EMPTY_STRING = "";
 
 	@Override
 	public String getCursorName() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return EMPTY_STRING;
 	}
 
 	@Override
@@ -57,19 +57,19 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher
 	@Override
 	public boolean rowUpdated() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return false;
 	}
 
 	@Override
 	public boolean rowInserted() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return false;
 	}
 
 	@Override
 	public boolean rowDeleted() throws SQLException
 	{
-		throw new SQLFeatureNotSupportedException();
+		return false;
 	}
 
 	@Override
@@ -391,18 +391,6 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher
 	}
 
 	@Override
-	public URL getURL(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public URL getURL(String columnLabel) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public void updateRef(int columnIndex, Ref x) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
@@ -470,12 +458,6 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher
 
 	@Override
 	public void updateRowId(String columnLabel, RowId x) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public int getHoldability() throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
 	}
@@ -709,24 +691,6 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher
 	}
 
 	@Override
-	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public boolean isFirst() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public boolean isLast() throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
@@ -752,12 +716,6 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher
 
 	@Override
 	public boolean last() throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public int getRow() throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
 	}
