@@ -35,6 +35,28 @@ public abstract class AbstractCloudSpannerWrapper implements Wrapper
 		return Types.OTHER;
 	}
 
+	public static Type getGoogleType(int sqlType)
+	{
+		if (sqlType == Types.BOOLEAN)
+			return Type.bool();
+		if (sqlType == Types.BINARY)
+			return Type.bytes();
+		if (sqlType == Types.DATE)
+			return Type.date();
+		if (sqlType == Types.DOUBLE || sqlType == Types.FLOAT || sqlType == Types.DECIMAL)
+			return Type.float64();
+		if (sqlType == Types.BIGINT || sqlType == Types.INTEGER || sqlType == Types.TINYINT)
+			return Type.int64();
+		if (sqlType == Types.NVARCHAR)
+			return Type.string();
+		if (sqlType == Types.TIMESTAMP)
+			return Type.timestamp();
+		if (sqlType == Types.ARRAY)
+			throw new IllegalArgumentException("Array type not yet implemented");
+
+		throw new IllegalArgumentException("Unknown type: " + sqlType);
+	}
+
 	public static String getGoogleTypeName(int sqlType)
 	{
 		if (sqlType == Types.BOOLEAN)
