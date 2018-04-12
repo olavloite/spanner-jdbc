@@ -1,6 +1,7 @@
 package nl.topicus.jdbc.resultset;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -46,6 +47,30 @@ public class AbstractCloudSpannerResultSetTest
 		public void testGetConcurrency() throws SQLException
 		{
 			assertEquals(ResultSet.CONCUR_READ_ONLY, subject.getConcurrency());
+		}
+
+		@Test
+		public void testGetCursorName() throws SQLException
+		{
+			assertEquals("", subject.getCursorName());
+		}
+
+		@Test
+		public void testRowUpdated() throws SQLException
+		{
+			assertFalse(subject.rowUpdated());
+		}
+
+		@Test
+		public void testRowInserted() throws SQLException
+		{
+			assertFalse(subject.rowInserted());
+		}
+
+		@Test
+		public void testRowDeleted() throws SQLException
+		{
+			assertFalse(subject.rowDeleted());
 		}
 	}
 
