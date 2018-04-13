@@ -16,6 +16,7 @@ import com.google.cloud.spanner.Type.StructField;
 import com.google.spanner.v1.ResultSetStats;
 
 import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
+import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 class ResultSetEmulator extends SQLExceptionWrapper implements ResultSet
 {
@@ -158,148 +159,167 @@ class ResultSetEmulator extends SQLExceptionWrapper implements ResultSet
 	@Override
 	public ByteArray getBytes(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return ByteArray.copyFrom(get(rs::getBytes, columnName));
 	}
 
 	@Override
 	public Timestamp getTimestamp(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return CloudSpannerConversionUtil.toCloudSpannerTimestamp(get(rs::getTimestamp, columnIndex + 1));
 	}
 
 	@Override
 	public Timestamp getTimestamp(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return CloudSpannerConversionUtil.toCloudSpannerTimestamp(get(rs::getTimestamp, columnName));
 	}
 
 	@Override
 	public Date getDate(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return CloudSpannerConversionUtil.toCloudSpannerDate(get(rs::getDate, columnIndex + 1));
 	}
 
 	@Override
 	public Date getDate(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return CloudSpannerConversionUtil.toCloudSpannerDate(get(rs::getDate, columnName));
 	}
 
 	@Override
 	public boolean[] getBooleanArray(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return (boolean[]) get(get(rs::getArray, columnIndex + 1)::getArray);
 	}
 
 	@Override
 	public boolean[] getBooleanArray(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return (boolean[]) get(get(rs::getArray, columnName)::getArray);
 	}
 
 	@Override
 	public List<Boolean> getBooleanList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToBooleanList(getBooleanArray(columnIndex));
 	}
 
 	@Override
 	public List<Boolean> getBooleanList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToBooleanList(getBooleanArray(columnName));
+	}
+
+	private List<Boolean> convertToBooleanList(boolean[] array)
+	{
+		List<Boolean> res = new ArrayList<>(array.length);
+		for (boolean val : array)
+			res.add(Boolean.valueOf(val));
+		return res;
 	}
 
 	@Override
 	public long[] getLongArray(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return (long[]) get(get(rs::getArray, columnIndex + 1)::getArray);
 	}
 
 	@Override
 	public long[] getLongArray(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return (long[]) get(get(rs::getArray, columnName)::getArray);
 	}
 
 	@Override
 	public List<Long> getLongList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToLongList(getLongArray(columnIndex));
 	}
 
 	@Override
 	public List<Long> getLongList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToLongList(getLongArray(columnName));
+	}
+
+	private List<Long> convertToLongList(long[] array)
+	{
+		List<Long> res = new ArrayList<>(array.length);
+		for (long val : array)
+			res.add(Long.valueOf(val));
+		return res;
 	}
 
 	@Override
 	public double[] getDoubleArray(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return (double[]) get(get(rs::getArray, columnIndex + 1)::getArray);
 	}
 
 	@Override
 	public double[] getDoubleArray(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return (double[]) get(get(rs::getArray, columnName)::getArray);
 	}
 
 	@Override
 	public List<Double> getDoubleList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToDoubleList(getDoubleArray(columnIndex));
 	}
 
 	@Override
 	public List<Double> getDoubleList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToDoubleList(getDoubleArray(columnName));
+	}
+
+	private List<Double> convertToDoubleList(double[] array)
+	{
+		List<Double> res = new ArrayList<>(array.length);
+		for (double val : array)
+			res.add(Double.valueOf(val));
+		return res;
 	}
 
 	@Override
 	public List<String> getStringList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToStringList((String[]) get(get(rs::getArray, columnIndex + 1)::getArray));
 	}
 
 	@Override
 	public List<String> getStringList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToStringList((String[]) get(get(rs::getArray, columnName)::getArray));
+	}
+
+	private List<String> convertToStringList(String[] array)
+	{
+		List<String> res = new ArrayList<>(array.length);
+		for (String val : array)
+			res.add(String.valueOf(val));
+		return res;
 	}
 
 	@Override
 	public List<ByteArray> getBytesList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToByteArrayList((byte[][]) get(get(rs::getArray, columnIndex + 1)::getArray));
 	}
 
 	@Override
 	public List<ByteArray> getBytesList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToByteArrayList((byte[][]) get(get(rs::getArray, columnName)::getArray));
+	}
+
+	private List<ByteArray> convertToByteArrayList(byte[][] array)
+	{
+		List<ByteArray> res = new ArrayList<>(array.length);
+		for (byte[] val : array)
+			res.add(ByteArray.copyFrom(val));
+		return res;
 	}
 
 	@Override

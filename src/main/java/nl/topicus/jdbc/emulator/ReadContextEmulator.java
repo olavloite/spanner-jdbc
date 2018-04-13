@@ -23,6 +23,7 @@ class ReadContextEmulator extends AbstractReadContextEmulator
 		{
 			PreparedStatement ps = getConnection().prepareStatement(statement.getSql());
 			java.sql.ResultSet rs = ps.executeQuery();
+			return new ResultSetEmulator(rs);
 		}
 		catch (SQLException e)
 		{
