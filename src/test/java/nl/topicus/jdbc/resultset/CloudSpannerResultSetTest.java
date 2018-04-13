@@ -375,6 +375,16 @@ public class CloudSpannerResultSetTest
 	}
 
 	@Test
+	public void testGetNStringIndex() throws SQLException
+	{
+		assertNotNull(subject.getNString(STRING_COLINDEX_NOTNULL));
+		assertEquals("BAR", subject.getNString(STRING_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNString(STRING_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
 	public void testGetURLIndex() throws SQLException, MalformedURLException
 	{
 		assertNotNull(subject.getURL(URL_COLINDEX_NOTNULL));
@@ -487,6 +497,16 @@ public class CloudSpannerResultSetTest
 		assertEquals("FOO", subject.getString(STRING_COL_NOT_NULL));
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getString(STRING_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetNStringLabel() throws SQLException
+	{
+		assertNotNull(subject.getNString(STRING_COL_NOT_NULL));
+		assertEquals("FOO", subject.getNString(STRING_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNString(STRING_COL_NULL));
 		assertTrue(subject.wasNull());
 	}
 
