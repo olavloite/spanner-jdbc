@@ -13,11 +13,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.junit.Rule;
@@ -35,6 +40,7 @@ import com.google.cloud.spanner.Type.StructField;
 
 import nl.topicus.jdbc.CloudSpannerArray;
 import nl.topicus.jdbc.CloudSpannerDataType;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 import nl.topicus.jdbc.test.category.UnitTest;
 
@@ -115,6 +121,14 @@ public class CloudSpannerResultSetTest
 
 	static final int ARRAY_COLINDEX_NOTNULL = 18;
 
+	static final String URL_COL_NULL = "URL_COL_NULL";
+
+	static final String URL_COL_NOT_NULL = "URL_COL_NOT_NULL";
+
+	static final int URL_COLINDEX_NULL = 19;
+
+	static final int URL_COLINDEX_NOTNULL = 20;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -135,6 +149,19 @@ public class CloudSpannerResultSetTest
 		when(res.getColumnType(STRING_COL_NOT_NULL)).thenReturn(Type.string());
 		when(res.getColumnType(STRING_COLINDEX_NULL - 1)).thenReturn(Type.string());
 		when(res.getColumnType(STRING_COLINDEX_NOTNULL - 1)).thenReturn(Type.string());
+
+		when(res.getString(URL_COL_NULL)).thenReturn(null);
+		when(res.isNull(URL_COL_NULL)).thenReturn(true);
+		when(res.getString(URL_COL_NOT_NULL)).thenReturn("https://github.com/olavloite/spanner-jdbc");
+		when(res.isNull(URL_COL_NOT_NULL)).thenReturn(false);
+		when(res.getString(URL_COLINDEX_NULL - 1)).thenReturn(null);
+		when(res.isNull(URL_COLINDEX_NULL - 1)).thenReturn(true);
+		when(res.getString(URL_COLINDEX_NOTNULL - 1)).thenReturn("https://github.com/olavloite");
+		when(res.isNull(URL_COLINDEX_NOTNULL - 1)).thenReturn(false);
+		when(res.getColumnType(URL_COL_NULL)).thenReturn(Type.string());
+		when(res.getColumnType(URL_COL_NOT_NULL)).thenReturn(Type.string());
+		when(res.getColumnType(URL_COLINDEX_NULL - 1)).thenReturn(Type.string());
+		when(res.getColumnType(URL_COLINDEX_NOTNULL - 1)).thenReturn(Type.string());
 
 		when(res.getBoolean(BOOLEAN_COL_NULL)).thenReturn(false);
 		when(res.isNull(BOOLEAN_COL_NULL)).thenReturn(true);
@@ -266,7 +293,8 @@ public class CloudSpannerResultSetTest
 				StructField.of(LONG_COL_NOT_NULL, Type.int64()), StructField.of(DATE_COL_NULL, Type.date()),
 				StructField.of(DATE_COL_NOT_NULL, Type.date()), StructField.of(TIMESTAMP_COL_NULL, Type.timestamp()),
 				StructField.of(TIMESTAMP_COL_NOT_NULL, Type.timestamp()),
-				StructField.of(TIME_COL_NULL, Type.timestamp()), StructField.of(TIME_COL_NOT_NULL, Type.timestamp())
+				StructField.of(TIME_COL_NULL, Type.timestamp()), StructField.of(TIME_COL_NOT_NULL, Type.timestamp()),
+				StructField.of(URL_COL_NULL, Type.string()), StructField.of(URL_COL_NOT_NULL, Type.string())
 
 		));
 
@@ -347,6 +375,34 @@ public class CloudSpannerResultSetTest
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getString(STRING_COLINDEX_NULL));
 		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetNStringIndex() throws SQLException
+	{
+		assertNotNull(subject.getNString(STRING_COLINDEX_NOTNULL));
+		assertEquals("BAR", subject.getNString(STRING_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNString(STRING_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetURLIndex() throws SQLException, MalformedURLException
+	{
+		assertNotNull(subject.getURL(URL_COLINDEX_NOTNULL));
+		assertEquals(new URL("https://github.com/olavloite"), subject.getURL(URL_COLINDEX_NOTNULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getURL(URL_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetURLIndexInvalid() throws SQLException, MalformedURLException
+	{
+		thrown.expect(CloudSpannerSQLException.class);
+		thrown.expectMessage("Invalid URL");
+		assertNotNull(subject.getURL(STRING_COLINDEX_NOTNULL));
 	}
 
 	@Test
@@ -445,6 +501,34 @@ public class CloudSpannerResultSetTest
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getString(STRING_COL_NULL));
 		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetNStringLabel() throws SQLException
+	{
+		assertNotNull(subject.getNString(STRING_COL_NOT_NULL));
+		assertEquals("FOO", subject.getNString(STRING_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNString(STRING_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetURLLabel() throws SQLException
+	{
+		assertNotNull(subject.getString(URL_COL_NOT_NULL));
+		assertEquals("https://github.com/olavloite/spanner-jdbc", subject.getString(URL_COL_NOT_NULL));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getString(URL_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetURLLabelInvalid() throws SQLException
+	{
+		thrown.expect(CloudSpannerSQLException.class);
+		thrown.expectMessage("Invalid URL");
+		assertNotNull(subject.getURL(STRING_COL_NOT_NULL));
 	}
 
 	@Test
@@ -786,6 +870,30 @@ public class CloudSpannerResultSetTest
 		assertTrue(subject.wasNull());
 	}
 
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetObjectLabelMap() throws SQLException
+	{
+		Map<String, Class<?>> map = new HashMap<>();
+		assertNotNull(subject.getObject(DATE_COL_NOT_NULL, map));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getObject(DATE_COL_NOT_NULL, map));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getObject(DATE_COL_NULL, map));
+		assertTrue(subject.wasNull());
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetObjectIndexMap() throws SQLException
+	{
+		Map<String, Class<?>> map = Collections.emptyMap();
+		assertNotNull(subject.getObject(DATE_COLINDEX_NOTNULL, map));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getObject(DATE_COLINDEX_NOTNULL, map));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getObject(DATE_COLINDEX_NULL, map));
+		assertTrue(subject.wasNull());
+	}
+
 	@Test
 	public void testGetArrayLabel() throws SQLException
 	{
@@ -872,6 +980,34 @@ public class CloudSpannerResultSetTest
 		assertEquals(3, len);
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getCharacterStream(STRING_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetNCharacterStreamIndex() throws SQLException, IOException
+	{
+		assertNotNull(subject.getNCharacterStream(STRING_COLINDEX_NOTNULL));
+		Reader actual = subject.getNCharacterStream(STRING_COLINDEX_NOTNULL);
+		char[] cbuf = new char[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("BAR", new String(cbuf, 0, len));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNCharacterStream(STRING_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetNCharacterStreamLabel() throws SQLException, IOException
+	{
+		assertNotNull(subject.getNCharacterStream(STRING_COL_NOT_NULL));
+		Reader actual = subject.getNCharacterStream(STRING_COL_NOT_NULL);
+		char[] cbuf = new char[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("FOO", new String(cbuf, 0, len));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNCharacterStream(STRING_COL_NULL));
 		assertTrue(subject.wasNull());
 	}
 
@@ -995,4 +1131,27 @@ public class CloudSpannerResultSetTest
 		int index = subject.findColumn(UNKNOWN_COLUMN);
 		assertEquals(0, index);
 	}
+
+	@Test
+	public void testGetRowAndIsFirst() throws SQLException
+	{
+		try (CloudSpannerResultSet rs = new CloudSpannerResultSet(mock(CloudSpannerStatement.class), getMockResultSet(),
+				"SELECT * FROM FOO"))
+		{
+			int row = 0;
+			while (rs.next())
+			{
+				row++;
+				assertEquals(row, rs.getRow());
+				assertEquals(row == 1, rs.isFirst());
+			}
+		}
+	}
+
+	@Test
+	public void testGetHoldability() throws SQLException
+	{
+		assertEquals(java.sql.ResultSet.HOLD_CURSORS_OVER_COMMIT, subject.getHoldability());
+	}
+
 }

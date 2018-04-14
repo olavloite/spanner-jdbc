@@ -20,6 +20,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
@@ -638,20 +639,34 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		return convertObject(getObject(columnLabel), type, resultSet.getColumnType(columnLabel));
 	}
 
+	@Override
+	public Object getObject(int columnIndex, Map<String, Class<?>> map) throws SQLException
+	{
+		return convertObject(getObject(columnIndex), map, resultSet.getColumnType(columnIndex - 1));
+	}
+
+	@Override
+	public Object getObject(String columnLabel, Map<String, Class<?>> map) throws SQLException
+	{
+		return convertObject(getObject(columnLabel), map, resultSet.getColumnType(columnLabel));
+	}
+
 	@SuppressWarnings("unchecked")
 	private <T> T convertObject(Object o, Class<T> javaType, Type type) throws SQLException
 	{
-		if (javaType == null)
-			throw new CloudSpannerSQLException("Type may not be null", com.google.rpc.Code.INVALID_ARGUMENT);
+		return (T) CloudSpannerConversionUtil.convert(o, type, javaType);
+	}
+
+	private Object convertObject(Object o, Map<String, Class<?>> map, Type type) throws SQLException
+	{
+		if (map == null)
+			throw new CloudSpannerSQLException("Map may not be null", com.google.rpc.Code.INVALID_ARGUMENT);
 		if (o == null)
 			return null;
-		if (o.getClass().equals(javaType))
-			return (T) o;
-		if (javaType.equals(String.class))
-			return (T) o.toString();
-
-		throw new CloudSpannerSQLException("Unsupported conversion from Cloud Spanner type " + type.getCode().name()
-				+ " to Java type " + javaType.getName(), com.google.rpc.Code.INVALID_ARGUMENT);
+		Class<?> javaType = map.get(type.getCode().name());
+		if (javaType == null)
+			return o;
+		return CloudSpannerConversionUtil.convert(o, type, javaType);
 	}
 
 }

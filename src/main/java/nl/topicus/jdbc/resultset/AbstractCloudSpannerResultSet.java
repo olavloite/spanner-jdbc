@@ -16,7 +16,6 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Map;
 
 import nl.topicus.jdbc.AbstractCloudSpannerFetcher;
 
@@ -343,12 +342,6 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher
 	}
 
 	@Override
-	public Object getObject(int columnIndex, Map<String, Class<?>> map) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
 	public Ref getRef(int columnIndex) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
@@ -362,12 +355,6 @@ abstract class AbstractCloudSpannerResultSet extends AbstractCloudSpannerFetcher
 
 	@Override
 	public Clob getClob(int columnIndex) throws SQLException
-	{
-		throw new SQLFeatureNotSupportedException();
-	}
-
-	@Override
-	public Object getObject(String columnLabel, Map<String, Class<?>> map) throws SQLException
 	{
 		throw new SQLFeatureNotSupportedException();
 	}

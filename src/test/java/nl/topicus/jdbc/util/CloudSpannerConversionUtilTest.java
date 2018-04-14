@@ -3,7 +3,10 @@ package nl.topicus.jdbc.util;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -11,16 +14,23 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 import com.google.cloud.ByteArray;
+import com.google.cloud.spanner.Type;
 
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.test.category.UnitTest;
 
 @Category(UnitTest.class)
 public class CloudSpannerConversionUtilTest
 {
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
+
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testToSqlDate()
@@ -185,6 +195,120 @@ public class CloudSpannerConversionUtilTest
 
 		List<byte[]> list = Arrays.asList("AA".getBytes(), "BB".getBytes());
 		assertArrayEquals(list.toArray(), output.toArray());
+	}
+
+	@Test
+	public void testConvert() throws SQLException
+	{
+		assertEquals(Boolean.TRUE, CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), Boolean.class));
+		assertEquals(Boolean.TRUE, CloudSpannerConversionUtil.convert(Long.valueOf(1), Type.int64(), Boolean.class));
+		assertEquals(Boolean.TRUE,
+				CloudSpannerConversionUtil.convert(Double.valueOf(1d), Type.float64(), Boolean.class));
+		assertEquals(Boolean.TRUE, CloudSpannerConversionUtil.convert("True", Type.string(), Boolean.class));
+
+		assertEquals(Boolean.FALSE, CloudSpannerConversionUtil.convert(Boolean.FALSE, Type.bool(), Boolean.class));
+		assertEquals(Boolean.FALSE, CloudSpannerConversionUtil.convert(Long.valueOf(0), Type.int64(), Boolean.class));
+		assertEquals(Boolean.FALSE,
+				CloudSpannerConversionUtil.convert(Double.valueOf(0d), Type.float64(), Boolean.class));
+		assertEquals(Boolean.FALSE, CloudSpannerConversionUtil.convert("False", Type.string(), Boolean.class));
+
+		assertEquals(BigDecimal.ONE, CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), BigDecimal.class));
+		assertEquals(BigDecimal.TEN,
+				CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), BigDecimal.class));
+		assertEquals(BigDecimal.valueOf(10.1d),
+				CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), BigDecimal.class));
+		assertEquals(new BigDecimal("10.2"),
+				CloudSpannerConversionUtil.convert("10.2", Type.string(), BigDecimal.class));
+
+		assertEquals(Long.valueOf(1), CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), Long.class));
+		assertEquals(Long.valueOf(10), CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), Long.class));
+		assertEquals(Long.valueOf(10),
+				CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), Long.class));
+		assertEquals(new Long("10"), CloudSpannerConversionUtil.convert("10", Type.string(), Long.class));
+
+		assertEquals(Integer.valueOf(1), CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), Integer.class));
+		assertEquals(Integer.valueOf(10),
+				CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), Integer.class));
+		assertEquals(Integer.valueOf(10),
+				CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), Integer.class));
+		assertEquals(new Integer("10"), CloudSpannerConversionUtil.convert("10", Type.string(), Integer.class));
+
+		assertEquals(BigInteger.valueOf(1),
+				CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), BigInteger.class));
+		assertEquals(BigInteger.valueOf(10),
+				CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), BigInteger.class));
+		assertEquals(BigInteger.valueOf(10),
+				CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), BigInteger.class));
+		assertEquals(new BigInteger("10"), CloudSpannerConversionUtil.convert("10", Type.string(), BigInteger.class));
+
+		assertEquals(Float.valueOf(1), CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), Float.class));
+		assertEquals(Float.valueOf(10),
+				CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), Float.class));
+		assertEquals(Float.valueOf(Double.valueOf(10.1d).floatValue()),
+				CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), Float.class));
+		assertEquals(new Float("10.2"), CloudSpannerConversionUtil.convert("10.2", Type.string(), Float.class));
+
+		assertEquals(Double.valueOf(1), CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), Double.class));
+		assertEquals(Double.valueOf(10),
+				CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), Double.class));
+		assertEquals(Double.valueOf(10.1d),
+				CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), Double.class));
+		assertEquals(new Double("10.2"), CloudSpannerConversionUtil.convert("10.2", Type.string(), Double.class));
+
+		assertEquals("true", CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), String.class));
+		assertEquals("10", CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), String.class));
+		assertEquals("10.1", CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), String.class));
+		assertEquals("10.2", CloudSpannerConversionUtil.convert("10.2", Type.string(), String.class));
+	}
+
+	@Test
+	public void testConvertInvalidType() throws SQLException
+	{
+		testInvalidType(Type.date(), Boolean.class);
+		testInvalidType(Type.timestamp(), Boolean.class);
+		testInvalidType(Type.int64(), Timestamp.class);
+		testInvalidType(Type.int64(), Date.class);
+		testInvalidType(Type.float64(), Timestamp.class);
+		testInvalidType(Type.float64(), Date.class);
+		testInvalidType(Type.timestamp(), Date.class);
+	}
+
+	private void testInvalidType(Type fromType, Class<?> toType) throws CloudSpannerSQLException
+	{
+		try
+		{
+			CloudSpannerConversionUtil.convert(new Object(), fromType, toType);
+		}
+		catch (CloudSpannerSQLException e)
+		{
+			if (e.getMessage().equals("Cannot convert " + fromType.getCode().name() + " to " + toType.getName()))
+				return;
+			throw e;
+		}
+		throw new AssertionError("Expected exception not thrown");
+	}
+
+	@Test
+	public void testConvertInvalidValue() throws SQLException
+	{
+		testInvalidValue("test", Type.string(), Integer.class);
+		testInvalidValue("2010-10", Type.string(), Integer.class);
+		testInvalidValue("2010-10", Type.string(), BigDecimal.class);
+	}
+
+	private void testInvalidValue(Object value, Type fromType, Class<?> toType) throws CloudSpannerSQLException
+	{
+		try
+		{
+			CloudSpannerConversionUtil.convert(value, fromType, toType);
+		}
+		catch (CloudSpannerSQLException e)
+		{
+			if (e.getMessage().equals("Cannot convert " + value.toString() + " to " + toType.getName()))
+				return;
+			throw e;
+		}
+		throw new AssertionError("Expected exception not thrown");
 	}
 
 }
