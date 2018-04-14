@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.util;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -9,6 +11,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.google.cloud.ByteArray;
+import com.google.cloud.spanner.Type;
+import com.google.cloud.spanner.Type.Code;
+import com.google.common.base.Preconditions;
+
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 public class CloudSpannerConversionUtil
 {
@@ -104,6 +111,103 @@ public class CloudSpannerConversionUtil
 		for (ByteArray ba : bytes)
 			res.add(ba.toByteArray());
 		return res;
+	}
+
+	/**
+	 * Converts the given value from the Google {@link Type} to the Java
+	 * {@link Class} type.
+	 * 
+	 * @param value
+	 *            The value to convert
+	 * @param type
+	 *            The type in the database
+	 * @param targetType
+	 *            The java class target type to convert to
+	 * @return The converted value
+	 * @throws CloudSpannerSQLException
+	 */
+	public static Object convert(Object value, Type type, Class<?> targetType) throws CloudSpannerSQLException
+	{
+		Preconditions.checkNotNull(type, "type may not be null");
+		Preconditions.checkNotNull(targetType, "targetType may not be null");
+		if (value == null)
+			return null;
+		if (targetType.equals(String.class))
+			return value.toString();
+
+		try
+		{
+			if (targetType.equals(Boolean.class) && type.getCode() == Code.BOOL)
+				return value;
+			if (targetType.equals(Boolean.class) && type.getCode() == Code.INT64)
+				return Boolean.valueOf(!((Long) value == 0));
+			if (targetType.equals(Boolean.class) && type.getCode() == Code.FLOAT64)
+				return Boolean.valueOf(!((Double) value == 0d));
+			if (targetType.equals(Boolean.class) && type.getCode() == Code.STRING)
+				return Boolean.valueOf((String) value);
+
+			if (targetType.equals(BigDecimal.class) && type.getCode() == Code.BOOL)
+				return (Boolean) value ? BigDecimal.ONE : BigDecimal.ZERO;
+			if (targetType.equals(BigDecimal.class) && type.getCode() == Code.INT64)
+				return BigDecimal.valueOf((Long) value);
+			if (targetType.equals(BigDecimal.class) && type.getCode() == Code.FLOAT64)
+				return BigDecimal.valueOf((Double) value);
+			if (targetType.equals(BigDecimal.class) && type.getCode() == Code.STRING)
+				return new BigDecimal((String) value);
+
+			if (targetType.equals(Long.class) && type.getCode() == Code.BOOL)
+				return (Boolean) value ? 1L : 0L;
+			if (targetType.equals(Long.class) && type.getCode() == Code.INT64)
+				return value;
+			if (targetType.equals(Long.class) && type.getCode() == Code.FLOAT64)
+				return ((Double) value).longValue();
+			if (targetType.equals(Long.class) && type.getCode() == Code.STRING)
+				return Long.valueOf((String) value);
+
+			if (targetType.equals(Integer.class) && type.getCode() == Code.BOOL)
+				return (Boolean) value ? 1 : 0;
+			if (targetType.equals(Integer.class) && type.getCode() == Code.INT64)
+				return ((Long) value).intValue();
+			if (targetType.equals(Integer.class) && type.getCode() == Code.FLOAT64)
+				return ((Double) value).intValue();
+			if (targetType.equals(Integer.class) && type.getCode() == Code.STRING)
+				return Integer.valueOf((String) value);
+
+			if (targetType.equals(BigInteger.class) && type.getCode() == Code.BOOL)
+				return (Boolean) value ? BigInteger.ONE : BigInteger.ZERO;
+			if (targetType.equals(BigInteger.class) && type.getCode() == Code.INT64)
+				return BigInteger.valueOf((Long) value);
+			if (targetType.equals(BigInteger.class) && type.getCode() == Code.FLOAT64)
+				return BigInteger.valueOf(((Double) value).longValue());
+			if (targetType.equals(BigInteger.class) && type.getCode() == Code.STRING)
+				return new BigInteger((String) value);
+
+			if (targetType.equals(Float.class) && type.getCode() == Code.BOOL)
+				return (Boolean) value ? Float.valueOf(1f) : Float.valueOf(0f);
+			if (targetType.equals(Float.class) && type.getCode() == Code.INT64)
+				return ((Long) value).floatValue();
+			if (targetType.equals(Float.class) && type.getCode() == Code.FLOAT64)
+				return ((Double) value).floatValue();
+			if (targetType.equals(Float.class) && type.getCode() == Code.STRING)
+				return Float.valueOf((String) value);
+
+			if (targetType.equals(Double.class) && type.getCode() == Code.BOOL)
+				return (Boolean) value ? Double.valueOf(1d) : Double.valueOf(0d);
+			if (targetType.equals(Double.class) && type.getCode() == Code.INT64)
+				return ((Long) value).doubleValue();
+			if (targetType.equals(Double.class) && type.getCode() == Code.FLOAT64)
+				return value;
+			if (targetType.equals(Double.class) && type.getCode() == Code.STRING)
+				return Double.valueOf((String) value);
+		}
+		catch (Exception e)
+		{
+			throw new CloudSpannerSQLException("Cannot convert " + value + " to " + targetType.getName(),
+					com.google.rpc.Code.INVALID_ARGUMENT, e);
+		}
+
+		throw new CloudSpannerSQLException("Cannot convert " + type.getCode().name() + " to " + targetType.getName(),
+				com.google.rpc.Code.INVALID_ARGUMENT);
 	}
 
 }

@@ -20,6 +20,9 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.junit.Rule;
@@ -864,6 +867,30 @@ public class CloudSpannerResultSetTest
 		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getObject(DATE_COLINDEX_NOTNULL));
 		assertEquals(false, subject.wasNull());
 		assertNull(subject.getObject(DATE_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetObjectLabelMap() throws SQLException
+	{
+		Map<String, Class<?>> map = new HashMap<>();
+		assertNotNull(subject.getObject(DATE_COL_NOT_NULL, map));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getObject(DATE_COL_NOT_NULL, map));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getObject(DATE_COL_NULL, map));
+		assertTrue(subject.wasNull());
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testGetObjectIndexMap() throws SQLException
+	{
+		Map<String, Class<?>> map = Collections.emptyMap();
+		assertNotNull(subject.getObject(DATE_COLINDEX_NOTNULL, map));
+		assertEquals(new java.sql.Date(2017 - 1900, 8, 10), subject.getObject(DATE_COLINDEX_NOTNULL, map));
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getObject(DATE_COLINDEX_NULL, map));
 		assertTrue(subject.wasNull());
 	}
 
