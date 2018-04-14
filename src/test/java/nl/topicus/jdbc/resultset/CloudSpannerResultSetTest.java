@@ -1121,4 +1121,10 @@ public class CloudSpannerResultSetTest
 		}
 	}
 
+	@Test
+	public void testGetHoldability() throws SQLException
+	{
+		assertEquals(java.sql.ResultSet.HOLD_CURSORS_OVER_COMMIT, subject.getHoldability());
+	}
+
 }
