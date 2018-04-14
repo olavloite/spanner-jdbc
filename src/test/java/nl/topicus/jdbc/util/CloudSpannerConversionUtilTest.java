@@ -254,6 +254,11 @@ public class CloudSpannerConversionUtilTest
 		assertEquals(Double.valueOf(10.1d),
 				CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), Double.class));
 		assertEquals(new Double("10.2"), CloudSpannerConversionUtil.convert("10.2", Type.string(), Double.class));
+
+		assertEquals("true", CloudSpannerConversionUtil.convert(Boolean.TRUE, Type.bool(), String.class));
+		assertEquals("10", CloudSpannerConversionUtil.convert(Long.valueOf(10), Type.int64(), String.class));
+		assertEquals("10.1", CloudSpannerConversionUtil.convert(Double.valueOf(10.1d), Type.float64(), String.class));
+		assertEquals("10.2", CloudSpannerConversionUtil.convert("10.2", Type.string(), String.class));
 	}
 
 	@Test
