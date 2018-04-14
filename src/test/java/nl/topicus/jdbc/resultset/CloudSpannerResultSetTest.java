@@ -957,6 +957,34 @@ public class CloudSpannerResultSetTest
 	}
 
 	@Test
+	public void testGetNCharacterStreamIndex() throws SQLException, IOException
+	{
+		assertNotNull(subject.getNCharacterStream(STRING_COLINDEX_NOTNULL));
+		Reader actual = subject.getNCharacterStream(STRING_COLINDEX_NOTNULL);
+		char[] cbuf = new char[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("BAR", new String(cbuf, 0, len));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNCharacterStream(STRING_COLINDEX_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
+	public void testGetNCharacterStreamLabel() throws SQLException, IOException
+	{
+		assertNotNull(subject.getNCharacterStream(STRING_COL_NOT_NULL));
+		Reader actual = subject.getNCharacterStream(STRING_COL_NOT_NULL);
+		char[] cbuf = new char[10];
+		int len = actual.read(cbuf, 0, cbuf.length);
+		assertEquals("FOO", new String(cbuf, 0, len));
+		assertEquals(3, len);
+		assertEquals(false, subject.wasNull());
+		assertNull(subject.getNCharacterStream(STRING_COL_NULL));
+		assertTrue(subject.wasNull());
+	}
+
+	@Test
 	public void testGetAsciiStreamIndex() throws SQLException, IOException
 	{
 		assertNotNull(subject.getAsciiStream(STRING_COLINDEX_NOTNULL));
