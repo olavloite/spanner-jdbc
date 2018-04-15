@@ -16,7 +16,7 @@ This driver supports a number of unsupported features of the official JDBC drive
 * DML-statements (INSERT, UPDATE, DELETE)
 * DDL-statements (CREATE TABLE [IF NOT EXISTS], ALTER TABLE, CREATE INDEX [IF NOT EXISTS], DROP TABLE [IF EXISTS], ...)
 * Transactions (both read/write and read-only)
-* Support for JPA/Hibernate and several other popular Java frameworks
+* Support for JPA/Hibernate and several other popular Java frameworks, such as Spring Boot, Apache Beam, Flyway, Apache Spark and many more.
 
 The driver ofcourse also supports normal SELECT-statements, including parameters. Example usage and tutorials can be found on http://www.googlecloudspanner.com/.
 
