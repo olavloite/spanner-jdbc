@@ -404,7 +404,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			}
 		}
 
-		private Object handleInvokeClose() throws Throwable
+		private Object handleInvokeClose() throws SQLException
 		{
 			// we are already closed and a double close
 			// is not an error.
@@ -537,7 +537,8 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			}
 		}
 
-		private Object handleInvokeObjectMethod(Object proxy, Method method, Object[] args) throws Throwable
+		private Object handleInvokeObjectMethod(Object proxy, Method method, Object[] args)
+				throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 		{
 			final String methodName = method.getName();
 			if (methodName.equals("toString"))
@@ -555,7 +556,7 @@ public class CloudSpannerPooledConnection implements PooledConnection, AutoClose
 			return method.invoke(st, args);
 		}
 
-		private Object handleInvokeClose() throws Throwable
+		private Object handleInvokeClose() throws SQLException
 		{
 			if (st == null || st.isClosed())
 			{
