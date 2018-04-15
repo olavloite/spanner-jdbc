@@ -837,7 +837,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		R apply(T t) throws SQLException;
 	}
 
-	private SqlFunction<Boolean, Integer> getPropertySetter(String propertyName) throws SQLException
+	private SqlFunction<Boolean, Integer> getPropertySetter(String propertyName)
 	{
 		if (propertyName
 				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))
