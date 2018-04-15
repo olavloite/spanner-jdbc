@@ -140,9 +140,9 @@ public class CloudSpannerConversionUtil
 			if (targetType.equals(Boolean.class) && type.getCode() == Code.BOOL)
 				return value;
 			if (targetType.equals(Boolean.class) && type.getCode() == Code.INT64)
-				return Boolean.valueOf(!((Long) value == 0));
+				return Boolean.valueOf((Long) value != 0);
 			if (targetType.equals(Boolean.class) && type.getCode() == Code.FLOAT64)
-				return Boolean.valueOf(!((Double) value == 0d));
+				return Boolean.valueOf((Double) value != 0d);
 			if (targetType.equals(Boolean.class) && type.getCode() == Code.STRING)
 				return Boolean.valueOf((String) value);
 
