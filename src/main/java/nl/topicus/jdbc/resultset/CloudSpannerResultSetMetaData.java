@@ -393,6 +393,8 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 			return 10;
 		case Types.TIMESTAMP:
 			return 24;
+		default:
+			// Not fixed size, try to get it from INFORMATION_SCHEMA
 		}
 		Column col = getColumn(column);
 		if (col != null && col.getTable() != null)
