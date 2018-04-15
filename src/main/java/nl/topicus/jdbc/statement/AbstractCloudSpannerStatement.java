@@ -200,7 +200,7 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		return connection.getTransaction();
 	}
 
-	protected List<Partition> partitionQuery(com.google.cloud.spanner.Statement statement) throws SQLException
+	protected List<Partition> partitionQuery(com.google.cloud.spanner.Statement statement)
 	{
 		PartitionOptions po = PartitionOptions.getDefaultInstance();
 		return connection.getTransaction().partitionQuery(po, statement);

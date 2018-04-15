@@ -91,21 +91,21 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 			return;
 
 		initialized = true;
-		Statement statement = null;
+		Statement sqlStatement = null;
 		if (sql == null)
 			return;
 		try
 		{
-			statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
+			sqlStatement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 		}
 		catch (JSQLParserException | TokenMgrError e)
 		{
 			// ignore
 			return;
 		}
-		if (!(statement instanceof Select))
+		if (!(sqlStatement instanceof Select))
 			return;
-		Select select = (Select) statement;
+		Select select = (Select) sqlStatement;
 		try
 		{
 			initTables(select);
@@ -393,6 +393,8 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 			return 10;
 		case Types.TIMESTAMP:
 			return 24;
+		default:
+			// Not fixed size, try to get it from INFORMATION_SCHEMA
 		}
 		Column col = getColumn(column);
 		if (col != null && col.getTable() != null)

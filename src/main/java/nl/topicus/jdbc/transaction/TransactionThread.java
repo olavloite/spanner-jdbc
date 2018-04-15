@@ -93,6 +93,7 @@ class TransactionThread extends Thread
 	TransactionThread(DatabaseClient dbClient)
 	{
 		super("Google Cloud Spanner JDBC Transaction Thread-" + nextThreadNum());
+		Preconditions.checkNotNull(dbClient, "dbClient may not be null");
 		this.dbClient = dbClient;
 		setDaemon(true);
 	}

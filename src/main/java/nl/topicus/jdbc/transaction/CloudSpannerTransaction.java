@@ -9,6 +9,7 @@ import com.google.cloud.spanner.BatchClient;
 import com.google.cloud.spanner.BatchReadOnlyTransaction;
 import com.google.cloud.spanner.BatchTransactionId;
 import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
@@ -19,6 +20,7 @@ import com.google.cloud.spanner.PartitionOptions;
 import com.google.cloud.spanner.ReadOnlyTransaction;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.SpannerException;
+import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
@@ -38,6 +40,10 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 public class CloudSpannerTransaction implements TransactionContext, BatchReadOnlyTransaction
 {
 	private static final String SAVEPOINTS_NOT_IN_READ_ONLY = "Savepoints are not allowed in read-only mode";
+
+	private static final String METHOD_NOT_IMPLEMENTED = "This method is not implemented";
+
+	private static final String METHOD_ONLY_IN_BATCH_READONLY = "This method may only be called when in batch read-only mode";
 
 	public static class TransactionException extends RuntimeException
 	{
@@ -303,32 +309,32 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 	@Override
 	public ResultSet read(String table, KeySet keys, Iterable<String> columns, ReadOption... options)
 	{
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, METHOD_NOT_IMPLEMENTED);
 	}
 
 	@Override
 	public ResultSet readUsingIndex(String table, String index, KeySet keys, Iterable<String> columns,
 			ReadOption... options)
 	{
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, METHOD_NOT_IMPLEMENTED);
 	}
 
 	@Override
 	public Struct readRow(String table, Key key, Iterable<String> columns)
 	{
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, METHOD_NOT_IMPLEMENTED);
 	}
 
 	@Override
 	public Struct readRowUsingIndex(String table, String index, Key key, Iterable<String> columns)
 	{
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, METHOD_NOT_IMPLEMENTED);
 	}
 
 	@Override
 	public ResultSet analyzeQuery(Statement statement, QueryAnalyzeMode queryMode)
 	{
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, METHOD_NOT_IMPLEMENTED);
 	}
 
 	/**
@@ -354,14 +360,14 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 	public List<Partition> partitionRead(PartitionOptions partitionOptions, String table, KeySet keys,
 			Iterable<String> columns, ReadOption... options) throws SpannerException
 	{
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, METHOD_NOT_IMPLEMENTED);
 	}
 
 	@Override
 	public List<Partition> partitionReadUsingIndex(PartitionOptions partitionOptions, String table, String index,
 			KeySet keys, Iterable<String> columns, ReadOption... options) throws SpannerException
 	{
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, METHOD_NOT_IMPLEMENTED);
 	}
 
 	@Override
@@ -373,7 +379,7 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 		{
 			return batchReadOnlyTransaction.partitionQuery(partitionOptions, statement, options);
 		}
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.FAILED_PRECONDITION, METHOD_ONLY_IN_BATCH_READONLY);
 	}
 
 	@Override
@@ -384,7 +390,7 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 		{
 			return batchReadOnlyTransaction.execute(partition);
 		}
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.FAILED_PRECONDITION, METHOD_ONLY_IN_BATCH_READONLY);
 	}
 
 	@Override
@@ -395,7 +401,7 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
 		{
 			return batchReadOnlyTransaction.getBatchTransactionId();
 		}
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.FAILED_PRECONDITION, METHOD_ONLY_IN_BATCH_READONLY);
 	}
 
 	public BatchReadOnlyTransaction getBatchReadOnlyTransaction()

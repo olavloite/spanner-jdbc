@@ -470,14 +470,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	public void setAutoCommit(boolean autoCommit) throws SQLException
 	{
 		checkClosed();
-		if (autoCommit != this.autoCommit)
+		if (autoCommit != this.autoCommit && isBatchReadOnly())
 		{
-			if (isBatchReadOnly())
-			{
-				throw new CloudSpannerSQLException(
-						"The connection is currently in batch read-only mode. Please turn off batch read-only before changing auto-commit mode.",
-						Code.FAILED_PRECONDITION);
-			}
+			throw new CloudSpannerSQLException(
+					"The connection is currently in batch read-only mode. Please turn off batch read-only before changing auto-commit mode.",
+					Code.FAILED_PRECONDITION);
 		}
 		this.autoCommit = autoCommit;
 	}
@@ -840,7 +837,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		R apply(T t) throws SQLException;
 	}
 
-	private SqlFunction<Boolean, Integer> getPropertySetter(String propertyName) throws SQLException
+	private SqlFunction<Boolean, Integer> getPropertySetter(String propertyName)
 	{
 		if (propertyName
 				.equalsIgnoreCase(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE)))

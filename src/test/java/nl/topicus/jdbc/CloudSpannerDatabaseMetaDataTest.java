@@ -5,9 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.withSettings;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -21,6 +19,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+
+import com.google.cloud.spanner.BatchClient;
+import com.google.cloud.spanner.DatabaseClient;
 
 import nl.topicus.jdbc.test.category.UnitTest;
 
@@ -883,8 +884,9 @@ public class CloudSpannerDatabaseMetaDataTest
 	{
 		assertTrue(testSubject.supportsSavepoints());
 		// Check that the connection does not throw an Exception
-		CloudSpannerConnection connection = mock(CloudSpannerConnection.class,
-				withSettings().useConstructor().defaultAnswer(CALLS_REAL_METHODS));
+		@SuppressWarnings("resource")
+		CloudSpannerConnection connection = new CloudSpannerConnection(mock(DatabaseClient.class),
+				mock(BatchClient.class));
 		connection.setAutoCommit(false);
 		connection.setSavepoint();
 	}
