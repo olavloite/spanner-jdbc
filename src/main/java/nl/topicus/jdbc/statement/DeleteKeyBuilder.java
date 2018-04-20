@@ -62,15 +62,18 @@ public class DeleteKeyBuilder
 
 	private Object convert(Object value)
 	{
-		if (Date.class.isAssignableFrom(value.getClass()))
+		if (value != null)
 		{
-			Date dateValue = (Date) value;
-			return CloudSpannerConversionUtil.toCloudSpannerDate(dateValue);
-		}
-		else if (Timestamp.class.isAssignableFrom(value.getClass()))
-		{
-			Timestamp timeValue = (Timestamp) value;
-			return CloudSpannerConversionUtil.toCloudSpannerTimestamp(timeValue);
+			if (Date.class.isAssignableFrom(value.getClass()))
+			{
+				Date dateValue = (Date) value;
+				return CloudSpannerConversionUtil.toCloudSpannerDate(dateValue);
+			}
+			else if (Timestamp.class.isAssignableFrom(value.getClass()))
+			{
+				Timestamp timeValue = (Timestamp) value;
+				return CloudSpannerConversionUtil.toCloudSpannerTimestamp(timeValue);
+			}
 		}
 		return value;
 	}
