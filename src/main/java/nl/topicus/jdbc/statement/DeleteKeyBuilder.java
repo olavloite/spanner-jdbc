@@ -1,6 +1,8 @@
 package nl.topicus.jdbc.statement;
 
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +11,7 @@ import com.google.rpc.Code;
 
 import nl.topicus.jdbc.MetaDataStore.TableKeyMetaData;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 public class DeleteKeyBuilder
 {
@@ -52,9 +55,24 @@ public class DeleteKeyBuilder
 								+ ". All key columns must be specified in the WHERE-clause of a DELETE-statement.",
 						Code.INVALID_ARGUMENT);
 			}
-			builder.appendObject(value);
+			builder.appendObject(convert(value));
 		}
 		return builder;
+	}
+
+	private Object convert(Object value)
+	{
+		if (Date.class.isAssignableFrom(value.getClass()))
+		{
+			Date dateValue = (Date) value;
+			return CloudSpannerConversionUtil.toCloudSpannerDate(dateValue);
+		}
+		else if (Timestamp.class.isAssignableFrom(value.getClass()))
+		{
+			Timestamp timeValue = (Timestamp) value;
+			return CloudSpannerConversionUtil.toCloudSpannerTimestamp(timeValue);
+		}
+		return value;
 	}
 
 }
