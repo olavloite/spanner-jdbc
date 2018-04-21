@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -26,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -40,8 +42,6 @@ import com.google.cloud.spanner.Operation;
 import com.google.cloud.spanner.ResultSets;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerException;
-import com.google.cloud.spanner.SpannerOptions;
-import com.google.cloud.spanner.SpannerOptions.Builder;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.StructField;
@@ -74,6 +74,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 		public final String database;
 
+		private final String key;
+
 		public CloudSpannerDatabaseSpecification(String instance, String database)
 		{
 			this(null, instance, database);
@@ -81,9 +83,26 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 		public CloudSpannerDatabaseSpecification(String project, String instance, String database)
 		{
+			Preconditions.checkNotNull(instance);
+			Preconditions.checkNotNull(database);
 			this.project = project;
 			this.instance = instance;
 			this.database = database;
+			this.key = Objects.toString(project, "") + "/" + instance + "/" + database;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return key.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object o)
+		{
+			if (!(o instanceof CloudSpannerDatabaseSpecification))
+				return false;
+			return ((CloudSpannerDatabaseSpecification) o).key.equals(key);
 		}
 	}
 
@@ -196,19 +215,14 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 		try
 		{
-			Builder builder = SpannerOptions.newBuilder();
-			if (database.project != null)
-				builder.setProjectId(database.project);
-			GoogleCredentials credentials = null;
+			Credentials credentials = null;
 			if (credentialsPath != null)
 			{
 				credentials = getCredentialsFromFile(credentialsPath);
-				builder.setCredentials(credentials);
 			}
 			else if (oauthToken != null)
 			{
 				credentials = getCredentialsFromOAuthToken(oauthToken);
-				builder.setCredentials(credentials);
 			}
 			if (credentials != null)
 			{
@@ -221,13 +235,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 					clientId = ((ServiceAccountCredentials) credentials).getClientId();
 				}
 			}
-
-			SpannerOptions options = builder.build();
-			spanner = options.getService();
-			dbClient = spanner
-					.getDatabaseClient(DatabaseId.of(options.getProjectId(), database.instance, database.database));
-			BatchClient batchClient = spanner
-					.getBatchClient(DatabaseId.of(options.getProjectId(), database.instance, database.database));
+			spanner = driver.getSpanner(database.project, credentials);
+			dbClient = spanner.getDatabaseClient(
+					DatabaseId.of(spanner.getOptions().getProjectId(), database.instance, database.database));
+			BatchClient batchClient = spanner.getBatchClient(
+					DatabaseId.of(spanner.getOptions().getProjectId(), database.instance, database.database));
 			adminClient = spanner.getDatabaseAdminClient();
 			transaction = new CloudSpannerTransaction(dbClient, batchClient, this);
 			metaDataStore = new MetaDataStore(this);
