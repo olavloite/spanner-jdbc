@@ -9,9 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
+import com.google.auth.Credentials;
 import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.SpannerOptions;
+import com.google.cloud.spanner.SpannerOptions.Builder;
 
 import nl.topicus.jdbc.CloudSpannerConnection.CloudSpannerDatabaseSpecification;
 
@@ -41,11 +45,53 @@ public class CloudSpannerDriver implements Driver
 
 	static final int MINOR_VERSION = 0;
 
+	private static class SpannerKey
+	{
+		private final String projectId;
+
+		private final Credentials credentials;
+
+		private SpannerKey(String projectId, Credentials credentials)
+		{
+			this.projectId = projectId;
+			this.credentials = credentials;
+		}
+
+		private static SpannerKey of(String projectId, Credentials credentials)
+		{
+			return new SpannerKey(projectId, credentials);
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return Objects.hash(projectId, credentials);
+		}
+
+		@Override
+		public boolean equals(Object o)
+		{
+			if (o == null)
+				return false;
+			if (!(o instanceof SpannerKey))
+				return false;
+			SpannerKey other = (SpannerKey) o;
+			return Objects.equals(projectId, other.projectId) && Objects.equals(credentials, other.credentials);
+		}
+	}
+
 	/**
 	 * Keep track of all connections that are opened, so that we know which
 	 * Spanner instances to close.
 	 */
 	private Map<Spanner, List<CloudSpannerConnection>> connections = new HashMap<>();
+
+	/**
+	 * Keep track of all spanner instances that are opened by the driver so that
+	 * these can be reused for new connections to the same project and with the
+	 * same credentials.
+	 */
+	private Map<SpannerKey, Spanner> spanners = new HashMap<>();
 
 	/**
 	 * Connects to a Google Cloud Spanner database.
@@ -116,10 +162,45 @@ public class CloudSpannerDriver implements Driver
 
 		if (list.isEmpty())
 		{
+			// No more connections for this spanner instance
 			Spanner spanner = connection.getSpanner();
 			connections.remove(spanner);
+			spanners.remove(SpannerKey.of(spanner.getOptions().getProjectId(), spanner.getOptions().getCredentials()));
 			spanner.close();
 		}
+	}
+
+	/**
+	 * Get a {@link Spanner} instance from the pool or create a new one if
+	 * needed.
+	 * 
+	 * @param projectId
+	 *            The projectId to connect to
+	 * @param credentials
+	 *            The credentials to use for the connection
+	 * @return The {@link Spanner} instance to use
+	 */
+	Spanner getSpanner(String projectId, Credentials credentials)
+	{
+		SpannerKey key = SpannerKey.of(projectId, credentials);
+		Spanner spanner = spanners.get(key);
+		if (spanner == null)
+		{
+			spanner = createSpanner(key);
+			spanners.put(key, spanner);
+		}
+		return spanner;
+	}
+
+	private Spanner createSpanner(SpannerKey key)
+	{
+		Builder builder = SpannerOptions.newBuilder();
+		if (key.projectId != null)
+			builder.setProjectId(key.projectId);
+		if (key.credentials != null)
+			builder.setCredentials(key.credentials);
+		SpannerOptions options = builder.build();
+		return options.getService();
 	}
 
 	@Override
