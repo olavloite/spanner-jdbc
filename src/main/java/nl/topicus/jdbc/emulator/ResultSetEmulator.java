@@ -8,8 +8,10 @@ import java.util.List;
 import com.google.cloud.ByteArray;
 import com.google.cloud.Date;
 import com.google.cloud.Timestamp;
+import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.SpannerException;
+import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.StructField;
@@ -325,71 +327,77 @@ class ResultSetEmulator extends SQLExceptionWrapper implements ResultSet
 	@Override
 	public List<Timestamp> getTimestampList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToTimestampList((java.sql.Timestamp[]) get(get(rs::getArray, columnIndex + 1)::getArray));
 	}
 
 	@Override
 	public List<Timestamp> getTimestampList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToTimestampList((java.sql.Timestamp[]) get(get(rs::getArray, columnName)::getArray));
+	}
+
+	private List<Timestamp> convertToTimestampList(java.sql.Timestamp[] array)
+	{
+		List<Timestamp> res = new ArrayList<>(array.length);
+		for (java.sql.Timestamp val : array)
+			res.add(CloudSpannerConversionUtil.toCloudSpannerTimestamp(val));
+		return res;
 	}
 
 	@Override
 	public List<Date> getDateList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToDateList((java.sql.Date[]) get(get(rs::getArray, columnIndex + 1)::getArray));
 	}
 
 	@Override
 	public List<Date> getDateList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return convertToDateList((java.sql.Date[]) get(get(rs::getArray, columnName)::getArray));
+	}
+
+	private List<Date> convertToDateList(java.sql.Date[] array)
+	{
+		List<Date> res = new ArrayList<>(array.length);
+		for (java.sql.Date val : array)
+			res.add(CloudSpannerConversionUtil.toCloudSpannerDate(val));
+		return res;
 	}
 
 	@Override
 	public List<Struct> getStructList(int columnIndex)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
 	}
 
 	@Override
 	public List<Struct> getStructList(String columnName)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
 	}
 
 	@Override
 	public boolean next() throws SpannerException
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return get(rs::next);
 	}
 
 	@Override
 	public Struct getCurrentRowAsStruct()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
 	}
 
 	@Override
 	public void close()
 	{
-		// TODO Auto-generated method stub
-
+		consume(rs::close);
 	}
 
 	@Override
 	public ResultSetStats getStats()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
 	}
 
 }

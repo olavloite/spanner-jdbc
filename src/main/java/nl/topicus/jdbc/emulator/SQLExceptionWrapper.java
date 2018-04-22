@@ -7,6 +7,12 @@ import com.google.cloud.spanner.SpannerExceptionFactory;
 class SQLExceptionWrapper
 {
 	@FunctionalInterface
+	interface SQLConsumer
+	{
+		void consume() throws SQLException;
+	}
+
+	@FunctionalInterface
 	interface SQLSupplier<T>
 	{
 		T get() throws SQLException;
@@ -16,6 +22,18 @@ class SQLExceptionWrapper
 	interface SQLFunction<T, R>
 	{
 		R apply(T t) throws SQLException;
+	}
+
+	void consume(SQLConsumer consumer)
+	{
+		try
+		{
+			consumer.consume();
+		}
+		catch (SQLException e)
+		{
+			throw SpannerExceptionFactory.newSpannerException(e);
+		}
 	}
 
 	<T> T get(SQLSupplier<T> supplier)
