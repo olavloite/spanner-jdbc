@@ -10,15 +10,12 @@ import com.google.cloud.spanner.TransactionRunner;
 
 public class DatabaseClientEmulator implements com.google.cloud.spanner.DatabaseClient
 {
-<<<<<<< HEAD
 	private final String url;
 
 	DatabaseClientEmulator(String url)
 	{
 		this.url = url;
 	}
-=======
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 
 	@Override
 	public Timestamp write(Iterable<Mutation> mutations) throws SpannerException
@@ -36,23 +33,13 @@ public class DatabaseClientEmulator implements com.google.cloud.spanner.Database
 	@Override
 	public ReadContext singleUse()
 	{
-<<<<<<< HEAD
 		return new ReadContextEmulator(url);
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public ReadContext singleUse(TimestampBound bound)
 	{
-<<<<<<< HEAD
 		return new ReadContextEmulator(url);
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override

@@ -8,15 +8,10 @@ import java.util.List;
 import com.google.cloud.ByteArray;
 import com.google.cloud.Date;
 import com.google.cloud.Timestamp;
-<<<<<<< HEAD
 import com.google.cloud.spanner.ErrorCode;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.SpannerExceptionFactory;
-=======
-import com.google.cloud.spanner.ResultSet;
-import com.google.cloud.spanner.SpannerException;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.StructField;
@@ -332,18 +327,12 @@ class ResultSetEmulator extends SQLExceptionWrapper implements ResultSet
 	@Override
 	public List<Timestamp> getTimestampList(int columnIndex)
 	{
-<<<<<<< HEAD
 		return convertToTimestampList((java.sql.Timestamp[]) get(get(rs::getArray, columnIndex + 1)::getArray));
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public List<Timestamp> getTimestampList(String columnName)
 	{
-<<<<<<< HEAD
 		return convertToTimestampList((java.sql.Timestamp[]) get(get(rs::getArray, columnName)::getArray));
 	}
 
@@ -353,27 +342,17 @@ class ResultSetEmulator extends SQLExceptionWrapper implements ResultSet
 		for (java.sql.Timestamp val : array)
 			res.add(CloudSpannerConversionUtil.toCloudSpannerTimestamp(val));
 		return res;
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public List<Date> getDateList(int columnIndex)
 	{
-<<<<<<< HEAD
 		return convertToDateList((java.sql.Date[]) get(get(rs::getArray, columnIndex + 1)::getArray));
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public List<Date> getDateList(String columnName)
 	{
-<<<<<<< HEAD
 		return convertToDateList((java.sql.Date[]) get(get(rs::getArray, columnName)::getArray));
 	}
 
@@ -383,76 +362,42 @@ class ResultSetEmulator extends SQLExceptionWrapper implements ResultSet
 		for (java.sql.Date val : array)
 			res.add(CloudSpannerConversionUtil.toCloudSpannerDate(val));
 		return res;
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public List<Struct> getStructList(int columnIndex)
 	{
-<<<<<<< HEAD
 		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public List<Struct> getStructList(String columnName)
 	{
-<<<<<<< HEAD
 		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public boolean next() throws SpannerException
 	{
-<<<<<<< HEAD
 		return get(rs::next);
-=======
-		// TODO Auto-generated method stub
-		return false;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public Struct getCurrentRowAsStruct()
 	{
-<<<<<<< HEAD
 		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public void close()
 	{
-<<<<<<< HEAD
 		consume(rs::close);
-=======
-		// TODO Auto-generated method stub
-
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 	@Override
 	public ResultSetStats getStats()
 	{
-<<<<<<< HEAD
 		throw SpannerExceptionFactory.newSpannerException(ErrorCode.UNIMPLEMENTED, "Not implemented");
-=======
-		// TODO Auto-generated method stub
-		return null;
->>>>>>> 48d3c4cef9b199e654b0f227adc981dd827326aa
 	}
 
 }
