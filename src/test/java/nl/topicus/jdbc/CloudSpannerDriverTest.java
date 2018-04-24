@@ -1,14 +1,18 @@
 package nl.topicus.jdbc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Rule;
@@ -244,6 +248,27 @@ public class CloudSpannerDriverTest
 			assertEquals("FOO", CloudSpannerDriver.unquoteIdentifier("FOO"));
 			assertEquals("FOO", CloudSpannerDriver.unquoteIdentifier("`FOO`"));
 			assertNull(CloudSpannerDriver.unquoteIdentifier(null));
+		}
+	}
+
+	public static class ConnectAndCloseTest
+	{
+		@Test
+		public void testConnect() throws SQLException, NoSuchFieldException, SecurityException,
+				IllegalArgumentException, IllegalAccessException
+		{
+			Connection connection = DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb");
+			assertNotNull(connection);
+			assertTrue(connection.isWrapperFor(ICloudSpannerConnection.class));
+			CloudSpannerDriver driver = CloudSpannerDriver.getDriver();
+			assertNotNull(driver);
+			Field spannersField = CloudSpannerDriver.class.getDeclaredField("spanners");
+			spannersField.setAccessible(true);
+			@SuppressWarnings("rawtypes")
+			Map spanners = (Map) spannersField.get(driver);
+			assertNotNull(spanners);
+			assertEquals(1, spanners.size());
 		}
 	}
 

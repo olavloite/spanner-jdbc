@@ -27,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.google.api.core.InternalApi;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -525,6 +526,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		getTransaction().rollback();
 		closed = true;
 		driver.closeConnection(this);
+	}
+
+	@InternalApi
+	void markClosed()
+	{
+		closed = true;
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import java.util.Properties;
 
 import com.google.auth.Credentials;
 import com.google.cloud.spanner.Spanner;
+import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
 
@@ -93,6 +94,38 @@ public class CloudSpannerDriver implements Driver
 	 */
 	private Map<SpannerKey, Spanner> spanners = new HashMap<>();
 
+	private class CloseSpannerRunnable implements Runnable
+	{
+		@Override
+		public void run()
+		{
+			try
+			{
+				closeSpanner();
+			}
+			catch (Exception e)
+			{
+				// ignore
+			}
+		}
+	}
+
+	/**
+	 * Thread that will be run as a shutdown hook on closing the application.
+	 * This thread will close any Spanner instances opened by the driver that
+	 * are still open.
+	 */
+	private Thread shutdownThread = null;
+
+	/**
+	 * 
+	 * @return The registered {@link CloudSpannerDriver}
+	 */
+	public static CloudSpannerDriver getDriver()
+	{
+		return registeredDriver;
+	}
+
 	/**
 	 * Connects to a Google Cloud Spanner database.
 	 * 
@@ -141,8 +174,49 @@ public class CloudSpannerDriver implements Driver
 		return connection;
 	}
 
+	/**
+	 * Closes all connections to Google Cloud Spanner that have been opened by
+	 * this driver during the lifetime of this application. You should call this
+	 * method when you want to shutdown your application, as this frees up all
+	 * connections and sessions to Google Cloud Spanner. Failure to do so, will
+	 * keep sessions open server side and can eventually lead to resource
+	 * exhaustion. Any open JDBC connection to Cloud Spanner opened by this
+	 * driver will also be closed by this method. This method is also called
+	 * automatically in a shutdown hook when the JVM is stopped orderly.
+	 */
+	public synchronized void closeSpanner()
+	{
+		try
+		{
+			for (Spanner spanner : connections.keySet())
+			{
+				List<CloudSpannerConnection> list = connections.get(spanner);
+				for (CloudSpannerConnection con : list)
+				{
+					if (!con.isClosed())
+					{
+						con.rollback();
+						con.markClosed();
+					}
+				}
+				spanner.close();
+			}
+			connections.clear();
+			spanners.clear();
+		}
+		catch (SQLException e)
+		{
+			throw SpannerExceptionFactory.newSpannerException(e);
+		}
+	}
+
 	private synchronized void registerConnection(CloudSpannerConnection connection)
 	{
+		if (shutdownThread == null)
+		{
+			shutdownThread = new Thread(new CloseSpannerRunnable(), "CloudSpannerDriver shutdown hook");
+			Runtime.getRuntime().addShutdownHook(shutdownThread);
+		}
 		List<CloudSpannerConnection> list = connections.get(connection.getSpanner());
 		if (list == null)
 		{
@@ -159,15 +233,6 @@ public class CloudSpannerDriver implements Driver
 			throw new IllegalStateException("Connection is not registered");
 		if (!list.remove(connection))
 			throw new IllegalStateException("Connection is not registered");
-
-		if (list.isEmpty())
-		{
-			// No more connections for this spanner instance
-			Spanner spanner = connection.getSpanner();
-			connections.remove(spanner);
-			spanners.remove(SpannerKey.of(spanner.getOptions().getProjectId(), spanner.getOptions().getCredentials()));
-			spanner.close();
-		}
 	}
 
 	/**
@@ -334,6 +399,7 @@ public class CloudSpannerDriver implements Driver
 			throw new IllegalStateException(
 					"Driver is not registered (or it has not been registered using Driver.register() method)");
 		}
+		registeredDriver.closeSpanner();
 		DriverManager.deregisterDriver(registeredDriver);
 		registeredDriver = null;
 	}
