@@ -141,7 +141,7 @@ public class CloudSpannerDriver implements Driver
 		return connection;
 	}
 
-	private void registerConnection(CloudSpannerConnection connection)
+	private synchronized void registerConnection(CloudSpannerConnection connection)
 	{
 		List<CloudSpannerConnection> list = connections.get(connection.getSpanner());
 		if (list == null)
@@ -152,7 +152,7 @@ public class CloudSpannerDriver implements Driver
 		list.add(connection);
 	}
 
-	void closeConnection(CloudSpannerConnection connection)
+	synchronized void closeConnection(CloudSpannerConnection connection)
 	{
 		List<CloudSpannerConnection> list = connections.get(connection.getSpanner());
 		if (list == null)
@@ -180,7 +180,7 @@ public class CloudSpannerDriver implements Driver
 	 *            The credentials to use for the connection
 	 * @return The {@link Spanner} instance to use
 	 */
-	Spanner getSpanner(String projectId, Credentials credentials)
+	synchronized Spanner getSpanner(String projectId, Credentials credentials)
 	{
 		SpannerKey key = SpannerKey.of(projectId, credentials);
 		Spanner spanner = spanners.get(key);
