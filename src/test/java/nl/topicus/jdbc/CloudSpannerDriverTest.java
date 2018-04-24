@@ -257,18 +257,49 @@ public class CloudSpannerDriverTest
 		public void testConnect() throws SQLException, NoSuchFieldException, SecurityException,
 				IllegalArgumentException, IllegalAccessException
 		{
-			Connection connection = DriverManager.getConnection(
-					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb");
-			assertNotNull(connection);
-			assertTrue(connection.isWrapperFor(ICloudSpannerConnection.class));
 			CloudSpannerDriver driver = CloudSpannerDriver.getDriver();
 			assertNotNull(driver);
 			Field spannersField = CloudSpannerDriver.class.getDeclaredField("spanners");
 			spannersField.setAccessible(true);
 			@SuppressWarnings("rawtypes")
 			Map spanners = (Map) spannersField.get(driver);
-			assertNotNull(spanners);
+			// Clear spanners to have a known initial situation
+			spanners.clear();
+
+			Connection connection = DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb");
+			assertNotNull(connection);
+			assertTrue(connection.isWrapperFor(ICloudSpannerConnection.class));
 			assertEquals(1, spanners.size());
+			connection.close();
+			assertEquals(1, spanners.size());
+
+			connection = DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb2");
+			assertEquals(1, spanners.size());
+			connection.close();
+			assertEquals(1, spanners.size());
+
+			DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb2");
+			DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-xxx;Instance=test-instance;Database=testdb2");
+			assertEquals(1, spanners.size());
+
+			DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
+			assertEquals(2, spanners.size());
+
+			String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o";
+			DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2;OAuthAccessToken="
+							+ token);
+			assertEquals(3, spanners.size());
+			token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dnZWRJbkFzIjoiYWRtaW4iLCJpYXQiOjE0MjI3Nzk2Mzh9.gzSraSYS8EXBxLN_oWnFSRgCzcmJmMjLiuyu5CSpyHI";
+			DriverManager.getConnection(
+					"jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2;OAuthAccessToken="
+							+ token);
+			assertEquals(4, spanners.size());
 		}
 	}
 
