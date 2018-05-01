@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.cloud.spanner.SpannerException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.rpc.Code;
 
+import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.Limit;
 import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
@@ -170,12 +173,11 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 
 	protected abstract String createSQL() throws SQLException;
 
-	protected long getEstimatedRecordCount(Select select) throws SQLException
+	private long isRecordCountGreaterThan(Select select, long batchSize) throws SQLException
 	{
 		if (estimatedRecordCount == -1)
 		{
-			String sql = "SELECT COUNT(*) AS C FROM (" + select.toString() + ") Q";
-			try (ResultSet count = connection.prepareStatement(sql).executeQuery())
+			try (ResultSet count = connection.prepareStatement(createCountQuery(select, batchSize)).executeQuery())
 			{
 				if (count.next())
 					estimatedRecordCount = count.getLong(1);
@@ -184,7 +186,15 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 		return estimatedRecordCount;
 	}
 
-	protected boolean isExtendedMode(long batchSize) throws SQLException
+	@VisibleForTesting
+	String createCountQuery(Select select, long batchSize)
+	{
+		Limit limit = new Limit();
+		limit.setRowCount(new LongValue(batchSize));
+		return String.format("SELECT COUNT(*) AS C FROM ((%s)%s) Q", select, limit);
+	}
+
+	private boolean isExtendedMode(long batchSize) throws SQLException
 	{
 		if (mode == Mode.UNKNOWN)
 		{
@@ -194,7 +204,7 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 			}
 			else
 			{
-				long count = getEstimatedRecordCount(select);
+				long count = isRecordCountGreaterThan(select, batchSize);
 				if (count >= batchSize)
 				{
 					mode = Mode.EXTENDED;
