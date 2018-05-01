@@ -50,7 +50,8 @@ public class InsertWorkerTest
 		when(countResultSet.next()).thenReturn(true, false);
 		when(countResultSet.getLong(1)).thenReturn(count);
 		when(countStatement.executeQuery()).thenReturn(countResultSet);
-		when(connection.prepareStatement("SELECT COUNT(*) AS C FROM (" + selectSQL + ") Q")).thenReturn(countStatement);
+		when(connection.prepareStatement("SELECT COUNT(*) AS C FROM ((" + selectSQL + ") LIMIT 5000) Q"))
+				.thenReturn(countStatement);
 
 		CloudSpannerPreparedStatement selectStatement = mock(CloudSpannerPreparedStatement.class);
 		CloudSpannerResultSet selectResultSet = mock(CloudSpannerResultSet.class);
