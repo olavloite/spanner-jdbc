@@ -1,6 +1,7 @@
 package nl.topicus.jdbc.statement;
 
 import java.math.BigDecimal;
+import java.sql.Types;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,36 +29,36 @@ public class ValueBinderExpressionVisitorAdapterTest
 	@Test
 	public void testSetValueWithoutException()
 	{
-		create().setValue(null);
-		create().setValue((byte) 1);
-		create().setValue((short) 1);
-		create().setValue(1);
-		create().setValue(1l);
-		create().setValue(1f);
-		create().setValue(1d);
-		create().setValue('a');
-		create().setValue(true);
-		create().setValue("TEST");
-		create().setValue(BigDecimal.ONE);
-		create().setValue(new byte[] { (byte) 1 });
+		create().setValue(null, Types.BOOLEAN);
+		create().setValue((byte) 1, Types.TINYINT);
+		create().setValue((short) 1, Types.SMALLINT);
+		create().setValue(1, Types.INTEGER);
+		create().setValue(1l, Types.BIGINT);
+		create().setValue(1f, Types.FLOAT);
+		create().setValue(1d, Types.DOUBLE);
+		create().setValue('a', Types.CHAR);
+		create().setValue(true, Types.BOOLEAN);
+		create().setValue("TEST", Types.NVARCHAR);
+		create().setValue(BigDecimal.ONE, Types.DECIMAL);
+		create().setValue(new byte[] { (byte) 1 }, Types.BINARY);
 
-		create().setValue(new short[] { (short) 1 });
-		create().setValue(new Short[] { (short) 1 });
-		create().setValue(new int[] { 1 });
-		create().setValue(new Integer[] { 1 });
-		create().setValue(new long[] { 1l });
-		create().setValue(new Long[] { 1l });
-		create().setValue(new float[] { 1f });
-		create().setValue(new Float[] { 1f });
-		create().setValue(new double[] { 1d });
-		create().setValue(new Double[] { 1d });
-		create().setValue(new char[] { 'a' });
-		create().setValue(new Character[] { 'a' });
-		create().setValue(new boolean[] { true });
-		create().setValue(new Boolean[] { true });
-		create().setValue(new String[] { "TEST" });
-		create().setValue(new BigDecimal[] { BigDecimal.ONE });
-		create().setValue(new byte[][] { { (byte) 1 } });
+		create().setValue(new short[] { (short) 1 }, Types.ARRAY);
+		create().setValue(new Short[] { (short) 1 }, Types.ARRAY);
+		create().setValue(new int[] { 1 }, Types.ARRAY);
+		create().setValue(new Integer[] { 1 }, Types.ARRAY);
+		create().setValue(new long[] { 1l }, Types.ARRAY);
+		create().setValue(new Long[] { 1l }, Types.ARRAY);
+		create().setValue(new float[] { 1f }, Types.ARRAY);
+		create().setValue(new Float[] { 1f }, Types.ARRAY);
+		create().setValue(new double[] { 1d }, Types.ARRAY);
+		create().setValue(new Double[] { 1d }, Types.ARRAY);
+		create().setValue(new char[] { 'a' }, Types.ARRAY);
+		create().setValue(new Character[] { 'a' }, Types.ARRAY);
+		create().setValue(new boolean[] { true }, Types.ARRAY);
+		create().setValue(new Boolean[] { true }, Types.ARRAY);
+		create().setValue(new String[] { "TEST" }, Types.ARRAY);
+		create().setValue(new BigDecimal[] { BigDecimal.ONE }, Types.ARRAY);
+		create().setValue(new byte[][] { { (byte) 1 } }, Types.ARRAY);
 
 	}
 

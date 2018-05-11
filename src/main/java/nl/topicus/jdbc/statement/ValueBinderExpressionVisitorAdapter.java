@@ -7,6 +7,7 @@ import java.sql.Array;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,9 +30,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	}
 
 	@Override
-	protected void setValue(Object value)
+	protected void setValue(Object value, Integer sqlType)
 	{
-		R res = setSingleValue(value);
+		R res = setSingleValue(value, sqlType);
 		if (res == null && value != null)
 			res = setArrayValue(value);
 
@@ -42,12 +43,11 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		}
 	}
 
-	private R setSingleValue(Object value)
+	private R setSingleValue(Object value, Integer sqlType)
 	{
 		if (value == null)
 		{
-			// Set to null, type does not matter
-			return binder.to((Boolean) null);
+			return setNullValue(sqlType);
 		}
 		else if (Boolean.class.isAssignableFrom(value.getClass()))
 		{
@@ -216,6 +216,71 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 			return binder.toBytesArray(CloudSpannerConversionUtil.toCloudSpannerBytes((byte[][]) value));
 		}
 		return null;
+	}
+
+	private R setNullValue(Integer sqlType)
+	{
+		if (sqlType == null)
+		{
+			return binder.to((String) null);
+		}
+		switch (sqlType)
+		{
+		case Types.BIGINT:
+			return binder.to((Long) null);
+		case Types.BINARY:
+			return binder.to((ByteArray) null);
+		case Types.BLOB:
+			return binder.to((ByteArray) null);
+		case Types.BOOLEAN:
+			return binder.to((Boolean) null);
+		case Types.CHAR:
+			return binder.to((String) null);
+		case Types.CLOB:
+			return binder.to((String) null);
+		case Types.DATE:
+			return binder.to((com.google.cloud.Date) null);
+		case Types.DECIMAL:
+			return binder.to((Double) null);
+		case Types.DOUBLE:
+			return binder.to((Double) null);
+		case Types.FLOAT:
+			return binder.to((Double) null);
+		case Types.INTEGER:
+			return binder.to((Long) null);
+		case Types.LONGNVARCHAR:
+			return binder.to((String) null);
+		case Types.LONGVARBINARY:
+			return binder.to((ByteArray) null);
+		case Types.LONGVARCHAR:
+			return binder.to((String) null);
+		case Types.NCHAR:
+			return binder.to((String) null);
+		case Types.NCLOB:
+			return binder.to((String) null);
+		case Types.NUMERIC:
+			return binder.to((Double) null);
+		case Types.NVARCHAR:
+			return binder.to((String) null);
+		case Types.REAL:
+			return binder.to((Double) null);
+		case Types.SMALLINT:
+			return binder.to((Long) null);
+		case Types.SQLXML:
+			return binder.to((String) null);
+		case Types.TIME:
+			return binder.to((com.google.cloud.Timestamp) null);
+		case Types.TIMESTAMP:
+			return binder.to((com.google.cloud.Timestamp) null);
+		case Types.TINYINT:
+			return binder.to((Long) null);
+		case Types.VARBINARY:
+			return binder.to((ByteArray) null);
+		case Types.VARCHAR:
+			return binder.to((String) null);
+		default:
+			throw new IllegalArgumentException("Unsupported sql type: " + sqlType);
+		}
 	}
 
 }

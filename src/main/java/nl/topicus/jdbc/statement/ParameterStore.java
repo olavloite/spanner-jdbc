@@ -99,7 +99,7 @@ public class ParameterStore
 				getColumn(parameterIndex));
 	}
 
-	void setParameter(int parameterIndex, Object value)
+	void setParameter(int parameterIndex, Object value, Integer sqlType)
 	{
 		setParameter(parameterIndex, value, null, null);
 	}

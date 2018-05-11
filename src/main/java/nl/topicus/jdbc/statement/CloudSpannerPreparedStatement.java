@@ -239,7 +239,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<>(
 					getParameterStore(), builder.bind("p" + getParameterStore().getHighestIndex()), null);
-			binder.setValue(getParameterStore().getParameter(getParameterStore().getHighestIndex()));
+			binder.setValue(getParameterStore().getParameter(getParameterStore().getHighestIndex()), Types.BIGINT);
 			getParameterStore().setType(getParameterStore().getHighestIndex(), Types.BIGINT);
 		}
 	}
