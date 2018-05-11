@@ -11,7 +11,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.topicus</groupId>
 	<artifactId>spanner-jdbc</artifactId>
-	<version>1.0.5-SNAPSHOT</version>
+	<version>1.0.6-SNAPSHOT</version>
 	<name>spanner-jdbc</name>
 	<description>JDBC Driver for Google Cloud Spanner</description>
 	<url>https://github.com/olavloite/spanner-jdbc</url>
