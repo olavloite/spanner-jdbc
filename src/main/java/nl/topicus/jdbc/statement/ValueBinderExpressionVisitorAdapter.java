@@ -193,12 +193,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.startsWith("\"") && val.endsWith("\"")))
 			{
-				if (!(val.startsWith("\"") && val.endsWith("\"")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -223,12 +220,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")))
 			{
-				if (!(val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -307,12 +301,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.startsWith("{d \"") && val.endsWith("\"}")))
 			{
-				if (!(val.startsWith("{d \"") && val.endsWith("\"}")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -338,12 +329,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.startsWith("{ts \"") && val.endsWith("\"}")))
 			{
-				if (!(val.startsWith("{ts \"") && val.endsWith("\"}")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -357,10 +345,10 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		{
 			if (val != null)
 			{
-				String date = val.substring(5, val.length() - 2).replace(' ', 'T');
-				if (!date.endsWith("Z"))
-					date = date + "Z";
-				res[index] = com.google.cloud.Timestamp.parseTimestamp(date).toSqlTimestamp();
+				StringBuilder date = new StringBuilder(val.substring(5, val.length() - 2).replace(' ', 'T'));
+				if (date.charAt(date.length() - 1) != 'Z')
+					date.append('Z');
+				res[index] = com.google.cloud.Timestamp.parseTimestamp(date.toString()).toSqlTimestamp();
 			}
 			index++;
 		}
