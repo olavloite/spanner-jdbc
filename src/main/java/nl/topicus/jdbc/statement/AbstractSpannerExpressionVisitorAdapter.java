@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.statement;
 
+import java.sql.Types;
+
 import javax.xml.bind.DatatypeConverter;
 
 import net.sf.jsqlparser.expression.DateValue;
@@ -33,26 +35,26 @@ abstract class AbstractSpannerExpressionVisitorAdapter extends ExpressionVisitor
 		this.column = column;
 	}
 
-	protected abstract void setValue(Object value);
+	protected abstract void setValue(Object value, Integer sqlType);
 
 	@Override
 	public void visit(JdbcParameter parameter)
 	{
 		Object value = parameterStore.getParameter(parameter.getIndex());
 		parameterStore.setColumn(parameter.getIndex(), column);
-		setValue(value);
+		setValue(value, parameterStore.getType(parameter.getIndex()));
 	}
 
 	@Override
 	public void visit(NullValue value)
 	{
-		setValue(null);
+		setValue(null, null);
 	}
 
 	@Override
 	public void visit(DoubleValue value)
 	{
-		setValue(value.getValue());
+		setValue(value.getValue(), Types.DOUBLE);
 	}
 
 	@Override
@@ -80,31 +82,31 @@ abstract class AbstractSpannerExpressionVisitorAdapter extends ExpressionVisitor
 	@Override
 	public void visit(LongValue value)
 	{
-		setValue(value.getValue());
+		setValue(value.getValue(), Types.BIGINT);
 	}
 
 	@Override
 	public void visit(DateValue value)
 	{
-		setValue(value.getValue());
+		setValue(value.getValue(), Types.DATE);
 	}
 
 	@Override
 	public void visit(TimeValue value)
 	{
-		setValue(value.getValue());
+		setValue(value.getValue(), Types.TIME);
 	}
 
 	@Override
 	public void visit(TimestampValue value)
 	{
-		setValue(value.getValue());
+		setValue(value.getValue(), Types.TIMESTAMP);
 	}
 
 	@Override
 	public void visit(StringValue value)
 	{
-		setValue(value.getValue());
+		setValue(value.getValue(), Types.NVARCHAR);
 	}
 
 	@Override
@@ -112,7 +114,7 @@ abstract class AbstractSpannerExpressionVisitorAdapter extends ExpressionVisitor
 	{
 		String stringValue = value.getValue().substring(2);
 		byte[] byteValue = DatatypeConverter.parseHexBinary(stringValue);
-		setValue(byteValue);
+		setValue(byteValue, Types.BINARY);
 	}
 
 	/**
@@ -126,7 +128,7 @@ abstract class AbstractSpannerExpressionVisitorAdapter extends ExpressionVisitor
 		String stringValue = column.getColumnName();
 		if (stringValue.equalsIgnoreCase("true") || stringValue.equalsIgnoreCase("false"))
 		{
-			setValue(Boolean.valueOf(stringValue));
+			setValue(Boolean.valueOf(stringValue), Types.BOOLEAN);
 		}
 	}
 

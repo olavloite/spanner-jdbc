@@ -12,7 +12,7 @@ class SingleRowWhereClauseValidatorExpressionVisitorAdapter extends AbstractSpan
 	}
 
 	@Override
-	protected void setValue(Object value)
+	protected void setValue(Object value, Integer sqlType)
 	{
 		validator.to(value);
 	}

@@ -11,7 +11,7 @@ class KeyBuilderExpressionVisitorAdapter extends AbstractSpannerExpressionVisito
 	}
 
 	@Override
-	protected void setValue(Object value)
+	protected void setValue(Object value, Integer sqlType)
 	{
 		keyBuilder.to(value);
 	}

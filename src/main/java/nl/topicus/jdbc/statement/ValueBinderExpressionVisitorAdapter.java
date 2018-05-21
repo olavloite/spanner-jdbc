@@ -7,9 +7,14 @@ import java.sql.Array;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.math.NumberUtils;
+
+import com.google.api.client.util.DateTime;
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.ValueBinder;
 import com.google.common.primitives.Booleans;
@@ -20,6 +25,8 @@ import nl.topicus.jdbc.util.CloudSpannerConversionUtil;
 
 class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVisitorAdapter
 {
+	private static final Pattern SPLIT_ON_COMMA_PATTERN = Pattern.compile(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
 	private ValueBinder<R> binder;
 
 	ValueBinderExpressionVisitorAdapter(ParameterStore parameterStore, ValueBinder<R> binder, String column)
@@ -29,9 +36,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	}
 
 	@Override
-	protected void setValue(Object value)
+	protected void setValue(Object value, Integer sqlType)
 	{
-		R res = setSingleValue(value);
+		R res = setSingleValue(value, sqlType);
 		if (res == null && value != null)
 			res = setArrayValue(value);
 
@@ -42,12 +49,11 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		}
 	}
 
-	private R setSingleValue(Object value)
+	private R setSingleValue(Object value, Integer sqlType)
 	{
 		if (value == null)
 		{
-			// Set to null, type does not matter
-			return binder.to((Boolean) null);
+			return setNullValue(sqlType);
 		}
 		else if (Boolean.class.isAssignableFrom(value.getClass()))
 		{
@@ -93,7 +99,16 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		}
 		else if (String.class.isAssignableFrom(value.getClass()))
 		{
-			return binder.to((String) value);
+			String stringVal = (String) value;
+			if (stringVal.startsWith("{") && stringVal.endsWith("}"))
+			{
+				R res = splitAndSetArrayValue(stringVal);
+				if (res != null)
+				{
+					return res;
+				}
+			}
+			return binder.to(stringVal);
 		}
 		else if (Character.class.isAssignableFrom(value.getClass()))
 		{
@@ -137,6 +152,219 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 			}
 		}
 		return null;
+	}
+
+	private R splitAndSetArrayValue(String arrayString)
+	{
+		// Split on comma's, do not include '{' and '}'
+		String[] array = SPLIT_ON_COMMA_PATTERN.split(arrayString.substring(1, arrayString.length() - 1));
+		// Trim the array elements
+		for (int i = 0; i < array.length; i++)
+			array[i] = array[i] == null ? null : array[i].trim();
+		// Try to determine the data type of the array
+		if (isStringArray(array))
+		{
+			return setArrayValue(convertStringArray(array));
+		}
+		else if (isBooleanArray(array))
+		{
+			return setArrayValue(convertBooleanArray(array));
+		}
+		else if (isLongArray(array))
+		{
+			return setArrayValue(convertLongArray(array));
+		}
+		else if (isDoubleArray(array))
+		{
+			return setArrayValue(convertDoubleArray(array));
+		}
+		else if (isDateArray(array))
+		{
+			return setArrayValue(convertDateArray(array));
+		}
+		else if (isTimestampArray(array))
+		{
+			return setArrayValue(convertTimestampArray(array));
+		}
+		return null;
+	}
+
+	private boolean isStringArray(String[] array)
+	{
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				if (!(val.startsWith("\"") && val.endsWith("\"")))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private String[] convertStringArray(String[] array)
+	{
+		int index = 0;
+		String[] res = new String[array.length];
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				res[index] = val.substring(1, val.length() - 1);
+			}
+			index++;
+		}
+		return res;
+	}
+
+	private boolean isBooleanArray(String[] array)
+	{
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				if (!(val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private Boolean[] convertBooleanArray(String[] array)
+	{
+		int index = 0;
+		Boolean[] res = new Boolean[array.length];
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				res[index] = Boolean.valueOf(val);
+			}
+			index++;
+		}
+		return res;
+	}
+
+	private boolean isLongArray(String[] array)
+	{
+		for (String val : array)
+		{
+			if (!NumberUtils.isDigits(val))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Long[] convertLongArray(String[] array)
+	{
+		int index = 0;
+		Long[] res = new Long[array.length];
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				res[index] = NumberUtils.createNumber(val).longValue();
+			}
+			index++;
+		}
+		return res;
+	}
+
+	private boolean isDoubleArray(String[] array)
+	{
+		for (String val : array)
+		{
+			if (!NumberUtils.isCreatable(val))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Double[] convertDoubleArray(String[] array)
+	{
+		int index = 0;
+		Double[] res = new Double[array.length];
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				res[index] = NumberUtils.createNumber(val).doubleValue();
+			}
+			index++;
+		}
+		return res;
+	}
+
+	private boolean isDateArray(String[] array)
+	{
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				if (!(val.startsWith("{d \"") && val.endsWith("\"}")))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private Date[] convertDateArray(String[] array)
+	{
+		int index = 0;
+		Date[] res = new Date[array.length];
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				String date = val.substring(4, val.length() - 2);
+				res[index] = new Date(DateTime.parseRfc3339(date).getValue());
+			}
+			index++;
+		}
+		return res;
+	}
+
+	private boolean isTimestampArray(String[] array)
+	{
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				if (!(val.startsWith("{ts \"") && val.endsWith("\"}")))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private Timestamp[] convertTimestampArray(String[] array)
+	{
+		int index = 0;
+		Timestamp[] res = new Timestamp[array.length];
+		for (String val : array)
+		{
+			if (val != null)
+			{
+				String date = val.substring(5, val.length() - 2).replace(' ', 'T');
+				if (!date.endsWith("Z"))
+					date = date + "Z";
+				res[index] = com.google.cloud.Timestamp.parseTimestamp(date).toSqlTimestamp();
+			}
+			index++;
+		}
+		return res;
 	}
 
 	private R setArrayValue(Object value)
@@ -216,6 +444,71 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 			return binder.toBytesArray(CloudSpannerConversionUtil.toCloudSpannerBytes((byte[][]) value));
 		}
 		return null;
+	}
+
+	private R setNullValue(Integer sqlType)
+	{
+		if (sqlType == null)
+		{
+			return binder.to((String) null);
+		}
+		switch (sqlType)
+		{
+		case Types.BIGINT:
+			return binder.to((Long) null);
+		case Types.BINARY:
+			return binder.to((ByteArray) null);
+		case Types.BLOB:
+			return binder.to((ByteArray) null);
+		case Types.BOOLEAN:
+			return binder.to((Boolean) null);
+		case Types.CHAR:
+			return binder.to((String) null);
+		case Types.CLOB:
+			return binder.to((String) null);
+		case Types.DATE:
+			return binder.to((com.google.cloud.Date) null);
+		case Types.DECIMAL:
+			return binder.to((Double) null);
+		case Types.DOUBLE:
+			return binder.to((Double) null);
+		case Types.FLOAT:
+			return binder.to((Double) null);
+		case Types.INTEGER:
+			return binder.to((Long) null);
+		case Types.LONGNVARCHAR:
+			return binder.to((String) null);
+		case Types.LONGVARBINARY:
+			return binder.to((ByteArray) null);
+		case Types.LONGVARCHAR:
+			return binder.to((String) null);
+		case Types.NCHAR:
+			return binder.to((String) null);
+		case Types.NCLOB:
+			return binder.to((String) null);
+		case Types.NUMERIC:
+			return binder.to((Double) null);
+		case Types.NVARCHAR:
+			return binder.to((String) null);
+		case Types.REAL:
+			return binder.to((Double) null);
+		case Types.SMALLINT:
+			return binder.to((Long) null);
+		case Types.SQLXML:
+			return binder.to((String) null);
+		case Types.TIME:
+			return binder.to((com.google.cloud.Timestamp) null);
+		case Types.TIMESTAMP:
+			return binder.to((com.google.cloud.Timestamp) null);
+		case Types.TINYINT:
+			return binder.to((Long) null);
+		case Types.VARBINARY:
+			return binder.to((ByteArray) null);
+		case Types.VARCHAR:
+			return binder.to((String) null);
+		default:
+			throw new IllegalArgumentException("Unsupported sql type: " + sqlType);
+		}
 	}
 
 }

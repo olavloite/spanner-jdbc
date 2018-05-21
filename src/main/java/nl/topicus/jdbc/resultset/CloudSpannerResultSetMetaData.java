@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.cloud.spanner.ResultSet;
+import com.google.common.base.Strings;
 import com.google.rpc.Code;
 
 import net.sf.jsqlparser.JSQLParserException;
@@ -27,6 +28,7 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
+import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
@@ -214,7 +216,10 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 
 	private void registerAllTableColumns(Table table)
 	{
-		try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getColumns("", "", table.getName(), null))
+		String schema = Strings.isNullOrEmpty(table.getSchemaName()) ? ""
+				: CloudSpannerDriver.unquoteIdentifier(table.getSchemaName());
+		String tableName = CloudSpannerDriver.unquoteIdentifier(table.getName());
+		try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getColumns("", schema, tableName, null))
 		{
 			while (rs.next())
 			{

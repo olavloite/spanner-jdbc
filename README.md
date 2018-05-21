@@ -1,6 +1,5 @@
 ### Status
 [![Build Status](https://travis-ci.org/olavloite/spanner-jdbc.svg?branch=master)](https://travis-ci.org/olavloite/spanner-jdbc)
-
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=nl.topicus%3Aspanner-jdbc&metric=alert_status)](https://sonarcloud.io/dashboard/index/nl.topicus%3Aspanner-jdbc)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=nl.topicus%3Aspanner-jdbc&metric=coverage)](https://sonarcloud.io/dashboard/index/nl.topicus%3Aspanner-jdbc)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=nl.topicus%3Aspanner-jdbc&metric=reliability_rating)](https://sonarcloud.io/dashboard/index/nl.topicus%3Aspanner-jdbc)
