@@ -1,5 +1,7 @@
 package nl.topicus.jdbc.statement;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 
@@ -24,6 +26,7 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
@@ -618,6 +621,46 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertTrue(mutations.isWorker());
 			Assert.assertNotNull(mutations.getWorker());
 			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+		}
+
+		@Test
+		public void testInsertStatementWithArrayValue() throws SQLException
+		{
+			Mutation mutation = getMutation("INSERT INTO FOO (COL1) VALUES ('{\"foo\", \"bar\"}')");
+			Value value = mutation.getValues().iterator().next();
+			assertThat(value.getStringArray(), is(Arrays.asList("foo", "bar")));
+
+			mutation = getMutation("INSERT INTO FOO (COL1) VALUES ('{\"foo, bar\", \"bar, foo\"}')");
+			value = mutation.getValues().iterator().next();
+			assertThat(value.getStringArray(), is(Arrays.asList("foo, bar", "bar, foo")));
+
+			mutation = getMutation("INSERT INTO FOO (COL1) VALUES ('{1,2,3}')");
+			value = mutation.getValues().iterator().next();
+			assertThat(value.getInt64Array(), is(Arrays.asList(1L, 2L, 3L)));
+
+			mutation = getMutation("INSERT INTO FOO (COL1) VALUES ('{1.0,2.0,3.5}')");
+			value = mutation.getValues().iterator().next();
+			assertThat(value.getFloat64Array(), is(Arrays.asList(1.0D, 2.0D, 3.5D)));
+
+			mutation = getMutation(
+					"INSERT INTO FOO (COL1) VALUES ('{{d \"2018-05-20\"}, {d \"2018-05-21\"},{d \"2018-05-22\"}}')");
+			value = mutation.getValues().iterator().next();
+			assertThat(value.getDateArray(),
+					is(Arrays.asList(com.google.cloud.Date.fromYearMonthDay(2018, 5, 20),
+							com.google.cloud.Date.fromYearMonthDay(2018, 5, 21),
+							com.google.cloud.Date.fromYearMonthDay(2018, 5, 22))));
+
+			mutation = getMutation(
+					"INSERT INTO FOO (COL1) VALUES ('{{ts \"2018-05-20 10:05:15\"}, {ts \"2018-05-21T11:00:00\"},{ts \"2018-05-22 13:15:25.12345\"}}')");
+			value = mutation.getValues().iterator().next();
+			assertThat(value.getTimestampArray(),
+					is(Arrays.asList(com.google.cloud.Timestamp.parseTimestamp("2018-05-20T10:05:15Z"),
+							com.google.cloud.Timestamp.parseTimestamp("2018-05-21T11:00:00Z"),
+							com.google.cloud.Timestamp.parseTimestamp("2018-05-22T13:15:25.12345Z"))));
+
+			mutation = getMutation("INSERT INTO FOO (COL1) VALUES ('{true, false,true,false,false}')");
+			value = mutation.getValues().iterator().next();
+			assertThat(value.getBoolArray(), is(Arrays.asList(true, false, true, false, false)));
 		}
 
 		private void assertSingleInsert(Mutation mutation, Mutation.Op operation)
