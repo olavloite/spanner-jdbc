@@ -48,6 +48,7 @@ import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.Op;
+import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Value;
 import com.google.rpc.Code;
 
@@ -663,6 +664,30 @@ public class CloudSpannerPreparedStatementTest
 			assertThat(value.getBoolArray(), is(Arrays.asList(true, false, true, false, false)));
 		}
 
+		@Test
+		public void testInsertStatementWithInvalidStringArray() throws SQLException
+		{
+			Mutation mutation = getMutation("INSERT INTO FOO (COL1) VALUES ('{\"foo\", 1}')");
+			Value value = mutation.getValues().iterator().next();
+			assertThat(value.getType(), is(Type.string()));
+		}
+
+		@Test
+		public void testInsertStatementWithInvalidDateArray() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Invalid date value");
+			getMutation("INSERT INTO FOO (COL1) VALUES ('{ {d \"20180510\"} }')");
+		}
+
+		@Test
+		public void testInsertStatementWithInvalidTimestampArray() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Invalid timestamp value");
+			getMutation("INSERT INTO FOO (COL1) VALUES ('{ {ts \"2018-05-10 10.15.00\"} }')");
+		}
+
 		private void assertSingleInsert(Mutation mutation, Mutation.Op operation)
 		{
 			Assert.assertNotNull(mutation);
@@ -841,6 +866,9 @@ public class CloudSpannerPreparedStatementTest
 
 	public static class ParameterTests
 	{
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
 		@Test
 		public void testParameters() throws SQLException, MalformedURLException
 		{
@@ -950,6 +978,71 @@ public class CloudSpannerPreparedStatementTest
 			pmd = ps.getParameterMetaData();
 			// 3 because the statement has 3 parameters defined in the query
 			Assert.assertEquals(3, pmd.getParameterCount());
+		}
+
+		@Test
+		public void setInvalidParameterValue() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Unsupported parameter type");
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setObject(1, new Object());
+			ps.getParameterMetaData();
+		}
+
+		@Test
+		public void testSetNullValues() throws SQLException
+		{
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setNull(1, Types.BLOB);
+			ps.setNull(2, Types.NVARCHAR);
+			ps.setNull(3, Types.DECIMAL);
+			ps.setNull(4, Types.BINARY);
+			ps.setNull(5, Types.BOOLEAN);
+			ps.setNull(6, Types.TINYINT);
+			ps.setNull(7, Types.DATE);
+			ps.setNull(8, Types.DOUBLE);
+			ps.setNull(9, Types.FLOAT);
+			ps.setNull(10, Types.INTEGER);
+			ps.setNull(11, Types.BIGINT);
+			ps.setNull(12, Types.SMALLINT);
+			ps.setNull(13, Types.TIME);
+			ps.setNull(14, Types.TIMESTAMP);
+			ps.setNull(15, Types.CHAR);
+			ps.setNull(16, Types.CLOB);
+			ps.setNull(17, Types.LONGNVARCHAR);
+			ps.setNull(18, Types.LONGVARBINARY);
+			ps.setNull(19, Types.LONGVARCHAR);
+			ps.setNull(20, Types.NCHAR);
+			ps.setNull(21, Types.NCLOB);
+			ps.setNull(22, Types.NUMERIC);
+			ps.setNull(23, Types.NVARCHAR);
+			ps.setNull(24, Types.REAL);
+			ps.setNull(25, Types.SQLXML);
+			ps.setNull(26, Types.VARBINARY);
+			ps.setNull(27, Types.VARCHAR);
+
+			CloudSpannerParameterMetaData pmd = ps.getParameterMetaData();
+			Assert.assertEquals(27, pmd.getParameterCount());
+			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(14));
+
+			ps.clearParameters();
+			pmd = ps.getParameterMetaData();
+			// 3 because the statement has 3 parameters defined in the query
+			Assert.assertEquals(3, pmd.getParameterCount());
+		}
+
+		@Test
+		public void setInvalidNullValue() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Unsupported sql type for setting to null");
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setNull(1, Types.ARRAY);
+			ps.getParameterMetaData();
 		}
 	}
 
