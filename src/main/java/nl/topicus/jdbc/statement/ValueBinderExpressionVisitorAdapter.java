@@ -318,7 +318,16 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 			if (val != null)
 			{
 				String date = val.substring(4, val.length() - 2);
-				res[index] = new Date(DateTime.parseRfc3339(date).getValue());
+				try
+				{
+					res[index] = new Date(DateTime.parseRfc3339(date).getValue());
+				}
+				catch (Exception e)
+				{
+					throw new IllegalArgumentException(String.format(
+							"Invalid date value: '%s'. Date values must be specified in the format yyyy-MM-dd.", date),
+							e);
+				}
 			}
 			index++;
 		}
@@ -348,7 +357,16 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 				StringBuilder date = new StringBuilder(val.substring(5, val.length() - 2).replace(' ', 'T'));
 				if (date.charAt(date.length() - 1) != 'Z')
 					date.append('Z');
-				res[index] = com.google.cloud.Timestamp.parseTimestamp(date.toString()).toSqlTimestamp();
+				try
+				{
+					res[index] = com.google.cloud.Timestamp.parseTimestamp(date.toString()).toSqlTimestamp();
+				}
+				catch (Exception e)
+				{
+					throw new IllegalArgumentException(String.format(
+							"Invalid timestamp value: '%s'. Timestamp values must be specified in the format yyyy-MM-dd HH:mm:ss.SSS",
+							val.substring(5, val.length() - 2)), e);
+				}
 			}
 			index++;
 		}
@@ -495,7 +513,7 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		case Types.VARCHAR:
 			return binder.to((String) null);
 		default:
-			throw new IllegalArgumentException("Unsupported sql type: " + sqlType);
+			throw new IllegalArgumentException("Unsupported sql type for setting to null: " + sqlType);
 		}
 	}
 
