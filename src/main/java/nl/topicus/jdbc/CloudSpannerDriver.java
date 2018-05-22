@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -188,9 +189,9 @@ public class CloudSpannerDriver implements Driver
 	{
 		try
 		{
-			for (Spanner spanner : connections.keySet())
+			for (Entry<Spanner, List<CloudSpannerConnection>> entry : connections.entrySet())
 			{
-				List<CloudSpannerConnection> list = connections.get(spanner);
+				List<CloudSpannerConnection> list = entry.getValue();
 				for (CloudSpannerConnection con : list)
 				{
 					if (!con.isClosed())
@@ -199,7 +200,7 @@ public class CloudSpannerDriver implements Driver
 						con.markClosed();
 					}
 				}
-				spanner.close();
+				entry.getKey().close();
 			}
 			connections.clear();
 			spanners.clear();

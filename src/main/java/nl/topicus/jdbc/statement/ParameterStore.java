@@ -101,7 +101,7 @@ public class ParameterStore
 
 	void setParameter(int parameterIndex, Object value, Integer sqlType)
 	{
-		setParameter(parameterIndex, value, null, null);
+		setParameter(parameterIndex, value, sqlType, null);
 	}
 
 	void setParameter(int parameterIndex, Object value, Integer sqlType, Integer scaleOrLength)
