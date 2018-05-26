@@ -17,19 +17,17 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.NClob;
-import java.sql.Ref;
 import java.sql.ResultSet;
-import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLXML;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -872,8 +870,14 @@ public class CloudSpannerPreparedStatementTest
 		@Test
 		public void testParameters() throws SQLException, MalformedURLException
 		{
-			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
-			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			final int numberOfParams = 48;
+			StringBuilder sql = new StringBuilder("INSERT INTO FOO (");
+			sql.append(IntStream.range(0, numberOfParams).mapToObj(i -> "COL" + i).collect(Collectors.joining(", ")));
+			sql.append(") VALUES (");
+			sql.append(IntStream.range(0, numberOfParams).mapToObj(i -> "?").collect(Collectors.joining(", ")));
+			sql.append(")");
+
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql.toString());
 			ps.setArray(1, ps.getConnection().createArrayOf("INT64", new Long[] { 1L, 2L, 3L }));
 			ps.setAsciiStream(2, new ByteArrayInputStream("TEST".getBytes()));
 			ps.setAsciiStream(3, new ByteArrayInputStream("TEST".getBytes()), 4);
@@ -911,20 +915,21 @@ public class CloudSpannerPreparedStatementTest
 			ps.setObject(35, "TEST");
 			ps.setObject(36, "TEST", Types.NVARCHAR);
 			ps.setObject(37, "TEST", Types.NVARCHAR, 20);
-			ps.setRef(38, (Ref) null);
-			ps.setRowId(39, (RowId) null);
+			// ps.setRef(38, (Ref) null);
+			// ps.setRowId(39, (RowId) null);
 			ps.setShort(40, (short) 1);
-			ps.setSQLXML(41, (SQLXML) null);
+			// ps.setSQLXML(41, (SQLXML) null);
 			ps.setString(42, "TEST");
-			ps.setTime(43, new Time(1000l));
-			ps.setTime(44, new Time(1000l), Calendar.getInstance(TimeZone.getTimeZone("GMT")));
+			// ps.setTime(43, new Time(1000l));
+			// ps.setTime(44, new Time(1000l),
+			// Calendar.getInstance(TimeZone.getTimeZone("GMT")));
 			ps.setTimestamp(45, new Timestamp(1000l));
 			ps.setTimestamp(46, new Timestamp(1000l), Calendar.getInstance(TimeZone.getTimeZone("GMT")));
 			ps.setUnicodeStream(47, new ByteArrayInputStream("TEST".getBytes()), 4);
 			ps.setURL(48, new URL("http://www.googlecloudspanner.com"));
 
 			CloudSpannerParameterMetaData pmd = ps.getParameterMetaData();
-			Assert.assertEquals(48, pmd.getParameterCount());
+			Assert.assertEquals(numberOfParams, pmd.getParameterCount());
 			Assert.assertEquals(CloudSpannerArray.class.getName(), pmd.getParameterClassName(1));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(2));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(3));
@@ -967,8 +972,8 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals(Short.class.getName(), pmd.getParameterClassName(40));
 			Assert.assertNull(pmd.getParameterClassName(41));
 			Assert.assertEquals(String.class.getName(), pmd.getParameterClassName(42));
-			Assert.assertEquals(Time.class.getName(), pmd.getParameterClassName(43));
-			Assert.assertEquals(Time.class.getName(), pmd.getParameterClassName(44));
+			Assert.assertNull(pmd.getParameterClassName(43));
+			Assert.assertNull(pmd.getParameterClassName(44));
 			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(45));
 			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(46));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(47));
@@ -976,8 +981,7 @@ public class CloudSpannerPreparedStatementTest
 
 			ps.clearParameters();
 			pmd = ps.getParameterMetaData();
-			// 3 because the statement has 3 parameters defined in the query
-			Assert.assertEquals(3, pmd.getParameterCount());
+			Assert.assertEquals(numberOfParams, pmd.getParameterCount());
 		}
 
 		@Test
