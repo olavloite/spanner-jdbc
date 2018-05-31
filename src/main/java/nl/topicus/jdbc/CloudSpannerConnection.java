@@ -151,6 +151,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 
 	private boolean originalReportDefaultSchemaAsNull = true;
 	private boolean reportDefaultSchemaAsNull = true;
+	private boolean useCustomHost = false;
 
 	private String simulateProductName;
 	private Integer simulateMajorVersion;
@@ -200,7 +201,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	}
 
 	CloudSpannerConnection(CloudSpannerDriver driver, String url, CloudSpannerDatabaseSpecification database,
-			String credentialsPath, String oauthToken, Properties suppliedProperties) throws SQLException
+			String credentialsPath, String oauthToken, Properties suppliedProperties, boolean useCustomHost)
+			throws SQLException
 	{
 		this.driver = driver;
 		this.database = database;
@@ -236,7 +238,13 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 					clientId = ((ServiceAccountCredentials) credentials).getClientId();
 				}
 			}
-			spanner = driver.getSpanner(database.project, credentials);
+			String host = null;
+			if (useCustomHost)
+			{
+				// Extract host from url
+				host = url.substring("jdbc:cloudspanner:".length(), url.indexOf(";"));
+			}
+			spanner = driver.getSpanner(database.project, credentials, host);
 			dbClient = spanner.getDatabaseClient(
 					DatabaseId.of(spanner.getOptions().getProjectId(), database.instance, database.database));
 			BatchClient batchClient = spanner.getBatchClient(
@@ -1160,6 +1168,17 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		checkSavepointPossible();
 		Preconditions.checkNotNull(savepoint);
 		transaction.releaseSavepoint(savepoint);
+	}
+
+	@Override
+	public boolean isUseCustomHost()
+	{
+		return useCustomHost;
+	}
+
+	void setUseCustomHost(boolean useCustomHost)
+	{
+		this.useCustomHost = useCustomHost;
 	}
 
 }

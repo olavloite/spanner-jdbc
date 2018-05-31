@@ -156,7 +156,7 @@ public class CloudSpannerDriver implements Driver
 		CloudSpannerDatabaseSpecification database = new CloudSpannerDatabaseSpecification(properties.project,
 				properties.instance, properties.database);
 		CloudSpannerConnection connection = new CloudSpannerConnection(this, url, database, properties.keyFile,
-				properties.oauthToken, info);
+				properties.oauthToken, info, properties.useCustomHost);
 		connection.setSimulateProductName(properties.productName);
 		connection.setSimulateMajorVersion(properties.majorVersion);
 		connection.setSimulateMinorVersion(properties.minorVersion);
@@ -170,6 +170,7 @@ public class CloudSpannerDriver implements Driver
 		connection.setOriginalReportDefaultSchemaAsNull(properties.reportDefaultSchemaAsNull);
 		connection.setBatchReadOnly(properties.batchReadOnlyMode);
 		connection.setOriginalBatchReadOnly(properties.batchReadOnlyMode);
+		connection.setUseCustomHost(properties.useCustomHost);
 		registerConnection(connection);
 
 		return connection;
@@ -244,27 +245,35 @@ public class CloudSpannerDriver implements Driver
 	 *            The projectId to connect to
 	 * @param credentials
 	 *            The credentials to use for the connection
+	 * @param host
+	 *            The host to connect to. Normally this is
+	 *            https://spanner.googleapis.com, but you could also use a
+	 *            (local) emulator. If null, no host will be set and the default
+	 *            host of Google Cloud Spanner will be used.
 	 * @return The {@link Spanner} instance to use
 	 */
-	synchronized Spanner getSpanner(String projectId, Credentials credentials)
+	synchronized Spanner getSpanner(String projectId, Credentials credentials, String host)
 	{
 		SpannerKey key = SpannerKey.of(projectId, credentials);
 		Spanner spanner = spanners.get(key);
 		if (spanner == null)
 		{
-			spanner = createSpanner(key);
+			spanner = createSpanner(key, host);
 			spanners.put(key, spanner);
 		}
 		return spanner;
 	}
 
-	private Spanner createSpanner(SpannerKey key)
+	private Spanner createSpanner(SpannerKey key, String host)
 	{
 		Builder builder = SpannerOptions.newBuilder();
 		if (key.projectId != null)
 			builder.setProjectId(key.projectId);
 		if (key.credentials != null)
 			builder.setCredentials(key.credentials);
+		if (host != null)
+			builder.setHost(host);
+		// builder.setHost("http://localhost:8443");
 		SpannerOptions options = builder.build();
 		return options.getService();
 	}

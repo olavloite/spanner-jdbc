@@ -36,6 +36,7 @@ final class ConnectionProperties
 	static final String AUTO_BATCH_DDL_OPERATIONS = "AutoBatchDdlOperations=";
 	static final String REPORT_DEFAULT_SCHEMA_AS_NULL = "ReportDefaultSchemaAsNull=";
 	static final String BATCH_READ_ONLY_MODE = "BatchReadOnlyMode=";
+	static final String USE_CUSTOM_HOST = "UseCustomHost=";
 
 	String project = null;
 	String instance = null;
@@ -50,6 +51,7 @@ final class ConnectionProperties
 	boolean autoBatchDdlOperations = false;
 	boolean reportDefaultSchemaAsNull = true;
 	boolean batchReadOnlyMode = false;
+	boolean useCustomHost = false;
 
 	static ConnectionProperties parse(String url) throws SQLException
 	{
@@ -90,6 +92,8 @@ final class ConnectionProperties
 							.valueOf(conPart.substring(REPORT_DEFAULT_SCHEMA_AS_NULL.length()));
 				else if (conPartLower.startsWith(BATCH_READ_ONLY_MODE.toLowerCase()))
 					res.batchReadOnlyMode = Boolean.valueOf(conPart.substring(BATCH_READ_ONLY_MODE.length()));
+				else if (conPartLower.startsWith(USE_CUSTOM_HOST.toLowerCase()))
+					res.useCustomHost = Boolean.valueOf(conPart.substring(USE_CUSTOM_HOST.length()));
 				else
 					throw new CloudSpannerSQLException("Unknown URL parameter " + conPart, Code.INVALID_ARGUMENT);
 			}
@@ -162,6 +166,9 @@ final class ConnectionProperties
 			batchReadOnlyMode = Boolean.valueOf(lowerCaseInfo.getProperty(
 					BATCH_READ_ONLY_MODE.substring(0, BATCH_READ_ONLY_MODE.length() - 1).toLowerCase(),
 					String.valueOf(batchReadOnlyMode)));
+			useCustomHost = Boolean.valueOf(
+					lowerCaseInfo.getProperty(USE_CUSTOM_HOST.substring(0, USE_CUSTOM_HOST.length() - 1).toLowerCase(),
+							String.valueOf(useCustomHost)));
 			if (!CloudSpannerDriver.logLevelSet)
 				CloudSpannerDriver.setLogLevel(CloudSpannerDriver.OFF);
 		}
@@ -208,6 +215,9 @@ final class ConnectionProperties
 		res[12] = new DriverPropertyInfo(BATCH_READ_ONLY_MODE.substring(0, BATCH_READ_ONLY_MODE.length() - 1),
 				String.valueOf(batchReadOnlyMode));
 		res[12].description = "Run queries in batch-read-only-mode. Use this mode when downloading large amounts of data from Cloud Spanner in combination with the methods Statement#execute(String) or PreparedStatement#execute()";
+		res[13] = new DriverPropertyInfo(USE_CUSTOM_HOST.substring(0, USE_CUSTOM_HOST.length() - 1),
+				String.valueOf(useCustomHost));
+		res[13].description = "Connect to a custom host instead of https://spanner.googleapis.com. This enables the use of a local emulator instead of Google Cloud Spanner";
 
 		return res;
 	}

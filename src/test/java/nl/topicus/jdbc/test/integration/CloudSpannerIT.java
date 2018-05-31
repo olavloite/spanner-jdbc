@@ -77,6 +77,7 @@ public class CloudSpannerIT
 		Builder builder = SpannerOptions.newBuilder();
 		builder.setProjectId(projectId);
 		builder.setCredentials(credentials);
+		builder.setHost("https://localhost:8443");
 
 		SpannerOptions options = builder.build();
 		spanner = options.getService();
@@ -169,11 +170,12 @@ public class CloudSpannerIT
 		{
 			throw new CloudSpannerSQLException("Could not load JDBC driver", Code.UNKNOWN, e);
 		}
-		StringBuilder url = new StringBuilder("jdbc:cloudspanner://localhost");
+		StringBuilder url = new StringBuilder("jdbc:cloudspanner:https://localhost:8443");
 		url.append(";Project=").append(projectId);
 		url.append(";Instance=").append(instanceId);
 		url.append(";Database=").append(DATABASE_ID);
 		url.append(";PvtKeyPath=").append(credentialsPath);
+		url.append(";UseCustomHost=true");
 		return DriverManager.getConnection(url.toString());
 	}
 
