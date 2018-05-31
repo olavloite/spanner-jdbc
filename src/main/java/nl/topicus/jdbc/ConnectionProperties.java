@@ -10,7 +10,7 @@ import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 final class ConnectionProperties
 {
-	public static final int NUMBER_OF_PROPERTIES = 13;
+	public static final int NUMBER_OF_PROPERTIES = 14;
 
 	static String getPropertyName(String propertyPart)
 	{
