@@ -3,4 +3,5 @@
 /.classpath
 /.settings/
 /cloudspanner-key.json
+/cloudspanner-emulator-key.json
 /dependency-reduced-pom.xml
