@@ -38,7 +38,7 @@ public class InstanceConfigIT
 		Builder builder = SpannerOptions.newBuilder();
 		builder.setProjectId(projectId);
 		builder.setCredentials(credentials);
-		builder.setHost(CloudSpannerIT.HOST);
+		builder.setHost(CloudSpannerIT.getHost());
 
 		SpannerOptions options = builder.build();
 		Spanner spanner = options.getService();

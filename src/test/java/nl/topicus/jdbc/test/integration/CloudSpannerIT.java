@@ -44,8 +44,7 @@ public class CloudSpannerIT
 {
 	private static final Logger log = Logger.getLogger(CloudSpannerIT.class.getName());
 
-	static final String HOST = "https://emulator.googlecloudspanner.com:8443";
-	// static final String HOST = "https://localhost:8443";
+	private static final String DEFAULT_HOST = "https://emulator.googlecloudspanner.com:8443";
 
 	private static final boolean CREATE_INSTANCE = true;
 
@@ -60,6 +59,11 @@ public class CloudSpannerIT
 	private Spanner spanner;
 
 	private final String credentialsPath;
+
+	public static String getHost()
+	{
+		return System.getProperty("host", DEFAULT_HOST);
+	}
 
 	public CloudSpannerIT()
 	{
@@ -79,7 +83,7 @@ public class CloudSpannerIT
 		Builder builder = SpannerOptions.newBuilder();
 		builder.setProjectId(PROJECT_ID);
 		builder.setCredentials(credentials);
-		builder.setHost(HOST);
+		builder.setHost(getHost());
 
 		SpannerOptions options = builder.build();
 		spanner = options.getService();
@@ -173,7 +177,7 @@ public class CloudSpannerIT
 			throw new CloudSpannerSQLException("Could not load JDBC driver", Code.UNKNOWN, e);
 		}
 		StringBuilder url = new StringBuilder("jdbc:cloudspanner:");
-		url.append(HOST);
+		url.append(getHost());
 		url.append(";Project=").append(PROJECT_ID);
 		url.append(";Instance=").append(instanceId);
 		url.append(";Database=").append(DATABASE_ID);
