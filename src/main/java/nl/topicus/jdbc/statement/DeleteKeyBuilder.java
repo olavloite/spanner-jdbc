@@ -48,7 +48,7 @@ public class DeleteKeyBuilder
 		for (String key : table.getKeyColumns())
 		{
 			Object value = keyValues.get(key);
-			if (!generateParameterMetaData && value == null)
+			if (!generateParameterMetaData && value == null && !keyValues.containsKey(key))
 			{
 				throw new CloudSpannerSQLException(
 						"No value supplied for key column " + key
