@@ -53,4 +53,6 @@ public interface ICloudSpannerConnection extends Connection
 
 	public int setBatchReadOnly(boolean batchReadOnly) throws SQLException;
 
+	public boolean isUseCustomHost();
+
 }
