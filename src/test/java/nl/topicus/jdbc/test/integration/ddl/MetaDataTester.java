@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.junit.Assert;
@@ -101,16 +100,7 @@ public class MetaDataTester
 		{
 			while (tables.next())
 			{
-				// FIXME: remove this conditional testing once the emulator
-				// supports proper casing of objects
-				if (connection.isUseCustomHost())
-				{
-					assertEquals(TABLES[count].toUpperCase(), tables.getString("TABLE_NAME").toUpperCase());
-				}
-				else
-				{
-					assertEquals(TABLES[count], tables.getString("TABLE_NAME"));
-				}
+				assertEquals(TABLES[count], tables.getString("TABLE_NAME"));
 				assertEquals("TABLE", tables.getString("TABLE_TYPE"));
 				count++;
 			}
@@ -129,17 +119,7 @@ public class MetaDataTester
 			{
 				while (columns.next())
 				{
-					// FIXME: remove this conditional testing once the emulator
-					// supports proper casing of objects
-					if (connection.isUseCustomHost())
-					{
-						assertEquals(COLUMNS[tableIndex][columnIndex].toUpperCase(),
-								columns.getString("COLUMN_NAME").toUpperCase());
-					}
-					else
-					{
-						assertEquals(COLUMNS[tableIndex][columnIndex], columns.getString("COLUMN_NAME"));
-					}
+					assertEquals(COLUMNS[tableIndex][columnIndex], columns.getString("COLUMN_NAME"));
 					assertEquals(COLUMN_TYPES[tableIndex][columnIndex], columns.getInt("DATA_TYPE"));
 					columnIndex++;
 				}
@@ -150,18 +130,6 @@ public class MetaDataTester
 
 	private void runIndexMetaDataTests() throws SQLException
 	{
-		if (connection.isUseCustomHost())
-		{
-			for (Entry<String, String[]> entry : INDEX_COLUMNS.entrySet())
-			{
-				String[] newVal = new String[entry.getValue().length];
-				for (int i = 0; i < entry.getValue().length; i++)
-				{
-					newVal[i] = entry.getValue()[i].toUpperCase();
-				}
-				entry.setValue(newVal);
-			}
-		}
 		String currentKey = "";
 		DatabaseMetaData metadata = connection.getMetaData();
 		for (String table : TABLES)
@@ -172,10 +140,6 @@ public class MetaDataTester
 				while (indexes.next())
 				{
 					String key = indexes.getString("TABLE_NAME") + "." + indexes.getString("INDEX_NAME");
-					if (connection.isUseCustomHost())
-					{
-						key = key.toUpperCase();
-					}
 					if (!currentKey.equals(key))
 					{
 						columnIndex = 0;
@@ -184,17 +148,7 @@ public class MetaDataTester
 					String[] columns = INDEX_COLUMNS.get(key);
 					Boolean unique = INDEX_UNIQUE.get(key);
 					Assert.assertNotNull(columns);
-					// FIXME: remove this conditional testing once the emulator
-					// supports proper casing of objects
-					if (connection.isUseCustomHost())
-					{
-						assertEquals(columns[columnIndex].toUpperCase(),
-								indexes.getString("COLUMN_NAME").toUpperCase());
-					}
-					else
-					{
-						assertEquals(columns[columnIndex], indexes.getString("COLUMN_NAME"));
-					}
+					assertEquals(columns[columnIndex], indexes.getString("COLUMN_NAME"));
 					assertEquals(unique, !indexes.getBoolean("NON_UNIQUE"));
 					columnIndex++;
 				}
