@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
+import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
 
@@ -114,7 +115,15 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		}
 		beforeFirst = false;
 		currentRowIndex++;
-		boolean res = resultSet.next();
+		boolean res = false;
+		try
+		{
+			res = resultSet.next();
+		}
+		catch (SpannerException e)
+		{
+			throw new CloudSpannerSQLException(e);
+		}
 		afterLast = !res;
 
 		return res;
