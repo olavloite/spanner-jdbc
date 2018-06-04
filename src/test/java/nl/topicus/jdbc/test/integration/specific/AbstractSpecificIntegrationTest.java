@@ -32,6 +32,8 @@ import nl.topicus.jdbc.CloudSpannerConnection;
 
 public abstract class AbstractSpecificIntegrationTest
 {
+	protected static final String CLOUDSPANNER_HOST = "https://spanner.googleapis.com";
+
 	private static final String DEFAULT_HOST = "https://emulator.googlecloudspanner.com:8443";
 	private static final String DATABASE_ID = "test-database";
 
@@ -66,6 +68,11 @@ public abstract class AbstractSpecificIntegrationTest
 	protected DatabaseAdminClient getDatabaseAdminClient()
 	{
 		return spanner.getDatabaseAdminClient();
+	}
+
+	protected boolean isRunningOnEmulator()
+	{
+		return !CLOUDSPANNER_HOST.equalsIgnoreCase(getHost());
 	}
 
 	@BeforeClass
