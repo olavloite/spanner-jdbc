@@ -394,6 +394,26 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = @FOO",
 					mutations.getWorker().select.toString());
 		}
+
+		@Test()
+		public void testDeleteStatementWithNullValueInKey() throws SQLException, NoSuchMethodException,
+				SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+		{
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects
+					.createPreparedStatement("DELETE FROM FOO WHERE ID=?");
+			ps.setNull(1, Types.BIGINT);
+			Mutations mutations;
+			Method createMutations = ps.getClass().getDeclaredMethod("createMutations");
+			createMutations.setAccessible(true);
+			mutations = (Mutations) createMutations.invoke(ps);
+
+			Mutation deleteMutation = mutations.getMutations().get(0);
+			Assert.assertNotNull(deleteMutation);
+			Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
+			List<Key> keys = Lists.newArrayList(deleteMutation.getKeySet().getKeys());
+			Assert.assertEquals(1, keys.size());
+			Assert.assertNull(keys.get(0).getParts().iterator().next());
+		}
 	}
 
 	public static class UpdateStatementTests
