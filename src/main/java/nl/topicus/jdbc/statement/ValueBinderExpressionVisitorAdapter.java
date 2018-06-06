@@ -3,6 +3,7 @@ package nl.topicus.jdbc.statement;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.sql.Array;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -17,6 +18,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import com.google.api.client.util.DateTime;
 import com.google.cloud.ByteArray;
 import com.google.cloud.spanner.ValueBinder;
+import com.google.common.io.CharStreams;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Longs;
@@ -110,6 +112,18 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 			}
 			return binder.to(stringVal);
 		}
+		else if (Readable.class.isAssignableFrom(value.getClass()))
+		{
+			try
+			{
+				Readable readable = (Readable) value;
+				return binder.to(CharStreams.toString(readable));
+			}
+			catch (IOException e)
+			{
+				throw new IllegalArgumentException("Could not read from readable", e);
+			}
+		}
 		else if (Character.class.isAssignableFrom(value.getClass()))
 		{
 			return binder.to(((Character) value).toString());
@@ -123,6 +137,10 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		else if (char[].class.isAssignableFrom(value.getClass()))
 		{
 			return binder.to(String.valueOf((char[]) value));
+		}
+		else if (URL.class.isAssignableFrom(value.getClass()))
+		{
+			return binder.to(((URL) value).toString());
 		}
 		else if (byte[].class.isAssignableFrom(value.getClass()))
 		{
@@ -193,12 +211,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.startsWith("\"") && val.endsWith("\"")))
 			{
-				if (!(val.startsWith("\"") && val.endsWith("\"")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -223,12 +238,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")))
 			{
-				if (!(val.equalsIgnoreCase("true") || val.equalsIgnoreCase("false")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -307,12 +319,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.startsWith("{d \"") && val.endsWith("\"}")))
 			{
-				if (!(val.startsWith("{d \"") && val.endsWith("\"}")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -327,7 +336,16 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 			if (val != null)
 			{
 				String date = val.substring(4, val.length() - 2);
-				res[index] = new Date(DateTime.parseRfc3339(date).getValue());
+				try
+				{
+					res[index] = new Date(DateTime.parseRfc3339(date).getValue());
+				}
+				catch (Exception e)
+				{
+					throw new IllegalArgumentException(String.format(
+							"Invalid date value: '%s'. Date values must be specified in the format yyyy-MM-dd.", date),
+							e);
+				}
 			}
 			index++;
 		}
@@ -338,12 +356,9 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 	{
 		for (String val : array)
 		{
-			if (val != null)
+			if (val != null && !(val.startsWith("{ts \"") && val.endsWith("\"}")))
 			{
-				if (!(val.startsWith("{ts \"") && val.endsWith("\"}")))
-				{
-					return false;
-				}
+				return false;
 			}
 		}
 		return true;
@@ -357,10 +372,19 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		{
 			if (val != null)
 			{
-				String date = val.substring(5, val.length() - 2).replace(' ', 'T');
-				if (!date.endsWith("Z"))
-					date = date + "Z";
-				res[index] = com.google.cloud.Timestamp.parseTimestamp(date).toSqlTimestamp();
+				StringBuilder date = new StringBuilder(val.substring(5, val.length() - 2).replace(' ', 'T'));
+				if (date.charAt(date.length() - 1) != 'Z')
+					date.append('Z');
+				try
+				{
+					res[index] = com.google.cloud.Timestamp.parseTimestamp(date.toString()).toSqlTimestamp();
+				}
+				catch (Exception e)
+				{
+					throw new IllegalArgumentException(String.format(
+							"Invalid timestamp value: '%s'. Timestamp values must be specified in the format yyyy-MM-dd HH:mm:ss.SSS",
+							val.substring(5, val.length() - 2)), e);
+				}
 			}
 			index++;
 		}
@@ -507,7 +531,7 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
 		case Types.VARCHAR:
 			return binder.to((String) null);
 		default:
-			throw new IllegalArgumentException("Unsupported sql type: " + sqlType);
+			throw new IllegalArgumentException("Unsupported sql type for setting to null: " + sqlType);
 		}
 	}
 

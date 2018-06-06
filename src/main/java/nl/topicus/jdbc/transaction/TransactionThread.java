@@ -41,6 +41,11 @@ class TransactionThread extends Thread
 		}
 	}
 
+	private static class RollbackException extends RuntimeException
+	{
+		private static final long serialVersionUID = 1L;
+	}
+
 	enum TransactionStatus
 	{
 		NOT_STARTED, RUNNING, SUCCESS, FAIL;
@@ -149,7 +154,8 @@ class TransactionThread extends Thread
 							transaction.buffer(mutations);
 							break;
 						case ROLLBACK:
-							break;
+							// throw an exception to force a rollback
+							throw new RollbackException();
 						case PREPARE:
 							XATransaction.prepareMutations(transaction, xid, mutations);
 							break;
@@ -167,8 +173,15 @@ class TransactionThread extends Thread
 			}
 			catch (Exception e)
 			{
-				status = TransactionStatus.FAIL;
-				exception = e;
+				if (e.getCause() instanceof RollbackException)
+				{
+					status = TransactionStatus.SUCCESS;
+				}
+				else
+				{
+					status = TransactionStatus.FAIL;
+					exception = e;
+				}
 			}
 			finally
 			{

@@ -28,7 +28,7 @@ public class AbstractCloudSpannerConnectionTest
 		props.setProperty("Database", "test");
 		return new CloudSpannerConnection((CloudSpannerDriver) DriverManager.getDriver("jdbc:cloudspanner://localhost"),
 				"jdbc:cloudspanner://localhost", new CloudSpannerDatabaseSpecification("test", "test", "test"), null,
-				"oauth", props);
+				"oauth", props, false);
 	}
 
 	@Test

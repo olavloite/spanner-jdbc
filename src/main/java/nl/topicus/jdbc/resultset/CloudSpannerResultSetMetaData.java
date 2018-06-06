@@ -295,8 +295,12 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 		Column col = getColumn(column);
 		if (col != null && col.getTable() != null)
 		{
-			try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getColumns("", "",
-					col.getTable().getName(), col.getColumnName()))
+			String schema = Strings.isNullOrEmpty(col.getTable().getSchemaName()) ? ""
+					: CloudSpannerDriver.unquoteIdentifier(col.getTable().getSchemaName());
+			String tableName = CloudSpannerDriver.unquoteIdentifier(col.getTable().getName());
+			String colName = CloudSpannerDriver.unquoteIdentifier(col.getColumnName());
+			try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getColumns("", schema, tableName,
+					colName))
 			{
 				if (rs.next())
 				{
@@ -404,8 +408,12 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 		Column col = getColumn(column);
 		if (col != null && col.getTable() != null)
 		{
-			try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getColumns("", "",
-					col.getTable().getName(), col.getColumnName()))
+			String schema = Strings.isNullOrEmpty(col.getTable().getSchemaName()) ? ""
+					: CloudSpannerDriver.unquoteIdentifier(col.getTable().getSchemaName());
+			String tableName = CloudSpannerDriver.unquoteIdentifier(col.getTable().getName());
+			String colName = CloudSpannerDriver.unquoteIdentifier(col.getColumnName());
+			try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getColumns("", schema, tableName,
+					colName))
 			{
 				if (rs.next())
 				{
@@ -462,12 +470,15 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 			return true;
 		// Primary key columns are always read-only, all other columns are
 		// writable.
-		try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getPrimaryKeys("", "",
-				col.getTable().getName()))
+		String schema = Strings.isNullOrEmpty(col.getTable().getSchemaName()) ? ""
+				: CloudSpannerDriver.unquoteIdentifier(col.getTable().getSchemaName());
+		String tableName = CloudSpannerDriver.unquoteIdentifier(col.getTable().getName());
+		String colName = CloudSpannerDriver.unquoteIdentifier(col.getColumnName());
+		try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getPrimaryKeys("", schema, tableName))
 		{
 			while (rs.next())
 			{
-				if (rs.getString("COLUMN_NAME").equalsIgnoreCase(col.getColumnName()))
+				if (rs.getString("COLUMN_NAME").equalsIgnoreCase(colName))
 				{
 					return true;
 				}

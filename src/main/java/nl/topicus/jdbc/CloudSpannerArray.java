@@ -161,7 +161,14 @@ public class CloudSpannerArray implements Array
 		{
 			for (Object o : (Object[]) data)
 			{
-				joiner.add(o.toString());
+				if (o == null)
+				{
+					joiner.add("null");
+				}
+				else
+				{
+					joiner.add(o.toString());
+				}
 			}
 		}
 		return joiner.toString();

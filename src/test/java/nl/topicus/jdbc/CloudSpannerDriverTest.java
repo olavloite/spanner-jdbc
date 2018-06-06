@@ -177,7 +177,8 @@ public class CloudSpannerDriverTest
 			for (DriverPropertyInfo property : properties)
 			{
 				if (property.name.equals("AllowExtendedMode") || property.name.equals("AsyncDdlOperations")
-						|| property.name.equals("AutoBatchDdlOperations") || property.name.equals("BatchReadOnlyMode"))
+						|| property.name.equals("AutoBatchDdlOperations") || property.name.equals("BatchReadOnlyMode")
+						|| property.name.equals("UseCustomHost"))
 					assertEquals("false", property.value);
 				else if (property.name.equals("ReportDefaultSchemaAsNull"))
 					assertEquals("true", property.value);

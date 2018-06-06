@@ -17,19 +17,17 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.NClob;
-import java.sql.Ref;
 import java.sql.ResultSet;
-import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLXML;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -48,6 +46,7 @@ import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Key;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.Op;
+import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Value;
 import com.google.rpc.Code;
 
@@ -395,6 +394,26 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals("SELECT `FOO`.`ID` FROM `FOO` WHERE ID = @FOO",
 					mutations.getWorker().select.toString());
 		}
+
+		@Test()
+		public void testDeleteStatementWithNullValueInKey() throws SQLException, NoSuchMethodException,
+				SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+		{
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects
+					.createPreparedStatement("DELETE FROM FOO WHERE ID=?");
+			ps.setNull(1, Types.BIGINT);
+			Mutations mutations;
+			Method createMutations = ps.getClass().getDeclaredMethod("createMutations");
+			createMutations.setAccessible(true);
+			mutations = (Mutations) createMutations.invoke(ps);
+
+			Mutation deleteMutation = mutations.getMutations().get(0);
+			Assert.assertNotNull(deleteMutation);
+			Assert.assertEquals(Op.DELETE, deleteMutation.getOperation());
+			List<Key> keys = Lists.newArrayList(deleteMutation.getKeySet().getKeys());
+			Assert.assertEquals(1, keys.size());
+			Assert.assertNull(keys.get(0).getParts().iterator().next());
+		}
 	}
 
 	public static class UpdateStatementTests
@@ -663,6 +682,30 @@ public class CloudSpannerPreparedStatementTest
 			assertThat(value.getBoolArray(), is(Arrays.asList(true, false, true, false, false)));
 		}
 
+		@Test
+		public void testInsertStatementWithInvalidStringArray() throws SQLException
+		{
+			Mutation mutation = getMutation("INSERT INTO FOO (COL1) VALUES ('{\"foo\", 1}')");
+			Value value = mutation.getValues().iterator().next();
+			assertThat(value.getType(), is(Type.string()));
+		}
+
+		@Test
+		public void testInsertStatementWithInvalidDateArray() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Invalid date value");
+			getMutation("INSERT INTO FOO (COL1) VALUES ('{ {d \"20180510\"} }')");
+		}
+
+		@Test
+		public void testInsertStatementWithInvalidTimestampArray() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Invalid timestamp value");
+			getMutation("INSERT INTO FOO (COL1) VALUES ('{ {ts \"2018-05-10 10.15.00\"} }')");
+		}
+
 		private void assertSingleInsert(Mutation mutation, Mutation.Op operation)
 		{
 			Assert.assertNotNull(mutation);
@@ -841,11 +884,20 @@ public class CloudSpannerPreparedStatementTest
 
 	public static class ParameterTests
 	{
+		@Rule
+		public ExpectedException thrown = ExpectedException.none();
+
 		@Test
 		public void testParameters() throws SQLException, MalformedURLException
 		{
-			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
-			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			final int numberOfParams = 48;
+			StringBuilder sql = new StringBuilder("INSERT INTO FOO (");
+			sql.append(IntStream.range(0, numberOfParams).mapToObj(i -> "COL" + i).collect(Collectors.joining(", ")));
+			sql.append(") VALUES (");
+			sql.append(IntStream.range(0, numberOfParams).mapToObj(i -> "?").collect(Collectors.joining(", ")));
+			sql.append(")");
+
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql.toString());
 			ps.setArray(1, ps.getConnection().createArrayOf("INT64", new Long[] { 1L, 2L, 3L }));
 			ps.setAsciiStream(2, new ByteArrayInputStream("TEST".getBytes()));
 			ps.setAsciiStream(3, new ByteArrayInputStream("TEST".getBytes()), 4);
@@ -883,20 +935,21 @@ public class CloudSpannerPreparedStatementTest
 			ps.setObject(35, "TEST");
 			ps.setObject(36, "TEST", Types.NVARCHAR);
 			ps.setObject(37, "TEST", Types.NVARCHAR, 20);
-			ps.setRef(38, (Ref) null);
-			ps.setRowId(39, (RowId) null);
+			// ps.setRef(38, (Ref) null);
+			// ps.setRowId(39, (RowId) null);
 			ps.setShort(40, (short) 1);
-			ps.setSQLXML(41, (SQLXML) null);
+			// ps.setSQLXML(41, (SQLXML) null);
 			ps.setString(42, "TEST");
-			ps.setTime(43, new Time(1000l));
-			ps.setTime(44, new Time(1000l), Calendar.getInstance(TimeZone.getTimeZone("GMT")));
+			// ps.setTime(43, new Time(1000l));
+			// ps.setTime(44, new Time(1000l),
+			// Calendar.getInstance(TimeZone.getTimeZone("GMT")));
 			ps.setTimestamp(45, new Timestamp(1000l));
 			ps.setTimestamp(46, new Timestamp(1000l), Calendar.getInstance(TimeZone.getTimeZone("GMT")));
 			ps.setUnicodeStream(47, new ByteArrayInputStream("TEST".getBytes()), 4);
 			ps.setURL(48, new URL("http://www.googlecloudspanner.com"));
 
 			CloudSpannerParameterMetaData pmd = ps.getParameterMetaData();
-			Assert.assertEquals(48, pmd.getParameterCount());
+			Assert.assertEquals(numberOfParams, pmd.getParameterCount());
 			Assert.assertEquals(CloudSpannerArray.class.getName(), pmd.getParameterClassName(1));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(2));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(3));
@@ -939,8 +992,8 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals(Short.class.getName(), pmd.getParameterClassName(40));
 			Assert.assertNull(pmd.getParameterClassName(41));
 			Assert.assertEquals(String.class.getName(), pmd.getParameterClassName(42));
-			Assert.assertEquals(Time.class.getName(), pmd.getParameterClassName(43));
-			Assert.assertEquals(Time.class.getName(), pmd.getParameterClassName(44));
+			Assert.assertNull(pmd.getParameterClassName(43));
+			Assert.assertNull(pmd.getParameterClassName(44));
 			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(45));
 			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(46));
 			Assert.assertEquals(ByteArrayInputStream.class.getName(), pmd.getParameterClassName(47));
@@ -948,8 +1001,72 @@ public class CloudSpannerPreparedStatementTest
 
 			ps.clearParameters();
 			pmd = ps.getParameterMetaData();
+			Assert.assertEquals(numberOfParams, pmd.getParameterCount());
+		}
+
+		@Test
+		public void setInvalidParameterValue() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Unsupported parameter type");
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setObject(1, new Object());
+			ps.getParameterMetaData();
+		}
+
+		@Test
+		public void testSetNullValues() throws SQLException
+		{
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setNull(1, Types.BLOB);
+			ps.setNull(2, Types.NVARCHAR);
+			ps.setNull(3, Types.DECIMAL);
+			ps.setNull(4, Types.BINARY);
+			ps.setNull(5, Types.BOOLEAN);
+			ps.setNull(6, Types.TINYINT);
+			ps.setNull(7, Types.DATE);
+			ps.setNull(8, Types.DOUBLE);
+			ps.setNull(9, Types.FLOAT);
+			ps.setNull(10, Types.INTEGER);
+			ps.setNull(11, Types.BIGINT);
+			ps.setNull(12, Types.SMALLINT);
+			ps.setNull(13, Types.TIME);
+			ps.setNull(14, Types.TIMESTAMP);
+			ps.setNull(15, Types.CHAR);
+			ps.setNull(16, Types.CLOB);
+			ps.setNull(17, Types.LONGNVARCHAR);
+			ps.setNull(18, Types.LONGVARBINARY);
+			ps.setNull(19, Types.LONGVARCHAR);
+			ps.setNull(20, Types.NCHAR);
+			ps.setNull(21, Types.NCLOB);
+			ps.setNull(22, Types.NUMERIC);
+			ps.setNull(23, Types.NVARCHAR);
+			ps.setNull(24, Types.REAL);
+			ps.setNull(25, Types.SQLXML);
+			ps.setNull(26, Types.VARBINARY);
+			ps.setNull(27, Types.VARCHAR);
+
+			CloudSpannerParameterMetaData pmd = ps.getParameterMetaData();
+			Assert.assertEquals(27, pmd.getParameterCount());
+			Assert.assertEquals(Timestamp.class.getName(), pmd.getParameterClassName(14));
+
+			ps.clearParameters();
+			pmd = ps.getParameterMetaData();
 			// 3 because the statement has 3 parameters defined in the query
 			Assert.assertEquals(3, pmd.getParameterCount());
+		}
+
+		@Test
+		public void setInvalidNullValue() throws SQLException
+		{
+			thrown.expect(CloudSpannerSQLException.class);
+			thrown.expectMessage("Unsupported sql type for setting to null");
+			String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setNull(1, Types.ARRAY);
+			ps.getParameterMetaData();
 		}
 	}
 

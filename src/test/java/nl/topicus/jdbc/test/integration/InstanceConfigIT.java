@@ -24,8 +24,8 @@ public class InstanceConfigIT
 	@Test
 	public void testEuropeWestSingleNodeConfig()
 	{
-		String credentialsPath = "cloudspanner-key.json";
-		String projectId = CloudSpannerConnection.getServiceAccountProjectId(credentialsPath);
+		String credentialsPath = "cloudspanner-emulator-key.json";
+		String projectId = "test-project";
 		GoogleCredentials credentials = null;
 		try
 		{
@@ -38,6 +38,7 @@ public class InstanceConfigIT
 		Builder builder = SpannerOptions.newBuilder();
 		builder.setProjectId(projectId);
 		builder.setCredentials(credentials);
+		builder.setHost(CloudSpannerIT.getHost());
 
 		SpannerOptions options = builder.build();
 		Spanner spanner = options.getService();
