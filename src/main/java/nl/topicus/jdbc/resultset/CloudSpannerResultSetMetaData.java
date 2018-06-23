@@ -468,22 +468,9 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 		Column col = getColumn(column);
 		if (col == null || col.getTable() == null)
 			return true;
-		// Primary key columns are always read-only, all other columns are
-		// writable.
-		String schema = Strings.isNullOrEmpty(col.getTable().getSchemaName()) ? ""
-				: CloudSpannerDriver.unquoteIdentifier(col.getTable().getSchemaName());
-		String tableName = CloudSpannerDriver.unquoteIdentifier(col.getTable().getName());
-		String colName = CloudSpannerDriver.unquoteIdentifier(col.getColumnName());
-		try (java.sql.ResultSet rs = statement.getConnection().getMetaData().getPrimaryKeys("", schema, tableName))
-		{
-			while (rs.next())
-			{
-				if (rs.getString("COLUMN_NAME").equalsIgnoreCase(colName))
-				{
-					return true;
-				}
-			}
-		}
+		// Primary key columns are only insertable and never updatable, all
+		// other columns are insertable and updatable. This however still means
+		// that a primary key column is writable.
 		return false;
 	}
 
