@@ -105,6 +105,7 @@ public abstract class AbstractSpecificIntegrationTest
 	{
 		cleanUpDatabase();
 		cleanUpInstance();
+		spanner.close();
 	}
 
 	private static void createInstance()

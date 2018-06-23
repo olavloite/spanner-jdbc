@@ -74,7 +74,7 @@ public abstract class CloudSpannerDatabaseMetaDataConstants
 
 			+ "WHEN strpos(spanner_type, '(')=0 then 0 \n"
 
-			+ "ELSE cast(replace(substr(spanner_type, strpos(spanner_type, '(')+1, strpos(spanner_type, ')')-strpos(spanner_type, '(')-1), 'MAX', '0') as INT64) \n"
+			+ "ELSE cast(replace(substr(spanner_type, strpos(spanner_type, '(')+1, strpos(spanner_type, ')')-strpos(spanner_type, '(')-1), 'MAX', CASE WHEN UPPER(spanner_type) LIKE 'STRING%' THEN '2621440' ELSE '10485760' END) as INT64) \n"
 
 			+ "END AS COLUMN_SIZE, \n"
 
