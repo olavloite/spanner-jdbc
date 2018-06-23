@@ -35,6 +35,8 @@ public abstract class AbstractSpecificIntegrationTest
 	protected static final String CLOUDSPANNER_HOST = "https://spanner.googleapis.com";
 
 	private static final String DEFAULT_HOST = "https://emulator.googlecloudspanner.com:8443";
+	private static final String DEFAULT_PROJECT = "test-project";
+	private static final String DEFAULT_KEY_FILE = "cloudspanner-emulator-key.json";
 	private static final String DATABASE_ID = "test-database";
 
 	private static Spanner spanner;
@@ -48,6 +50,16 @@ public abstract class AbstractSpecificIntegrationTest
 	public static String getHost()
 	{
 		return System.getProperty("host", DEFAULT_HOST);
+	}
+
+	public static String getKeyFile()
+	{
+		return System.getProperty("keyfile", DEFAULT_KEY_FILE);
+	}
+
+	public static String getProject()
+	{
+		return System.getProperty("project", DEFAULT_PROJECT);
 	}
 
 	protected static Spanner getSpanner()
@@ -88,8 +100,8 @@ public abstract class AbstractSpecificIntegrationTest
 		// generate a unique instance id for this test run
 		Random rnd = new Random();
 		instanceId = "test-instance-" + rnd.nextInt(1000000);
-		credentialsPath = "cloudspanner-emulator-key.json";
-		projectId = "test-project";
+		credentialsPath = getKeyFile();
+		projectId = getProject();
 		GoogleCredentials credentials = CloudSpannerConnection.getCredentialsFromFile(credentialsPath);
 		Builder builder = SpannerOptions.newBuilder();
 		builder.setProjectId(projectId);
