@@ -12,7 +12,7 @@ JDBC Driver for Google Cloud Spanner
 
 **NEW: Google Cloud Spanner Emulator:** [Emulator test project](https://github.com/olavloite/spanner-emulator-tester)
 
-Sign up for a free trial account for a Google Cloud Spanner Emulator on https://emulator.googlecloudspanner.com
+Sign up for a free trial account for a Google Cloud Spanner Emulator on https://emulator.googlecloudspanner.com . A tutorial on how to set it up can be found on http://www.googlecloudspanner.com/2018/06/google-cloud-spanner-emulator.html
 
 An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, globally consistent, relational database service from Google. The JDBC Driver that is supplied by Google is quite limited, as it does not allow any inserts, updates or deletes, nor does it allow DDL-statements.
 
