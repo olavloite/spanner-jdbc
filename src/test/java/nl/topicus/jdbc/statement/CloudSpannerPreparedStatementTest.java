@@ -1,6 +1,7 @@
 package nl.topicus.jdbc.statement;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
@@ -1236,6 +1237,20 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals("SELECT * FROM FOO LIMIT @p1 OFFSET @p2", googleSql);
 			Assert.assertEquals(1000l, param1);
 			Assert.assertEquals(10000l, param2);
+		}
+
+		@Test
+		public void testSelectWithParameterInSubSelect() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT news.news_type_id FROM (" + "SELECT " + "n.news_type_id "
+					+ "FROM news2 AS n INNER JOIN news_types nt ON (nt.news_type_id = n.news_type_id) "
+					+ "WHERE n.seeker_id = ? ) AS news LIMIT 1";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000L);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+			assertEquals("n.seeker_id", ps.getParameterStore().getColumn(1));
 		}
 	}
 
