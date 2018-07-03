@@ -228,6 +228,27 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 					else
 						getParameterStore().setTable(null);
 				}
+
+				@Override
+				public void visit(SubSelect subSelect)
+				{
+					if (subSelect.getSelectBody() instanceof PlainSelect)
+					{
+						setPlainSelectParameters((PlainSelect) subSelect.getSelectBody(), builder);
+					}
+					else
+					{
+						subSelect.getSelectBody().accept(new SelectVisitorAdapter()
+						{
+							@Override
+							public void visit(PlainSelect plainSelect)
+							{
+								setPlainSelectParameters(plainSelect, builder);
+							}
+						});
+					}
+				}
+
 			});
 		}
 		setWhereParameters(plainSelect.getWhere(), builder);
