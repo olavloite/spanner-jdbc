@@ -1197,6 +1197,94 @@ public class CloudSpannerPreparedStatementTest
 		}
 
 		@Test
+		public void testSelectWithInterval() throws SQLException
+		{
+			String sql = "SELECT n.news_type_id, n.text FROM news2 AS n INNER JOIN news_types nt ON (nt.news_type_id = n.news_type_id) "
+					+ "WHERE n.seeker_id = :seekerId "
+					+ "AND TIMESTAMP_ADD(n.created, INTERVAL nt.update_hours HOUR) > CURRENT_TIMESTAMP() "
+					+ "AND nt.enabled = true " + "ORDER BY nt.priority DESC " + "LIMIT 1 ";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000L);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
+		public void testSelectWithExtract() throws SQLException
+		{
+			// @formatter:off
+			String sql = "SELECT\r\n" + 
+					"  timestamp,\r\n" + 
+					"  EXTRACT(NANOSECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(MICROSECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(MILLISECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(SECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(MINUTE FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(HOUR FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(DAYOFWEEK FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(DAY FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(DAYOFYEAR FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(WEEK FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(DATE FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(ISOYEAR FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT(ISOWEEK FROM timestamp) AS isoweek,\r\n" + 
+					"  EXTRACT(YEAR FROM timestamp) AS year,\r\n" + 
+					"  EXTRACT(WEEK FROM timestamp) AS week\r\n" + 
+					"FROM (\r\n" + 
+					"    SELECT TIMESTAMP '2005-01-03 12:34:56' AS timestamp UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2007-12-31' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2009-01-01' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2009-12-31' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2017-01-02' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2017-05-26'\r\n" + 
+					"  ) AS Timestamps\r\n" + 
+					"ORDER BY timestamp";
+			// @formatter:on
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
+		public void testSelectWithExtractAndSpaces() throws SQLException
+		{
+			// @formatter:off
+			String sql = "SELECT\r\n" + 
+					"  timestamp,\r\n" + 
+					"  EXTRACT( NANOSECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( MICROSECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( MILLISECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( SECOND FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( MINUTE FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( HOUR FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( DAYOFWEEK FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( DAY FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( DAYOFYEAR FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( WEEK FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( DATE FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( ISOYEAR FROM timestamp) AS isoyear,\r\n" + 
+					"  EXTRACT( ISOWEEK FROM timestamp) AS isoweek,\r\n" + 
+					"  EXTRACT( YEAR FROM timestamp) AS year,\r\n" + 
+					"  EXTRACT( WEEK FROM timestamp) AS week\r\n" + 
+					"FROM (\r\n" + 
+					"    SELECT TIMESTAMP '2005-01-03 12:34:56' AS timestamp UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2007-12-31' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2009-01-01' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2009-12-31' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2017-01-02' UNION ALL\r\n" + 
+					"    SELECT TIMESTAMP '2017-05-26'\r\n" + 
+					"  ) AS Timestamps\r\n" + 
+					"ORDER BY timestamp";
+			// @formatter:on
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+		}
+
+		@Test
 		public void testSelectWithLimitAndOffset() throws SQLException, MalformedURLException
 		{
 			String sql = "SELECT * FROM FOO LIMIT ? OFFSET ?";
