@@ -985,7 +985,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 			sql = sql + "AND IS_UNIQUE=TRUE ";
 		if (indexName != null)
 			sql = sql + " AND UPPER(IDX.INDEX_NAME) LIKE ? ";
-		sql = sql + "ORDER BY IS_UNIQUE, INDEX_NAME, ORDINAL_POSITION ";
+		sql = sql + "ORDER BY IS_UNIQUE, IDX.INDEX_NAME, ORDINAL_POSITION ";
 
 		PreparedStatement statement = prepareStatement(sql, catalog, schema, table, indexName);
 		return statement.executeQuery();
