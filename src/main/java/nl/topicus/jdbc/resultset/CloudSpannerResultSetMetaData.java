@@ -381,10 +381,8 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	private Alias getAlias(int column) throws SQLException
 	{
 		initMetaData();
-		if (aliases == null)
+		if (aliases == null || column > aliases.size())
 			return null;
-		if (column > aliases.size())
-			throw new CloudSpannerSQLException(getUnknownColumnMsg(column), Code.INVALID_ARGUMENT);
 		return aliases.get(column - 1);
 	}
 

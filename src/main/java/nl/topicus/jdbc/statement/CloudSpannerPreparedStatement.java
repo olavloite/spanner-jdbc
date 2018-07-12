@@ -34,6 +34,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
 import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
+import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
@@ -207,6 +208,16 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				{
 					setPlainSelectParameters(plainSelect, builder);
 				}
+
+				@Override
+				public void visit(SetOperationList setOpList)
+				{
+					for (SelectBody body : setOpList.getSelects())
+					{
+						setSelectParameters(body, builder);
+					}
+				}
+
 			});
 		}
 	}
@@ -244,6 +255,15 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 							public void visit(PlainSelect plainSelect)
 							{
 								setPlainSelectParameters(plainSelect, builder);
+							}
+
+							@Override
+							public void visit(SetOperationList setOpList)
+							{
+								for (SelectBody body : setOpList.getSelects())
+								{
+									setSelectParameters(body, builder);
+								}
 							}
 						});
 					}

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.stream.LongStream;
@@ -74,6 +75,11 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 		int count = 0;
 		try (ResultSet rs = ps.executeQuery())
 		{
+			ResultSetMetaData metadata = rs.getMetaData();
+			for (int i = 1; i <= metadata.getColumnCount(); i++)
+			{
+				assertNotNull(metadata.getColumnLabel(i));
+			}
 			while (rs.next())
 			{
 				count++;
@@ -116,6 +122,11 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 		PreparedStatement ps = getConnection().prepareStatement(sql);
 		try (ResultSet rs = ps.executeQuery())
 		{
+			ResultSetMetaData metadata = rs.getMetaData();
+			for (int i = 1; i <= metadata.getColumnCount(); i++)
+			{
+				assertNotNull(metadata.getColumnLabel(i));
+			}
 			while (rs.next())
 			{
 			}
@@ -156,6 +167,11 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 		PreparedStatement ps = getConnection().prepareStatement(sql);
 		try (ResultSet rs = ps.executeQuery())
 		{
+			ResultSetMetaData metadata = rs.getMetaData();
+			for (int i = 1; i <= metadata.getColumnCount(); i++)
+			{
+				assertNotNull(metadata.getColumnLabel(i));
+			}
 			while (rs.next())
 			{
 			}
@@ -174,6 +190,61 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 			{
 			}
 		}
+	}
+
+	@Test
+	public void testSelectWithSubSelectWithUnionAll() throws SQLException
+	{
+		// @formatter:off
+		String sql = "SELECT news.news_type_id, news.text FROM ( \n" + 
+				"			SELECT n.news_type_id, n.text, nt.enabled, nt.priority, nt.news_start FROM news2 AS n INNER JOIN news_types nt ON nt.news_type_id = n.news_type_id WHERE n.seeker_id = ? \n" + 
+				"			UNION ALL \n" + 
+				"			SELECT nt.news_type_id, '' as text, nt.enabled, nt.priority, nt.news_start FROM news_types AS nt \n" + 
+				"			) AS news \n" + 
+				"			WHERE news.enabled = true \n" + 
+				"			AND (news.news_start IS NULL OR news.news_start < CURRENT_TIMESTAMP()) \n" + 
+//				"			AND (news.news_end IS NULL OR news.news_end > CURRENT_TIMESTAMP()) \n" + 
+				"			AND news.news_type_id NOT IN (?) \n" + 
+				"			ORDER BY news.priority DESC \n" + 
+				"			LIMIT 1 ";
+		// @formatter:on
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		ps.setLong(1, 1000L);
+		ps.setLong(2, 500L);
+		try (ResultSet rs = ps.executeQuery())
+		{
+			ResultSetMetaData metadata = rs.getMetaData();
+			for (int i = 1; i <= metadata.getColumnCount(); i++)
+			{
+				assertNotNull(metadata.getColumnLabel(i));
+			}
+			while (rs.next())
+			{
+			}
+		}
+	}
+
+	@Test
+	public void testSelectWithUnionAll() throws SQLException
+	{
+		String sql = "select 1,2,3 from (select 'test' as col1) a where cast(a.col1 as string)=? union all select 4,5,6 from (select 'test' as col1) b where cast(b.col1 as string)=?";
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		ps.setString(1, "test");
+		ps.setString(2, "foo");
+		int count = 0;
+		try (ResultSet rs = ps.executeQuery())
+		{
+			ResultSetMetaData metadata = rs.getMetaData();
+			for (int i = 1; i <= metadata.getColumnCount(); i++)
+			{
+				assertNotNull(metadata.getColumnLabel(i));
+			}
+			while (rs.next())
+			{
+				count++;
+			}
+		}
+		assertEquals(1, count);
 	}
 
 }
