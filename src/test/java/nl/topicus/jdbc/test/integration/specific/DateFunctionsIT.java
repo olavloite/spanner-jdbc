@@ -1,6 +1,7 @@
 package nl.topicus.jdbc.test.integration.specific;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,17 +21,18 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 	private void createNewsTables() throws SQLException
 	{
 		getConnection().createStatement().executeUpdate(
-				"create table news_types (news_type_id int64 not null, name string(100), update_hours int64 not null, enabled bool not null, priority int64 not null) primary key (news_type_id)");
+				"create table news_types (news_type_id int64 not null, name string(100), update_hours int64 not null, enabled bool not null, priority int64 not null, news_start timestamp) primary key (news_type_id)");
 		getConnection().createStatement().executeUpdate(
 				"create table news2 (news_id int64 not null, created timestamp not null, news_type_id int64 not null, seeker_id int64, text string(max)) primary key (news_id)");
 
 		PreparedStatement psNewsType = getConnection().prepareStatement(
-				"insert into news_types (news_type_id, name, update_hours, enabled, priority) values (?, ?, ?, ?, ?)");
+				"insert into news_types (news_type_id, name, update_hours, enabled, priority, news_start) values (?, ?, ?, ?, ?, ?)");
 		psNewsType.setLong(1, 1L);
 		psNewsType.setString(2, "test");
 		psNewsType.setLong(3, 2L);
 		psNewsType.setBoolean(4, true);
 		psNewsType.setLong(5, 1L);
+		psNewsType.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
 		psNewsType.executeUpdate();
 
 		PreparedStatement psNews = getConnection().prepareStatement(
@@ -154,6 +156,20 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 		PreparedStatement ps = getConnection().prepareStatement(sql);
 		try (ResultSet rs = ps.executeQuery())
 		{
+			while (rs.next())
+			{
+			}
+		}
+	}
+
+	@Test
+	public void testSelectWithTimestampAdd() throws SQLException
+	{
+		String sql = "SELECT * FROM news_types WHERE TIMESTAMP_ADD(news_start, INTERVAL update_hours HOUR) > CURRENT_TIMESTAMP()";
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		try (ResultSet rs = ps.executeQuery())
+		{
+			assertNotNull(rs.getMetaData().getColumnLabel(1));
 			while (rs.next())
 			{
 			}
