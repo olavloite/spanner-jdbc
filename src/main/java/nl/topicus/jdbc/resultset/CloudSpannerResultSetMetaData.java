@@ -129,14 +129,17 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 				@Override
 				public void visit(PlainSelect plainSelect)
 				{
-					plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
+					if (plainSelect.getFromItem() != null)
 					{
-						@Override
-						public void visit(Table table)
+						plainSelect.getFromItem().accept(new FromItemVisitorAdapter()
 						{
-							initTable(table);
-						}
-					});
+							@Override
+							public void visit(Table table)
+							{
+								initTable(table);
+							}
+						});
+					}
 					if (plainSelect.getJoins() != null)
 					{
 						for (Join join : plainSelect.getJoins())
