@@ -193,6 +193,50 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 	}
 
 	@Test
+	public void testSelectWithTimestampSub() throws SQLException
+	{
+		String sql = "SELECT * FROM news_types WHERE TIMESTAMP_SUB(news_start, INTERVAL update_hours HOUR) > CURRENT_TIMESTAMP()";
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		try (ResultSet rs = ps.executeQuery())
+		{
+			assertNotNull(rs.getMetaData().getColumnLabel(1));
+			while (rs.next())
+			{
+			}
+		}
+	}
+
+	@Test
+	public void testSelectWithTimestampToString() throws SQLException
+	{
+		String sql = "SELECT STRING(CURRENT_TIMESTAMP()) AS TS";
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		try (ResultSet rs = ps.executeQuery())
+		{
+			assertEquals("TS", rs.getMetaData().getColumnLabel(1));
+			while (rs.next())
+			{
+				assertNotNull(rs.getString(1));
+			}
+		}
+	}
+
+	@Test
+	public void testSelectWithTimestampToStringWithTimezone() throws SQLException
+	{
+		String sql = "SELECT STRING(CAST('2008-12-25 15:30:00' AS TIMESTAMP), '-06:00') AS TS";
+		PreparedStatement ps = getConnection().prepareStatement(sql);
+		try (ResultSet rs = ps.executeQuery())
+		{
+			assertEquals("TS", rs.getMetaData().getColumnLabel(1));
+			while (rs.next())
+			{
+				assertEquals("2008-12-25 21:30:00", rs.getString(1));
+			}
+		}
+	}
+
+	@Test
 	public void testSelectWithSubSelectWithUnionAll() throws SQLException
 	{
 		// @formatter:off
@@ -227,7 +271,7 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 	@Test
 	public void testSelectWithUnionAll() throws SQLException
 	{
-		String sql = "select 1,2,3 from (select 'test' as col1) a where cast(a.col1 as string)=? union all select 4,5,6 from (select 'test' as col1) b where cast(b.col1 as string)=?";
+		String sql = "select 1,2,3 from (select 'test' as col1) a where a.col1=? union all select 4,5,6 from (select 'test' as col1) b where b.col1=?";
 		PreparedStatement ps = getConnection().prepareStatement(sql);
 		ps.setString(1, "test");
 		ps.setString(2, "foo");
