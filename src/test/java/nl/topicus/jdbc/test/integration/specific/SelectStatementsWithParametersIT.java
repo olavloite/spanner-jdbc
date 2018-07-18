@@ -65,6 +65,34 @@ public class SelectStatementsWithParametersIT extends AbstractSpecificIntegratio
 		testSqlStatement(sql, 1, 1L, "two", 3.0D);
 	}
 
+	@Test
+	public void testSelectStarWithSubSelectAndParamsInSubSelect() throws SQLException
+	{
+		// @formatter:off
+		String sql = "select * \n"
+				+ "from (\n"
+				+ "  select 1 as one, 'two' as two, 3.0 as three\n"
+				+ "  from (\n"
+				+ "    select 'innersubselect' as inner_col\n"
+				+ "  ) sub2"
+				+ "  where sub2.inner_col=?"
+				+ ") sub1\n"
+				+ "where one=?\n"
+				+ "and two=?\n"
+				+ "and three=?";
+		// @formatter:on
+		testSqlStatement(sql, 1, "innersubselect", 1L, "two", 3.0D);
+		testSqlStatement(sql, 0, "not_found", 1L, "two", 3.0D);
+	}
+
+	@Test
+	public void testSelectWithParamEqualsSelect() throws SQLException
+	{
+		String sql = "select 1 as one, 'two' as two, 3.0 as three from (select 1) sub where ?=(select 1)";
+		testSqlStatement(sql, 1, 1);
+		testSqlStatement(sql, 0, 2);
+	}
+
 	private void testSqlStatement(String sql) throws SQLException
 	{
 		testSqlStatement(sql, 1);
@@ -97,7 +125,7 @@ public class SelectStatementsWithParametersIT extends AbstractSpecificIntegratio
 				count++;
 			}
 		}
-		assertEquals(1, count);
+		assertEquals(expectedCount, count);
 	}
 
 }
