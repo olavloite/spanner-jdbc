@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.cloud.spanner.ResultSet;
 import com.google.common.base.Strings;
-import com.google.rpc.Code;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
@@ -29,18 +28,11 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SelectItemVisitor;
 import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
 import nl.topicus.jdbc.CloudSpannerDriver;
-import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 import nl.topicus.jdbc.statement.CloudSpannerStatement;
 
 public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper implements ResultSetMetaData
 {
-	private static final String UNKNOWN_COLUMN = "Unknown column at index ";
-
-	private static String getUnknownColumnMsg(int column)
-	{
-		return UNKNOWN_COLUMN + column;
-	}
 
 	private static final class ParseException extends RuntimeException
 	{
@@ -370,14 +362,15 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 	@Override
 	public String getSchemaName(int column) throws SQLException
 	{
+		// Use this method to honor the null / "" setting
 		return statement.getConnection().getSchema();
 	}
 
 	private Column getColumn(int column) throws SQLException
 	{
 		initMetaData();
-		if (column > columns.size())
-			throw new CloudSpannerSQLException(getUnknownColumnMsg(column), Code.INVALID_ARGUMENT);
+		if (columns == null || column > columns.size())
+			return null;
 		return columns.get(column - 1);
 	}
 

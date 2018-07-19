@@ -2,12 +2,14 @@ package nl.topicus.jdbc.test.integration.specific;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.stream.LongStream;
 
 import org.junit.Test;
@@ -181,11 +183,30 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest
 	@Test
 	public void testSelectWithTimestampAdd() throws SQLException
 	{
-		String sql = "SELECT * FROM news_types WHERE TIMESTAMP_ADD(news_start, INTERVAL update_hours HOUR) > CURRENT_TIMESTAMP()";
+		String sql = "SELECT * FROM news_types WHERE TIMESTAMP_ADD(news_start, INTERVAL update_hours HOUR) > CURRENT_TIMESTAMP() and news_type_id=?";
 		PreparedStatement ps = getConnection().prepareStatement(sql);
+		ps.setLong(1, 1L);
 		try (ResultSet rs = ps.executeQuery())
 		{
-			assertNotNull(rs.getMetaData().getColumnLabel(1));
+			ResultSetMetaData metadata = rs.getMetaData();
+			assertEquals("news_type_id", metadata.getColumnLabel(1));
+			assertEquals("news_type_id", metadata.getColumnName(1));
+			assertEquals(10, metadata.getColumnDisplaySize(1));
+			assertEquals(Types.BIGINT, metadata.getColumnType(1));
+			assertEquals("INT64", metadata.getColumnTypeName(1));
+			assertEquals(10, metadata.getPrecision(1));
+			assertEquals(0, metadata.getScale(1));
+			// The following asserts do not work as the sql parser does not
+			// recognize this sql statement
+			// assertEquals(ResultSetMetaData.columnNoNulls,
+			// metadata.isNullable(1));
+			// assertEquals("", metadata.getCatalogName(1));
+			// assertEquals("", metadata.getSchemaName(1));
+			// assertEquals("news_types", metadata.getTableName(1));
+			assertEquals(ResultSetMetaData.columnNullableUnknown, metadata.isNullable(1));
+			assertNull(metadata.getCatalogName(1));
+			assertNull(metadata.getSchemaName(1));
+			assertEquals("", metadata.getTableName(1));
 			while (rs.next())
 			{
 			}
