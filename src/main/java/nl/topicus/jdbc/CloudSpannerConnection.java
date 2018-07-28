@@ -242,7 +242,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			if (useCustomHost)
 			{
 				// Extract host from url
-				host = url.substring("jdbc:cloudspanner:".length(), url.indexOf(";"));
+				int endIndex = url.indexOf(';');
+				if (endIndex == -1)
+				{
+					endIndex = url.length();
+				}
+				host = url.substring("jdbc:cloudspanner:".length(), endIndex);
 			}
 			spanner = driver.getSpanner(database.project, credentials, host);
 			dbClient = spanner.getDatabaseClient(
