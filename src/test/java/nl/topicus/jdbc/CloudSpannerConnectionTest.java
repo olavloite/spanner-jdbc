@@ -430,4 +430,16 @@ public class CloudSpannerConnectionTest
 		Assert.assertTrue("Method did not throw exception on closed connection", valid);
 	}
 
+	@Test
+	public void testGetBucket()
+	{
+		assertEquals("test-bucket", CloudSpannerConnection.getBucket("gs://test-bucket/config/key.json"));
+	}
+
+	@Test
+	public void testGetBlob()
+	{
+		assertEquals("config/key.json", CloudSpannerConnection.getBlob("gs://test-bucket/config/key.json"));
+	}
+
 }

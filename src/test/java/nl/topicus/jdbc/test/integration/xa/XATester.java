@@ -21,6 +21,7 @@ import com.google.rpc.Code;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.CloudSpannerXADataSource;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
+import nl.topicus.jdbc.test.integration.CloudSpannerIT;
 import nl.topicus.jdbc.xa.CloudSpannerXAConnection;
 import nl.topicus.jdbc.xa.RecoveredXid;
 
@@ -39,6 +40,8 @@ public class XATester
 		int originalLogLevel = CloudSpannerDriver.getLogLevel();
 		CloudSpannerDriver.setLogLevel(CloudSpannerDriver.DEBUG);
 		CloudSpannerXADataSource ds = new CloudSpannerXADataSource();
+		ds.setHost(CloudSpannerIT.getHost());
+		ds.setUseCustomHost(true);
 		ds.setProjectId(projectId);
 		ds.setInstanceId(instanceId);
 		ds.setDatabase(database);
