@@ -49,25 +49,28 @@ public class CloudSpannerDriver implements Driver
 
 	private static class SpannerKey
 	{
+		private final String host;
+
 		private final String projectId;
 
 		private final Credentials credentials;
 
-		private SpannerKey(String projectId, Credentials credentials)
+		private SpannerKey(String host, String projectId, Credentials credentials)
 		{
+			this.host = host;
 			this.projectId = projectId;
 			this.credentials = credentials;
 		}
 
-		private static SpannerKey of(String projectId, Credentials credentials)
+		private static SpannerKey of(String host, String projectId, Credentials credentials)
 		{
-			return new SpannerKey(projectId, credentials);
+			return new SpannerKey(host, projectId, credentials);
 		}
 
 		@Override
 		public int hashCode()
 		{
-			return Objects.hash(projectId, credentials);
+			return Objects.hash(host, projectId, credentials);
 		}
 
 		@Override
@@ -78,7 +81,8 @@ public class CloudSpannerDriver implements Driver
 			if (!(o instanceof SpannerKey))
 				return false;
 			SpannerKey other = (SpannerKey) o;
-			return Objects.equals(projectId, other.projectId) && Objects.equals(credentials, other.credentials);
+			return Objects.equals(host, other.host) && Objects.equals(projectId, other.projectId)
+					&& Objects.equals(credentials, other.credentials);
 		}
 	}
 
@@ -254,25 +258,25 @@ public class CloudSpannerDriver implements Driver
 	 */
 	synchronized Spanner getSpanner(String projectId, Credentials credentials, String host)
 	{
-		SpannerKey key = SpannerKey.of(projectId, credentials);
+		SpannerKey key = SpannerKey.of(host, projectId, credentials);
 		Spanner spanner = spanners.get(key);
 		if (spanner == null)
 		{
-			spanner = createSpanner(key, host);
+			spanner = createSpanner(key);
 			spanners.put(key, spanner);
 		}
 		return spanner;
 	}
 
-	private Spanner createSpanner(SpannerKey key, String host)
+	private Spanner createSpanner(SpannerKey key)
 	{
 		Builder builder = SpannerOptions.newBuilder();
 		if (key.projectId != null)
 			builder.setProjectId(key.projectId);
 		if (key.credentials != null)
 			builder.setCredentials(key.credentials);
-		if (host != null)
-			builder.setHost(host);
+		if (key.host != null)
+			builder.setHost(key.host);
 		// builder.setHost("http://localhost:8443");
 		SpannerOptions options = builder.build();
 		return options.getService();
