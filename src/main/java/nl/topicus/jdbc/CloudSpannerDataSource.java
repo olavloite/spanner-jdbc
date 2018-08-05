@@ -21,9 +21,11 @@ import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
  */
 public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implements DataSource
 {
-	private String URL = "jdbc:cloudspanner:%s";
+	private static final String URL_FORMAT = "jdbc:cloudspanner:%s";
 
 	private String host = "//localhost";
+
+	private String url;
 
 	private String projectId;
 
@@ -94,7 +96,11 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 
 	private String getURL()
 	{
-		return String.format(URL, getHost());
+		if (getUrl() == null)
+		{
+			return String.format(URL_FORMAT, getHost());
+		}
+		return getUrl();
 	}
 
 	public String getHost()
@@ -141,6 +147,16 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 	private String stripEqualsSign(String urlPart)
 	{
 		return urlPart.substring(0, urlPart.length() - 1);
+	}
+
+	public String getUrl()
+	{
+		return url;
+	}
+
+	public void setUrl(String url)
+	{
+		this.url = url;
 	}
 
 	public String getProjectId()
