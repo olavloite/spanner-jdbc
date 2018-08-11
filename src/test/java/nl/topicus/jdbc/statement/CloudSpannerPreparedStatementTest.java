@@ -1340,6 +1340,18 @@ public class CloudSpannerPreparedStatementTest
 			}
 			assertEquals("n.seeker_id", ps.getParameterStore().getColumn(1));
 		}
+
+		@Test
+		public void testSelectWithParameterInSelectItem() throws SQLException, MalformedURLException
+		{
+			String sql = "SELECT CASE WHEN (n.accountId > ?) THEN true ELSE false END FROM Notification n";
+			CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+			ps.setLong(1, 1000L);
+			try (ResultSet rs = ps.executeQuery())
+			{
+			}
+			assertEquals("n.accountId", ps.getParameterStore().getColumn(1));
+		}
 	}
 
 	private static void testCreateTableStatement(String sql) throws SQLException
