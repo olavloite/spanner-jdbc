@@ -62,7 +62,7 @@ public class SelectStatementsWithParametersIT extends AbstractSpecificIntegratio
 				+ "and two=?\n"
 				+ "and three=?";
 		// @formatter:on
-		testSqlStatement(sql, 1, 1L, "two", 3.0D);
+		testSqlStatement(sql, 1, true, 1L, "two", 3.0D);
 	}
 
 	@Test
@@ -81,24 +81,47 @@ public class SelectStatementsWithParametersIT extends AbstractSpecificIntegratio
 				+ "and two=?\n"
 				+ "and three=?";
 		// @formatter:on
-		testSqlStatement(sql, 1, "innersubselect", 1L, "two", 3.0D);
-		testSqlStatement(sql, 0, "not_found", 1L, "two", 3.0D);
+		testSqlStatement(sql, 1, true, "innersubselect", 1L, "two", 3.0D);
+		testSqlStatement(sql, 0, true, "not_found", 1L, "two", 3.0D);
 	}
 
 	@Test
 	public void testSelectWithParamEqualsSelect() throws SQLException
 	{
 		String sql = "select 1 as one, 'two' as two, 3.0 as three from (select 1) sub where ?=(select 1)";
-		testSqlStatement(sql, 1, 1);
-		testSqlStatement(sql, 0, 2);
+		testSqlStatement(sql, 1, true, 1);
+		testSqlStatement(sql, 0, true, 2);
+	}
+
+	@Test
+	public void testSelectWithParamInSelectItem() throws SQLException
+	{
+		// @formatter:off
+		String sql =
+				  "select * from\n"
+				+ "  (select case\n"
+				+ "     when num>2 then 'Greater than two'"
+				+ "     else 'Not greater than two'"
+				+ "  end as description\n"
+				+ "  from\n"
+				+ "    (select 1 as num\n"
+				+ "     union all\n"
+				+ "     select 2 as num\n"
+				+ "     union all\n"
+				+ "     select 3 as num) sub\n"
+				+ "   ) sub2\n"
+				+ "where description='Greater than two'";
+		// @formatter:on
+		testSqlStatement(sql, 1, false, 1);
 	}
 
 	private void testSqlStatement(String sql) throws SQLException
 	{
-		testSqlStatement(sql, 1);
+		testSqlStatement(sql, 1, true);
 	}
 
-	private void testSqlStatement(String sql, int expectedCount, Object... params) throws SQLException
+	private void testSqlStatement(String sql, int expectedCount, boolean checkMetaData, Object... params)
+			throws SQLException
 	{
 		PreparedStatement ps = getConnection().prepareStatement(sql);
 		if (params != null)
@@ -113,13 +136,16 @@ public class SelectStatementsWithParametersIT extends AbstractSpecificIntegratio
 		int count = 0;
 		try (ResultSet rs = ps.executeQuery())
 		{
-			ResultSetMetaData metadata = rs.getMetaData();
-			assertEquals("one", metadata.getColumnLabel(1));
-			assertEquals("two", metadata.getColumnLabel(2));
-			assertEquals("three", metadata.getColumnLabel(3));
-			assertEquals(Types.BIGINT, metadata.getColumnType(1));
-			assertEquals(Types.NVARCHAR, metadata.getColumnType(2));
-			assertEquals(Types.DOUBLE, metadata.getColumnType(3));
+			if (checkMetaData)
+			{
+				ResultSetMetaData metadata = rs.getMetaData();
+				assertEquals("one", metadata.getColumnLabel(1));
+				assertEquals("two", metadata.getColumnLabel(2));
+				assertEquals("three", metadata.getColumnLabel(3));
+				assertEquals(Types.BIGINT, metadata.getColumnType(1));
+				assertEquals(Types.NVARCHAR, metadata.getColumnType(2));
+				assertEquals(Types.DOUBLE, metadata.getColumnType(3));
+			}
 			while (rs.next())
 			{
 				count++;
