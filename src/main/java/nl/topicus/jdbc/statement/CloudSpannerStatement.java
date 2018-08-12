@@ -20,7 +20,7 @@ import com.google.rpc.Code;
 
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.parser.TokenMgrError;
+import net.sf.jsqlparser.parser.TokenMgrException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import nl.topicus.jdbc.CloudSpannerConnection;
@@ -246,7 +246,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 			{
 				statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			}
-			catch (JSQLParserException | TokenMgrError e)
+			catch (JSQLParserException | TokenMgrException e)
 			{
 				throw new CloudSpannerSQLException(
 						"Error while parsing sql statement " + sql + ": " + e.getLocalizedMessage(),

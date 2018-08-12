@@ -220,7 +220,7 @@ public class CloudSpannerResultSetMetaDataTest
 			Struct.Builder builder = Struct.newBuilder();
 			for (TestColumn col : TEST_COLUMNS)
 			{
-				builder.add(col.name, getDefaultValue(col.type, row));
+				builder.set(col.name).to(getDefaultValue(col.type, row));
 			}
 			rows.add(builder.build());
 		}
@@ -289,8 +289,8 @@ public class CloudSpannerResultSetMetaDataTest
 		List<Struct> rows = new ArrayList<>(columns.size());
 		for (TestColumn col : columns)
 		{
-			rows.add(Struct.newBuilder().add("COLUMN_NAME", Value.string(col.name))
-					.add("NULLABLE", Value.int64(col.nullable)).add("COLUMN_SIZE", Value.int64(col.size)).build());
+			rows.add(Struct.newBuilder().set("COLUMN_NAME").to(Value.string(col.name)).set("NULLABLE")
+					.to(Value.int64(col.nullable)).set("COLUMN_SIZE").to(Value.int64(col.size)).build());
 		}
 		ResultSet rs = ResultSets.forRows(Type.struct(StructField.of("COLUMN_NAME", Type.string()),
 				StructField.of("NULLABLE", Type.int64()), StructField.of("COLUMN_SIZE", Type.int64())), rows);
@@ -300,7 +300,7 @@ public class CloudSpannerResultSetMetaDataTest
 	private CloudSpannerResultSet createFooPrimaryKeysResultSet(CloudSpannerStatement statement)
 	{
 		List<Struct> rows = new ArrayList<>(1);
-		rows.add(Struct.newBuilder().add("COLUMN_NAME", Value.string(tableColumns().get(0).name)).build());
+		rows.add(Struct.newBuilder().set("COLUMN_NAME").to(Value.string(tableColumns().get(0).name)).build());
 		ResultSet rs = ResultSets.forRows(Type.struct(StructField.of("COLUMN_NAME", Type.string())), rows);
 		return new CloudSpannerResultSet(statement, rs, null);
 	}
