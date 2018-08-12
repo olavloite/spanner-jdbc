@@ -127,10 +127,9 @@ class RunningOperationsStore
 			}
 			for (String ddl : op.sql)
 			{
-				rows.add(Struct.newBuilder().add("NAME", Value.string(op.operation.getName()))
-						.add("TIME_STARTED", Value.timestamp(op.timeStarted)).add("STATEMENT", Value.string(ddl))
-						.add("DONE", Value.bool(op.operation.isDone())).add("EXCEPTION", Value.string(exception))
-						.build());
+				rows.add(Struct.newBuilder().set("NAME").to(Value.string(op.operation.getName())).set("TIME_STARTED")
+						.to(Value.timestamp(op.timeStarted)).set("STATEMENT").to(Value.string(ddl)).set("DONE")
+						.to(Value.bool(op.operation.isDone())).set("EXCEPTION").to(Value.string(exception)).build());
 			}
 		}
 		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(Type.struct(StructField.of("NAME", Type.string()),

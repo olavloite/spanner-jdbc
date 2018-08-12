@@ -23,7 +23,7 @@ import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.parser.TokenMgrError;
+import net.sf.jsqlparser.parser.TokenMgrException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
@@ -144,7 +144,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 		}
-		catch (JSQLParserException | TokenMgrError e)
+		catch (JSQLParserException | TokenMgrException e)
 		{
 			throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
 					Code.INVALID_ARGUMENT, e);
@@ -316,7 +316,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 		{
 			setWhereParameters(plainSelect.getLimit().getRowCount(), builder);
 		}
-		if (plainSelect.getOffset() != null && plainSelect.getOffset().isOffsetJdbcParameter())
+		if (plainSelect.getOffset() != null && plainSelect.getOffset().getOffsetJdbcParameter() != null)
 		{
 			ValueBinderExpressionVisitorAdapter<com.google.cloud.spanner.Statement.Builder> binder = new ValueBinderExpressionVisitorAdapter<>(
 					getParameterStore(), builder.bind("p" + getParameterStore().getHighestIndex()), null);
@@ -488,7 +488,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 						Code.INVALID_ARGUMENT);
 			}
 		}
-		catch (JSQLParserException | IllegalArgumentException | TokenMgrError e)
+		catch (JSQLParserException | IllegalArgumentException | TokenMgrException e)
 		{
 			throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
 					Code.INVALID_ARGUMENT, e);
@@ -687,7 +687,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 			{
 				statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 			}
-			catch (JSQLParserException | TokenMgrError e)
+			catch (JSQLParserException | TokenMgrException e)
 			{
 				throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
 						Code.INVALID_ARGUMENT, e);
@@ -753,7 +753,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				createSelectBuilder(statement, sql);
 			}
 		}
-		catch (JSQLParserException | TokenMgrError e)
+		catch (JSQLParserException | TokenMgrException e)
 		{
 			throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
 					Code.INVALID_ARGUMENT, e);

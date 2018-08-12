@@ -23,7 +23,6 @@ import net.sf.jsqlparser.expression.RowConstructor;
 import net.sf.jsqlparser.expression.TimeKeyExpression;
 import net.sf.jsqlparser.expression.UserVariable;
 import net.sf.jsqlparser.expression.WhenClause;
-import net.sf.jsqlparser.expression.WithinGroupExpression;
 import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
 import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseAnd;
 import net.sf.jsqlparser.expression.operators.arithmetic.BitwiseOr;
@@ -346,13 +345,6 @@ abstract class DMLWhereClauseVisitorAdapter extends ExpressionVisitorAdapter
 	{
 		invalid = true;
 		super.visit(expr);
-	}
-
-	@Override
-	public void visit(WithinGroupExpression wgexpr)
-	{
-		invalid = true;
-		super.visit(wgexpr);
 	}
 
 	@Override

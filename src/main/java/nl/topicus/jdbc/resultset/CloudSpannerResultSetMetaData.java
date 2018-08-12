@@ -13,7 +13,7 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.expression.ExpressionVisitorAdapter;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.parser.TokenMgrError;
+import net.sf.jsqlparser.parser.TokenMgrException;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
@@ -92,7 +92,7 @@ public class CloudSpannerResultSetMetaData extends AbstractCloudSpannerWrapper i
 		{
 			sqlStatement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
 		}
-		catch (JSQLParserException | TokenMgrError e)
+		catch (JSQLParserException | TokenMgrException e)
 		{
 			// ignore
 			return;
