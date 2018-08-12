@@ -107,27 +107,34 @@ public class CloudSpannerIT
 	{
 		try
 		{
-			log.info("Starting tests, about to create database");
-			if (CREATE_INSTANCE)
-				createInstance();
-			if (CREATE_DATABASE)
-				createDatabase();
-			log.info("Database created");
-			// Do the testing
-			log.info("Starting JDBC tests");
-			performJdbcTests();
-			log.info("JDBC tests completed");
+			try
+			{
+				log.info("Starting tests, about to create database");
+				if (CREATE_INSTANCE)
+					createInstance();
+				if (CREATE_DATABASE)
+					createDatabase();
+				log.info("Database created");
+				// Do the testing
+				log.info("Starting JDBC tests");
+				performJdbcTests();
+				log.info("JDBC tests completed");
+			}
+			finally
+			{
+				// Clean up test instance and test database.
+				log.info("Cleaning up database");
+				if (CREATE_DATABASE)
+					cleanUpDatabase();
+				if (CREATE_INSTANCE)
+					cleanUpInstance();
+				spanner.close();
+				log.info("Clean up completed");
+			}
 		}
-		finally
+		catch (Throwable t)
 		{
-			// Clean up test instance and test database.
-			log.info("Cleaning up database");
-			if (CREATE_DATABASE)
-				cleanUpDatabase();
-			if (CREATE_INSTANCE)
-				cleanUpInstance();
-			spanner.close();
-			log.info("Clean up completed");
+			throw new AssertionError("Failed to perform database tests", t);
 		}
 	}
 
