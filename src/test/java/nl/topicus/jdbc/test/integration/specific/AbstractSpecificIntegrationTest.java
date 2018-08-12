@@ -90,16 +90,9 @@ public abstract class AbstractSpecificIntegrationTest
 	@BeforeClass
 	public static void setup() throws IOException, InterruptedException
 	{
-		try
-		{
-			createSpanner();
-			createInstance();
-			createDatabase();
-		}
-		catch (Throwable t)
-		{
-			throw new AssertionError("Failed to setup test instance", t);
-		}
+		createSpanner();
+		createInstance();
+		createDatabase();
 	}
 
 	private static void createSpanner() throws IOException
@@ -122,16 +115,9 @@ public abstract class AbstractSpecificIntegrationTest
 	@AfterClass
 	public static void teardown()
 	{
-		try
-		{
-			cleanUpDatabase();
-			cleanUpInstance();
-			spanner.close();
-		}
-		catch (Throwable t)
-		{
-			throw new AssertionError("Failed to teardown test instance", t);
-		}
+		cleanUpDatabase();
+		cleanUpInstance();
+		spanner.close();
 	}
 
 	private static void createInstance()
@@ -170,22 +156,15 @@ public abstract class AbstractSpecificIntegrationTest
 	@Before
 	public void setupConnection() throws SQLException
 	{
-		try
-		{
-			StringBuilder url = new StringBuilder("jdbc:cloudspanner:");
-			url.append(getHost());
-			url.append(";Project=").append(projectId);
-			url.append(";Instance=").append(instanceId);
-			url.append(";Database=").append(DATABASE_ID);
-			url.append(";PvtKeyPath=").append(credentialsPath);
-			url.append(";UseCustomHost=true");
-			connection = DriverManager.getConnection(url.toString());
-			connection.setAutoCommit(false);
-		}
-		catch (Throwable t)
-		{
-			throw new AssertionError("Failed to setup connection", t);
-		}
+		StringBuilder url = new StringBuilder("jdbc:cloudspanner:");
+		url.append(getHost());
+		url.append(";Project=").append(projectId);
+		url.append(";Instance=").append(instanceId);
+		url.append(";Database=").append(DATABASE_ID);
+		url.append(";PvtKeyPath=").append(credentialsPath);
+		url.append(";UseCustomHost=true");
+		connection = DriverManager.getConnection(url.toString());
+		connection.setAutoCommit(false);
 	}
 
 	@After
@@ -193,15 +172,8 @@ public abstract class AbstractSpecificIntegrationTest
 	{
 		if (connection != null)
 		{
-			try
-			{
-				connection.close();
-				connection = null;
-			}
-			catch (Throwable t)
-			{
-				throw new AssertionError("Failed to close connection", t);
-			}
+			connection.close();
+			connection = null;
 		}
 	}
 
