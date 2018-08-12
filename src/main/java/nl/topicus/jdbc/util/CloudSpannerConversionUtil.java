@@ -125,6 +125,8 @@ public class CloudSpannerConversionUtil
 	 *            The java class target type to convert to
 	 * @return The converted value
 	 * @throws CloudSpannerSQLException
+	 *             Thrown if the given value cannot be converted to the
+	 *             specified type
 	 */
 	public static Object convert(Object value, Type type, Class<?> targetType) throws CloudSpannerSQLException
 	{

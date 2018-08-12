@@ -21,7 +21,11 @@ import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
  */
 public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implements DataSource
 {
-	private static final String URL = "jdbc:cloudspanner://localhost";
+	private static final String URL_FORMAT = "jdbc:cloudspanner:%s";
+
+	private String host = "//localhost";
+
+	private String url;
 
 	private String projectId;
 
@@ -36,6 +40,8 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 	private String simulateProductName;
 
 	private boolean allowExtendedMode;
+
+	private boolean useCustomHost;
 
 	private PrintWriter logger;
 
@@ -90,7 +96,29 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 
 	private String getURL()
 	{
-		return URL;
+		if (getUrl() == null)
+		{
+			return String.format(URL_FORMAT, getHost());
+		}
+		return getUrl();
+	}
+
+	public String getHost()
+	{
+		return host;
+	}
+
+	/**
+	 * Sets the host to use for this {@link DataSource}. Setting this property
+	 * also automatically sets the property UseCustomHost to true.
+	 * 
+	 * @param host
+	 *            The host to use
+	 */
+	public void setHost(String host)
+	{
+		this.host = host;
+		this.useCustomHost = true;
 	}
 
 	private Properties getProperties()
@@ -100,12 +128,10 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 		setProperty(info, stripEqualsSign(ConnectionProperties.INSTANCE_URL_PART), getInstanceId());
 		setProperty(info, stripEqualsSign(ConnectionProperties.DATABASE_URL_PART), getDatabase());
 		setProperty(info, stripEqualsSign(ConnectionProperties.KEY_FILE_URL_PART), getPvtKeyPath());
-		setProperty(info, stripEqualsSign(ConnectionProperties.OAUTH_ACCESS_TOKEN_URL_PART),
-				getOauthAccessToken());
-		setProperty(info, stripEqualsSign(ConnectionProperties.SIMULATE_PRODUCT_NAME),
-				getSimulateProductName());
-		setProperty(info, stripEqualsSign(ConnectionProperties.ALLOW_EXTENDED_MODE),
-				isAllowExtendedMode());
+		setProperty(info, stripEqualsSign(ConnectionProperties.OAUTH_ACCESS_TOKEN_URL_PART), getOauthAccessToken());
+		setProperty(info, stripEqualsSign(ConnectionProperties.SIMULATE_PRODUCT_NAME), getSimulateProductName());
+		setProperty(info, stripEqualsSign(ConnectionProperties.ALLOW_EXTENDED_MODE), isAllowExtendedMode());
+		setProperty(info, stripEqualsSign(ConnectionProperties.USE_CUSTOM_HOST), isUseCustomHost());
 
 		return info;
 	}
@@ -121,6 +147,16 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 	private String stripEqualsSign(String urlPart)
 	{
 		return urlPart.substring(0, urlPart.length() - 1);
+	}
+
+	public String getUrl()
+	{
+		return url;
+	}
+
+	public void setUrl(String url)
+	{
+		this.url = url;
 	}
 
 	public String getProjectId()
@@ -191,6 +227,16 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 	public void setAllowExtendedMode(boolean allowExtendedMode)
 	{
 		this.allowExtendedMode = allowExtendedMode;
+	}
+
+	public boolean isUseCustomHost()
+	{
+		return useCustomHost;
+	}
+
+	public void setUseCustomHost(boolean useCustomHost)
+	{
+		this.useCustomHost = useCustomHost;
 	}
 
 }

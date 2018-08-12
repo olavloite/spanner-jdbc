@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.Channels;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -33,6 +34,7 @@ import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.auth.oauth2.UserCredentials;
+import com.google.cloud.ReadChannel;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.BatchClient;
 import com.google.cloud.spanner.DatabaseAdminClient;
@@ -47,6 +49,9 @@ import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.StructField;
 import com.google.cloud.spanner.Value;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.rpc.Code;
@@ -242,7 +247,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 			if (useCustomHost)
 			{
 				// Extract host from url
-				host = url.substring("jdbc:cloudspanner:".length(), url.indexOf(";"));
+				int endIndex = url.indexOf(';');
+				if (endIndex == -1)
+				{
+					endIndex = url.length();
+				}
+				host = url.substring("jdbc:cloudspanner:".length(), endIndex);
 			}
 			spanner = driver.getSpanner(database.project, credentials, host);
 			dbClient = spanner.getDatabaseClient(
@@ -280,17 +290,53 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		if (credentialsPath == null || credentialsPath.length() == 0)
 			throw new IllegalArgumentException("credentialsPath may not be null or empty");
 		GoogleCredentials credentials = null;
-		File credentialsFile = new File(credentialsPath);
-		if (!credentialsFile.isFile())
+		if (credentialsPath.startsWith("gs://"))
 		{
-			throw new IOException(
-					String.format("Error reading credential file %s: File does not exist", credentialsPath));
+			try
+			{
+				Storage storage = StorageOptions.newBuilder().build().getService();
+				String bucketName = getBucket(credentialsPath);
+				String blobName = getBlob(credentialsPath);
+				Blob blob = storage.get(bucketName, blobName);
+				ReadChannel reader = blob.reader();
+				InputStream inputStream = Channels.newInputStream(reader);
+				credentials = GoogleCredentials.fromStream(inputStream, CloudSpannerOAuthUtil.HTTP_TRANSPORT_FACTORY);
+			}
+			catch (Exception e)
+			{
+				throw new IllegalArgumentException(
+						"Invalid credentials path: " + credentialsPath + ". Reason: " + e.getMessage(), e);
+			}
 		}
-		try (InputStream credentialsStream = new FileInputStream(credentialsFile))
+		else
 		{
-			credentials = GoogleCredentials.fromStream(credentialsStream, CloudSpannerOAuthUtil.HTTP_TRANSPORT_FACTORY);
+			File credentialsFile = new File(credentialsPath);
+			if (!credentialsFile.isFile())
+			{
+				throw new IOException(
+						String.format("Error reading credential file %s: File does not exist", credentialsPath));
+			}
+			try (InputStream credentialsStream = new FileInputStream(credentialsFile))
+			{
+				credentials = GoogleCredentials.fromStream(credentialsStream,
+						CloudSpannerOAuthUtil.HTTP_TRANSPORT_FACTORY);
+			}
 		}
 		return credentials;
+	}
+
+	static String getBucket(String storageUrl)
+	{
+		Preconditions.checkArgument(storageUrl.startsWith("gs://"), "Storage URL must start with gs://");
+		Preconditions.checkArgument(storageUrl.substring(5).contains("/"), "Storage URL must contain a blob name");
+		return storageUrl.substring(5, storageUrl.indexOf('/', 5));
+	}
+
+	static String getBlob(String storageUrl)
+	{
+		Preconditions.checkArgument(storageUrl.startsWith("gs://"), "Storage URL must start with gs://");
+		Preconditions.checkArgument(storageUrl.substring(5).contains("/"), "Storage URL must contain a blob name");
+		return storageUrl.substring(storageUrl.indexOf('/', 5) + 1);
 	}
 
 	public static String getServiceAccountProjectId(String credentialsPath)

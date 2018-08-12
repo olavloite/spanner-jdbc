@@ -80,6 +80,21 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
 		}
 		// Remove @{FORCE_INDEX...} statements
 		sql = sql.replaceAll("(?is)\\@\\{\\s*FORCE_INDEX.*\\}", "");
+		// Remove 'INTERVAL INT64_expr date_part' calls
+		sql = sql.replaceAll("(?is),\\s*INTERVAL\\s+", ",");
+		sql = sql.replaceAll("(?is)\\s+DAY\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+WEEK\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+MONTH\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+QUARTER\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+YEAR\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+NANOSECOND\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+MICROSECOND\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+MILLISECOND\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+SECOND\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+MINUTE\\s*\\)", ")");
+		sql = sql.replaceAll("(?is)\\s+HOUR\\s*\\)", ")");
+		// Remove 'EXTRACT(DATE FROM ...)' calls
+		sql = sql.replaceAll("(?is)EXTRACT\\(\\s*DATE\\s+FROM\\s+", "EXTRACT(DATE_OF_MONTH FROM ");
 
 		return sql;
 	}

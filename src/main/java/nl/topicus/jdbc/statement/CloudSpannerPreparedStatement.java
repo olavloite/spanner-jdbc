@@ -33,7 +33,11 @@ import net.sf.jsqlparser.statement.select.FromItemVisitorAdapter;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.statement.select.SelectItemVisitorAdapter;
 import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
+import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.update.Update;
 import nl.topicus.jdbc.CloudSpannerConnection;
@@ -207,6 +211,16 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 				{
 					setPlainSelectParameters(plainSelect, builder);
 				}
+
+				@Override
+				public void visit(SetOperationList setOpList)
+				{
+					for (SelectBody body : setOpList.getSelects())
+					{
+						setSelectParameters(body, builder);
+					}
+				}
+
 			});
 		}
 	}
@@ -228,7 +242,74 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 					else
 						getParameterStore().setTable(null);
 				}
+
+				@Override
+				public void visit(SubSelect subSelect)
+				{
+					if (subSelect.getSelectBody() instanceof PlainSelect)
+					{
+						setPlainSelectParameters((PlainSelect) subSelect.getSelectBody(), builder);
+					}
+					else
+					{
+						subSelect.getSelectBody().accept(new SelectVisitorAdapter()
+						{
+							@Override
+							public void visit(PlainSelect plainSelect)
+							{
+								setPlainSelectParameters(plainSelect, builder);
+							}
+
+							@Override
+							public void visit(SetOperationList setOpList)
+							{
+								for (SelectBody body : setOpList.getSelects())
+								{
+									setSelectParameters(body, builder);
+								}
+							}
+						});
+					}
+				}
+
 			});
+		}
+		if (plainSelect.getSelectItems() != null)
+		{
+			for (SelectItem selectItem : plainSelect.getSelectItems())
+			{
+				selectItem.accept(new SelectItemVisitorAdapter()
+				{
+					@Override
+					public void visit(SelectExpressionItem item)
+					{
+						item.getExpression().accept(new ExpressionVisitorAdapter()
+						{
+							private String currentCol = null;
+
+							@Override
+							public void visit(Column col)
+							{
+								currentCol = unquoteIdentifier(col.getFullyQualifiedName());
+							}
+
+							@Override
+							public void visit(JdbcParameter parameter)
+							{
+								parameter.accept(new ValueBinderExpressionVisitorAdapter<>(getParameterStore(),
+										builder.bind("p" + parameter.getIndex()), currentCol));
+								currentCol = null;
+							}
+
+							@Override
+							public void visit(SubSelect subSelect)
+							{
+								setSelectParameters(subSelect.getSelectBody(), builder);
+							}
+						});
+					}
+				});
+			}
 		}
 		setWhereParameters(plainSelect.getWhere(), builder);
 		if (plainSelect.getLimit() != null)

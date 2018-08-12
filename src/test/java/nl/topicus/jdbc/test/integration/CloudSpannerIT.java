@@ -45,12 +45,12 @@ public class CloudSpannerIT
 	private static final Logger log = Logger.getLogger(CloudSpannerIT.class.getName());
 
 	private static final String DEFAULT_HOST = "https://emulator.googlecloudspanner.com:8443";
+	private static final String DEFAULT_PROJECT = "test-project";
+	private static final String DEFAULT_KEY_FILE = "cloudspanner-emulator-key.json";
 
 	private static final boolean CREATE_INSTANCE = true;
 
 	private static final boolean CREATE_DATABASE = true;
-
-	private static final String PROJECT_ID = "test-project";
 
 	private final String instanceId;
 
@@ -65,12 +65,22 @@ public class CloudSpannerIT
 		return System.getProperty("host", DEFAULT_HOST);
 	}
 
+	public static String getKeyFile()
+	{
+		return System.getProperty("keyfile", DEFAULT_KEY_FILE);
+	}
+
+	public static String getProject()
+	{
+		return System.getProperty("project", DEFAULT_PROJECT);
+	}
+
 	public CloudSpannerIT()
 	{
 		// generate a unique instance id for this test run
 		Random rnd = new Random();
 		this.instanceId = "test-instance-" + rnd.nextInt(1000000);
-		this.credentialsPath = "cloudspanner-emulator-key.json";
+		this.credentialsPath = getKeyFile();
 		GoogleCredentials credentials = null;
 		try
 		{
@@ -81,7 +91,7 @@ public class CloudSpannerIT
 			throw new RuntimeException("Could not read key file " + credentialsPath, e);
 		}
 		Builder builder = SpannerOptions.newBuilder();
-		builder.setProjectId(PROJECT_ID);
+		builder.setProjectId(getProject());
 		builder.setCredentials(credentials);
 		builder.setHost(getHost());
 
@@ -154,7 +164,7 @@ public class CloudSpannerIT
 			selectTester.runSelectTests();
 			// Test XA transactions
 			XATester xaTester = new XATester();
-			xaTester.testXA(PROJECT_ID, instanceId, DATABASE_ID, credentialsPath);
+			xaTester.testXA(getProject(), instanceId, DATABASE_ID, credentialsPath);
 
 			// Test drop statements
 			tableDDLTester.runDropTests();
@@ -178,7 +188,7 @@ public class CloudSpannerIT
 		}
 		StringBuilder url = new StringBuilder("jdbc:cloudspanner:");
 		url.append(getHost());
-		url.append(";Project=").append(PROJECT_ID);
+		url.append(";Project=").append(getProject());
 		url.append(";Instance=").append(instanceId);
 		url.append(";Database=").append(DATABASE_ID);
 		url.append(";PvtKeyPath=").append(credentialsPath);
@@ -190,7 +200,7 @@ public class CloudSpannerIT
 	{
 		InstanceAdminClient instanceAdminClient = spanner.getInstanceAdminClient();
 		InstanceConfig config = instanceAdminClient.getInstanceConfig("regional-europe-west1");
-		Instance instance = instanceAdminClient.newInstanceBuilder(InstanceId.of(PROJECT_ID, instanceId))
+		Instance instance = instanceAdminClient.newInstanceBuilder(InstanceId.of(getProject(), instanceId))
 				.setDisplayName("Test Instance").setInstanceConfigId(config.getId()).setNodeCount(1).build();
 		Operation<Instance, CreateInstanceMetadata> createInstance = instanceAdminClient.createInstance(instance);
 		createInstance = createInstance.waitFor();

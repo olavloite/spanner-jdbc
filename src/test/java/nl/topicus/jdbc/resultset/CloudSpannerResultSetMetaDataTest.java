@@ -546,27 +546,24 @@ public class CloudSpannerResultSetMetaDataTest
 	@Test
 	public void testIsReadOnly() throws SQLException
 	{
-		assertTrue(subject.isReadOnly(1));
 		assertTrue(subject.isReadOnly(TEST_COLUMNS.size()));
-		for (int i = 2; i < TEST_COLUMNS.size(); i++)
+		for (int i = 1; i < TEST_COLUMNS.size(); i++)
 			assertFalse(subject.isReadOnly(i));
 	}
 
 	@Test
 	public void testIsWritable() throws SQLException
 	{
-		assertFalse(subject.isWritable(1));
 		assertFalse(subject.isWritable(TEST_COLUMNS.size()));
-		for (int i = 2; i < TEST_COLUMNS.size(); i++)
+		for (int i = 1; i < TEST_COLUMNS.size(); i++)
 			assertTrue(subject.isWritable(i));
 	}
 
 	@Test
 	public void testIsDefinitelyWritable() throws SQLException
 	{
-		assertFalse(subject.isDefinitelyWritable(1));
 		assertFalse(subject.isDefinitelyWritable(TEST_COLUMNS.size()));
-		for (int i = 2; i < TEST_COLUMNS.size(); i++)
+		for (int i = 1; i < TEST_COLUMNS.size(); i++)
 			assertTrue(subject.isDefinitelyWritable(i));
 	}
 

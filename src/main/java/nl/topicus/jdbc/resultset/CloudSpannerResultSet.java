@@ -304,7 +304,14 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		ensureOpen();
 		if (beforeFirst)
 		{
-			nextCalledForMetaDataResult = resultSet.next();
+			try
+			{
+				nextCalledForMetaDataResult = resultSet.next();
+			}
+			catch (SpannerException e)
+			{
+				throw new CloudSpannerSQLException(e);
+			}
 			afterLast = !nextCalledForMetaDataResult;
 			beforeFirst = false;
 			nextCalledForMetaData = true;
