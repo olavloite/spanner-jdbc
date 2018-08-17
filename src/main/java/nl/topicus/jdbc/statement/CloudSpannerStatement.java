@@ -537,9 +537,27 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement
 		}
 	}
 
+	private class GetLastCommitTimestamp extends CustomDriverStatement
+	{
+		private GetLastCommitTimestamp()
+		{
+			super("GET_LAST_COMMIT_TIMESTAMP", true);
+		}
+
+		@Override
+		public ResultSet executeQuery(String[] sqlTokens) throws SQLException
+		{
+			if (sqlTokens.length == 1)
+				return getConnection().getLastCommitTimestamp(CloudSpannerStatement.this);
+			throw new CloudSpannerSQLException(
+					"Invalid argument(s) for GET_LAST_COMMIT_TIMESTAMP. Expected \"GET_LAST_COMMIT_TIMESTAMP\"",
+					Code.INVALID_ARGUMENT);
+		}
+	}
+
 	private final List<CustomDriverStatement> customDriverStatements = Arrays.asList(new ShowDdlOperations(),
 			new CleanDdlOperations(), new WaitForDdlOperations(), new ExecuteDdlBatch(), new SetConnectionProperty(),
-			new GetConnectionProperty(), new ResetConnectionProperty());
+			new GetConnectionProperty(), new ResetConnectionProperty(), new GetLastCommitTimestamp());
 
 	/**
 	 * Checks if a sql statement is a custom statement only recognized by this

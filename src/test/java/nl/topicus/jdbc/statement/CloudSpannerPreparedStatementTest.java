@@ -504,6 +504,30 @@ public class CloudSpannerPreparedStatementTest
 			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
 		}
 
+		@Test
+		public void testUpdateStatementWithCommitTimestampMultipleRows() throws SQLException
+		{
+			String sql = "UPDATE FOO SET COL1 = 'spanner.commit_timestamp()' WHERE ID > ?";
+			Mutations mutations = getMutations(sql);
+			Assert.assertTrue(mutations.isWorker());
+			Assert.assertNotNull(mutations.getWorker());
+			Assert.assertEquals(InsertWorker.class, mutations.getWorker().getClass());
+		}
+
+		@Test
+		public void testUpdateStatementWithCommitTimestampOneRow() throws SQLException
+		{
+			String sql = "UPDATE FOO SET COL1 = 'spanner.commit_timestamp()' WHERE ID = 1";
+			Mutation updateMutation = getMutation(sql);
+			Assert.assertNotNull(updateMutation);
+			Assert.assertEquals(Op.UPDATE, updateMutation.getOperation());
+			Assert.assertEquals("FOO", updateMutation.getTable());
+			List<String> columns = Lists.newArrayList(updateMutation.getColumns());
+			Assert.assertArrayEquals(new String[] { "COL1", "ID" }, columns.toArray());
+			Assert.assertArrayEquals(new String[] { "spanner.commit_timestamp()", "1" },
+					getValues(updateMutation.getValues()));
+		}
+
 		private static final String TEST_SQL = "UPDATE FOO SET COL1=1, COL2=2";
 
 		@Test
@@ -880,6 +904,15 @@ public class CloudSpannerPreparedStatementTest
 					"/* CREATE A TEST TABLE */\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
 			CloudSpannerPreparedStatementTest.testCreateTableStatement(
 					"-- CREATE A TEST TABLE\nCREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100)) PRIMARY KEY (ID)");
+		}
+
+		@Test
+		public void testCreateTableWithCommitTimestamp() throws SQLException
+		{
+			CloudSpannerPreparedStatementTest
+					.testCreateTableStatement("CREATE TABLE `FOO` (`ID` INT64, `NAME` STRING(100),\n"
+							+ "`LAST_UPDATE_TIME` TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true))\n"
+							+ "PRIMARY KEY (ID)");
 		}
 	}
 
