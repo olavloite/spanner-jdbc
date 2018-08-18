@@ -15,6 +15,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -987,12 +988,19 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		List<Struct> rows = new ArrayList<>(values.size());
 		for (Entry<String, String> entry : values.entrySet())
 		{
-
 			rows.add(Struct.newBuilder().set("NAME").to(Value.string(entry.getKey())).set("VALUE")
 					.to(Value.string(entry.getValue())).build());
 		}
 		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(
 				Type.struct(StructField.of("NAME", Type.string()), StructField.of("VALUE", Type.string())), rows);
+		return new CloudSpannerResultSet(statement, rs, null);
+	}
+
+	public ResultSet getLastCommitTimestamp(CloudSpannerStatement statement)
+	{
+		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(
+				Type.struct(StructField.of("COMMIT_TIMESTAMP", Type.timestamp())),
+				Arrays.asList(Struct.newBuilder().set("COMMIT_TIMESTAMP").to(lastCommitTimestamp).build()));
 		return new CloudSpannerResultSet(statement, rs, null);
 	}
 

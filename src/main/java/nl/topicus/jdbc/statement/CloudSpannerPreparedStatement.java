@@ -3,6 +3,7 @@ package nl.topicus.jdbc.statement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +55,9 @@ import nl.topicus.jdbc.statement.AbstractTablePartWorker.DMLOperation;
  */
 public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedStatement
 {
+	public static final Timestamp SPANNER_COMMIT_TIMESTAMP = new Timestamp(Long.MIN_VALUE);
+	public static final String SPANNER_COMMIT_TIMESTAMP_PLACEHOLDER = "spanner.commit_timestamp()";
+
 	private static final String INVALID_WHERE_CLAUSE_DELETE_MESSAGE = "The DELETE statement does not contain a valid WHERE clause. DELETE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form 'ID=value' or 'ID1=value1 AND ID2=value2'";
 
 	private static final String INVALID_WHERE_CLAUSE_UPDATE_MESSAGE = "The UPDATE statement does not contain a valid WHERE clause. UPDATE statements must contain a WHERE clause specifying the value of the primary key of the record(s) to be deleted in the form 'ID=value' or 'ID1=value1 AND ID2=value2'";
