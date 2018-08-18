@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import nl.topicus.jdbc.test.category.IntegrationTest;
 
 /**
  * Version 1.0.x of the JDBC driver had the same behavior as the Cloud Spanner Java client when it
@@ -28,6 +30,7 @@ import org.junit.Test;
  * @author loite
  *
  */
+@Category(IntegrationTest.class)
 public class ResultSetExecuteQueryDirectlyIT extends AbstractSpecificIntegrationTest {
 
   @Before
