@@ -492,8 +492,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 	 * @param statement
 	 *            The statement that requested the operations
 	 * @return A ResultSet with the DDL-operations
+	 * @throws SQLException If a database error occurs
 	 */
-	public ResultSet getRunningDDLOperations(CloudSpannerStatement statement)
+	public ResultSet getRunningDDLOperations(CloudSpannerStatement statement) throws SQLException
 	{
 		return operations.getOperations(statement);
 	}
@@ -942,12 +943,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return x -> 0;
 	}
 
-	public ResultSet getDynamicConnectionProperties(CloudSpannerStatement statement)
+	public ResultSet getDynamicConnectionProperties(CloudSpannerStatement statement) throws SQLException
 	{
 		return getDynamicConnectionProperty(statement, null);
 	}
 
-	public ResultSet getDynamicConnectionProperty(CloudSpannerStatement statement, String propertyName)
+	public ResultSet getDynamicConnectionProperty(CloudSpannerStatement statement, String propertyName) throws SQLException
 	{
 		Map<String, String> values = new HashMap<>();
 		if (propertyName == null || propertyName
@@ -983,7 +984,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return createResultSet(statement, values);
 	}
 
-	private ResultSet createResultSet(CloudSpannerStatement statement, Map<String, String> values)
+	private ResultSet createResultSet(CloudSpannerStatement statement, Map<String, String> values) throws SQLException
 	{
 		List<Struct> rows = new ArrayList<>(values.size());
 		for (Entry<String, String> entry : values.entrySet())
@@ -996,7 +997,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection
 		return new CloudSpannerResultSet(statement, rs, null);
 	}
 
-	public ResultSet getLastCommitTimestamp(CloudSpannerStatement statement)
+	public ResultSet getLastCommitTimestamp(CloudSpannerStatement statement) throws SQLException
 	{
 		com.google.cloud.spanner.ResultSet rs = ResultSets.forRows(
 				Type.struct(StructField.of("COMMIT_TIMESTAMP", Type.timestamp())),

@@ -212,7 +212,7 @@ public class CloudSpannerResultSetMetaDataTest
 		return types;
 	}
 
-	private CloudSpannerResultSet getFooTestResultSet(CloudSpannerStatement statement)
+	private CloudSpannerResultSet getFooTestResultSet(CloudSpannerStatement statement) throws SQLException 
 	{
 		List<Struct> rows = new ArrayList<>(4);
 		for (int row = 1; row <= 4; row++)
@@ -283,7 +283,7 @@ public class CloudSpannerResultSetMetaDataTest
 		return tableColumns().stream().filter(col -> col.name.equalsIgnoreCase(colName)).findFirst().orElse(null);
 	}
 
-	private CloudSpannerResultSet createFooColumnsResultSet(CloudSpannerStatement statement, String colName)
+	private CloudSpannerResultSet createFooColumnsResultSet(CloudSpannerStatement statement, String colName) throws SQLException
 	{
 		List<TestColumn> columns = colName == null ? tableColumns() : Arrays.asList(getTestColumn(colName));
 		List<Struct> rows = new ArrayList<>(columns.size());
@@ -297,7 +297,7 @@ public class CloudSpannerResultSetMetaDataTest
 		return new CloudSpannerResultSet(statement, rs, null);
 	}
 
-	private CloudSpannerResultSet createFooPrimaryKeysResultSet(CloudSpannerStatement statement)
+	private CloudSpannerResultSet createFooPrimaryKeysResultSet(CloudSpannerStatement statement) throws SQLException
 	{
 		List<Struct> rows = new ArrayList<>(1);
 		rows.add(Struct.newBuilder().set("COLUMN_NAME").to(Value.string(tableColumns().get(0).name)).build());

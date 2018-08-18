@@ -109,8 +109,9 @@ class RunningOperationsStore
 	 * 
 	 * @return A result set of all DDL operations that have been issued on this
 	 *         connection since the last clear operation.
+	 * @throws SQLException If a database error occurs
 	 */
-	ResultSet getOperations(CloudSpannerStatement statement)
+	ResultSet getOperations(CloudSpannerStatement statement) throws SQLException
 	{
 		List<Struct> rows = new ArrayList<>(operations.size());
 		for (DdlOperation op : operations)
