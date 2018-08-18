@@ -1,5 +1,6 @@
 package nl.topicus.jdbc.test.integration.specific;
 
+import static org.junit.Assert.fail;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -33,37 +34,11 @@ public class InvalidSelectStatementIT extends AbstractSpecificIntegrationTest
 
 	private void runInvalidSelectStatementTest(ResultSetFunction<?> function) throws SQLException
 	{
-		ResultSet rs = null;
-		try
+		try(ResultSet rs = getConnection().createStatement().executeQuery("SELECT * FROM NON_EXISTENT_TABLE WHERE 1=0"))
 		{
-			rs = getConnection().createStatement().executeQuery("SELECT * FROM NON_EXISTENT_TABLE WHERE 1=0");
-		}
-		catch (SQLException e)
-		{
-			// should not happen as Cloud Spanner does not actually execute the
-			// query before a call to ResultSet#next is executed
-			throw new AssertionError(
-					"Unexpected SQLException: An invalid query should not throw an exception before any data is actually requested");
-		}
-		try
-		{
-			function.apply(rs);
-		}
-		finally
-		{
-			// Close the result set
-			if (rs != null)
-			{
-				try
-				{
-					rs.close();
-				}
-				catch (SQLException e)
-				{
-					// Should not happen
-					throw new RuntimeException(e);
-				}
-			}
+	        fail(
+	            "Unexpected program flow: An invalid query should throw an exception directly when it is executed");
+	        function.apply(rs);
 		}
 	}
 }
