@@ -1105,8 +1105,10 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSuperTypes(String catalog, String schemaPattern, String typeNamePattern) throws SQLException
 	{
-		String sql = "SELECT '' AS TYPE_CAT, '' AS TYPE_SCHEM, '' AS TYPE_NAME, "
-				+ "'' AS SUPERTYPE_CAT, '' AS SUPERTYPE_SCHEM, '' AS SUPERTYPE_NAME " + FROM_STATEMENT_WITHOUT_RESULTS;
+		String sql = "SELECT * FROM (SELECT '' AS TYPE_CAT, '' AS TYPE_SCHEM, '' AS TYPE_NAME, "
+			+ "'' AS SUPERTYPE_CAT, '' AS SUPERTYPE_SCHEM, '' AS SUPERTYPE_NAME "
+		    + FROM_STATEMENT_WITHOUT_RESULTS
+		    + ") T";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1115,8 +1117,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException
 	{
-		String sql = "SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS SUPERTABLE_NAME "
-				+ FROM_STATEMENT_WITHOUT_RESULTS;
+		String sql = "SELECT * FROM (SELECT '' AS TABLE_CAT, '' AS TABLE_SCHEM, '' AS TABLE_NAME, '' AS SUPERTABLE_NAME "
+				+ FROM_STATEMENT_WITHOUT_RESULTS
+				+ ") T";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1126,11 +1129,12 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
 			String attributeNamePattern) throws SQLException
 	{
-		String sql = "SELECT '' AS TYPE_CAT, '' AS TYPE_SCHEM, '' AS TYPE_NAME, '' AS ATTR_NAME, 0 AS DATA_TYPE, "
+		String sql = "SELECT * FROM (SELECT '' AS TYPE_CAT, '' AS TYPE_SCHEM, '' AS TYPE_NAME, '' AS ATTR_NAME, 0 AS DATA_TYPE, "
 				+ "'' AS ATTR_TYPE_NAME, 0 AS ATTR_SIZE, 0 AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, 0 AS NULLABLE, "
 				+ "'' AS REMARKS, '' AS ATTR_DEF, 0 AS SQL_DATA_TYPE, 0 AS SQL_DATETIME_SUB, 0 AS CHAR_OCTET_LENGTH, "
 				+ "0 AS ORDINAL_POSITION, 'NO' AS IS_NULLABLE, '' AS SCOPE_CATALOG, '' AS SCOPE_SCHEMA, '' AS SCOPE_TABLE, "
-				+ "0 AS SOURCE_DATA_TYPE " + FROM_STATEMENT_WITHOUT_RESULTS;
+				+ "0 AS SOURCE_DATA_TYPE " + FROM_STATEMENT_WITHOUT_RESULTS
+				+ ") T";
 
 		CloudSpannerPreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1226,9 +1230,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getClientInfoProperties() throws SQLException
 	{
-		String sql = "SELECT '' AS NAME, 0 AS MAX_LEN, '' AS DEFAULT_VALUE, '' AS DESCRIPTION "
+		String sql = "SELECT * FROM (SELECT '' AS NAME, 0 AS MAX_LEN, '' AS DEFAULT_VALUE, '' AS DESCRIPTION "
 				+ FROM_STATEMENT_WITHOUT_RESULTS;
-		sql = sql + " ORDER BY NAME ";
+		sql = sql + ") T ORDER BY NAME ";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1237,9 +1241,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	@Override
 	public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern) throws SQLException
 	{
-		String sql = "SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS REMARKS, 0 AS FUNCTION_TYPE, '' AS SPECIFIC_NAME "
+		String sql = "SELECT * FROM (SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS REMARKS, 0 AS FUNCTION_TYPE, '' AS SPECIFIC_NAME "
 				+ FROM_STATEMENT_WITHOUT_RESULTS;
-		sql = sql + " ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
+		sql = sql + ") T ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1249,9 +1253,9 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
 			String columnNamePattern) throws SQLException
 	{
-		String sql = "SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS COLUMN_NAME, 0 AS COLUMN_TYPE, 1111 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS PRECISION, 0 AS LENGTH, 0 AS SCALE, 0 AS RADIX, 0 AS NULLABLE, '' AS REMARKS, 0 AS CHAR_OCTET_LENGTH, 0 AS ORDINAL_POSITION, '' AS IS_NULLABLE, '' AS SPECIFIC_NAME "
+		String sql = "SELECT * FROM (SELECT '' AS FUNCTION_CAT, '' AS FUNCTION_SCHEM, '' AS FUNCTION_NAME, '' AS COLUMN_NAME, 0 AS COLUMN_TYPE, 1111 AS DATA_TYPE, '' AS TYPE_NAME, 0 AS PRECISION, 0 AS LENGTH, 0 AS SCALE, 0 AS RADIX, 0 AS NULLABLE, '' AS REMARKS, 0 AS CHAR_OCTET_LENGTH, 0 AS ORDINAL_POSITION, '' AS IS_NULLABLE, '' AS SPECIFIC_NAME "
 				+ FROM_STATEMENT_WITHOUT_RESULTS;
-		sql = sql + " ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
+		sql = sql + ") T ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME ";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
@@ -1261,7 +1265,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
 			String columnNamePattern) throws SQLException
 	{
-		String sql = "select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
+		String sql = "SELECT * FROM (select TABLE_CATALOG AS TABLE_CAT, TABLE_SCHEMA AS TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, "
 				+ "CASE " + "	WHEN SPANNER_TYPE = 'ARRAY' THEN " + Types.ARRAY + " "
 				+ "	WHEN SPANNER_TYPE = 'BOOL' THEN " + Types.BOOLEAN + " " + "	WHEN SPANNER_TYPE = 'BYTES' THEN "
 				+ Types.BINARY + " " + "	WHEN SPANNER_TYPE = 'DATE' THEN " + Types.DATE + " "
@@ -1270,7 +1274,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 				+ "	WHEN SPANNER_TYPE = 'STRUCT' THEN " + Types.STRUCT + " "
 				+ "	WHEN SPANNER_TYPE = 'TIMESTAMP' THEN " + Types.TIMESTAMP + " " + "END AS DATA_TYPE, "
 				+ "0 AS COLUMN_SIZE, NULL AS DECIMAL_DIGITS, 0 AS NUM_PREC_RADIX, 'USAGE_UNKNOWN' AS COLUMN_USAGE, NULL AS REMARKS, 0 AS CHAR_OCTET_LENGTH, IS_NULLABLE "
-				+ FROM_STATEMENT_WITHOUT_RESULTS;
+				+ FROM_STATEMENT_WITHOUT_RESULTS + ") T ";
 
 		sql = sql + getCatalogSchemaTableWhereClause("T", catalog, schemaPattern, tableNamePattern);
 		if (columnNamePattern != null)
