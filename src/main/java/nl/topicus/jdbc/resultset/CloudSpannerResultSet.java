@@ -46,9 +46,9 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 
 	private boolean afterLast = false;
 
-	private boolean nextCalledForMetaData = false;
+	private boolean nextCalledForInternalReasons = false;
 
-	private boolean nextCalledForMetaDataResult = false;
+	private boolean nextCalledForInternalReasonsResult = false;
 
 	private final CloudSpannerStatement statement;
 
@@ -61,11 +61,12 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	}
 
 	public CloudSpannerResultSet(CloudSpannerStatement statement, com.google.cloud.spanner.ResultSet resultSet,
-			String sql)
+			String sql) throws SQLException
 	{
 		this.statement = statement;
 		this.resultSet = resultSet;
 		this.sql = sql;
+		callNextForInternalReasons();
 	}
 
 	void setResultSet(com.google.cloud.spanner.ResultSet rs)
@@ -103,18 +104,39 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		if (closed)
 			throw new CloudSpannerSQLException("Resultset is closed", com.google.rpc.Code.FAILED_PRECONDITION);
 	}
+	
+	/**
+	 * Advances the underlying {@link com.google.cloud.spanner.ResultSet} to the first position. This forces the query to be executed, and ensures that any invalid queries are reported as quickly as possible.
+	 * @throws CloudSpannerSQLException
+	 */
+	private void callNextForInternalReasons() throws CloudSpannerSQLException
+	{
+		if (!nextCalledForInternalReasons)
+		{
+			try
+			{
+				nextCalledForInternalReasonsResult = resultSet.next();
+			}
+			catch (SpannerException e)
+			{
+				throw new CloudSpannerSQLException(e);
+			}
+			nextCalledForInternalReasons = true;
+		}
+	}
 
 	@Override
 	public boolean next() throws SQLException
 	{
 		ensureOpen();
-		if (!beforeFirst && nextCalledForMetaData)
+		if (beforeFirst && nextCalledForInternalReasons)
 		{
-			nextCalledForMetaData = false;
-			return nextCalledForMetaDataResult;
+	        currentRowIndex++;
+			nextCalledForInternalReasons = false;
+			beforeFirst = false;
+			afterLast = !nextCalledForInternalReasonsResult;
+			return nextCalledForInternalReasonsResult;
 		}
-		beforeFirst = false;
-		currentRowIndex++;
 		boolean res = false;
 		try
 		{
@@ -124,6 +146,8 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 		{
 			throw new CloudSpannerSQLException(e);
 		}
+        currentRowIndex++;
+        beforeFirst = false;
 		afterLast = !res;
 
 		return res;
@@ -302,20 +326,6 @@ public class CloudSpannerResultSet extends AbstractCloudSpannerResultSet
 	public CloudSpannerResultSetMetaData getMetaData() throws SQLException
 	{
 		ensureOpen();
-		if (beforeFirst)
-		{
-			try
-			{
-				nextCalledForMetaDataResult = resultSet.next();
-			}
-			catch (SpannerException e)
-			{
-				throw new CloudSpannerSQLException(e);
-			}
-			afterLast = !nextCalledForMetaDataResult;
-			beforeFirst = false;
-			nextCalledForMetaData = true;
-		}
 		return new CloudSpannerResultSetMetaData(resultSet, statement, sql);
 	}
 
