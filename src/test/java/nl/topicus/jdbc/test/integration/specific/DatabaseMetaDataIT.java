@@ -25,4 +25,12 @@ public class DatabaseMetaDataIT extends AbstractSpecificIntegrationTest {
     }
   }
 
+  @Test
+  public void testGetPseudoColumns() throws SQLException {
+    try (ResultSet rs = getConnection().getMetaData().getPseudoColumns("", "", null, null)) {
+      while(rs.next()) {
+      }
+    }
+  }
+
 }
