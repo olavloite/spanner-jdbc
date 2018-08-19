@@ -17,4 +17,12 @@ public class DatabaseMetaDataIT extends AbstractSpecificIntegrationTest {
     }
   }
 
+  @Test
+  public void testGetTypeInfo() throws SQLException {
+    try (ResultSet rs = getConnection().getMetaData().getTypeInfo()) {
+      while(rs.next()) {
+      }
+    }
+  }
+
 }
