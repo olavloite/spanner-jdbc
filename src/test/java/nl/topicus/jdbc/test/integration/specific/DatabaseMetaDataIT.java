@@ -12,7 +12,7 @@ public class DatabaseMetaDataIT extends AbstractSpecificIntegrationTest {
   @Test
   public void testGetClientInfoProperties() throws SQLException {
     try (ResultSet rs = getConnection().getMetaData().getClientInfoProperties()) {
-      while(rs.next()) {
+      while (rs.next()) {
       }
     }
   }
@@ -20,7 +20,7 @@ public class DatabaseMetaDataIT extends AbstractSpecificIntegrationTest {
   @Test
   public void testGetTypeInfo() throws SQLException {
     try (ResultSet rs = getConnection().getMetaData().getTypeInfo()) {
-      while(rs.next()) {
+      while (rs.next()) {
       }
     }
   }
@@ -28,7 +28,7 @@ public class DatabaseMetaDataIT extends AbstractSpecificIntegrationTest {
   @Test
   public void testGetPseudoColumns() throws SQLException {
     try (ResultSet rs = getConnection().getMetaData().getPseudoColumns("", "", null, null)) {
-      while(rs.next()) {
+      while (rs.next()) {
       }
     }
   }

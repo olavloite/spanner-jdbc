@@ -5,14 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
-
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -20,319 +18,296 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
-
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.statement.CloudSpannerStatement.BatchMode;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.test.util.CloudSpannerTestObjects;
 
 @Category(UnitTest.class)
-public class CloudSpannerStatementTest
-{
-	private static final String INSERT_SQL = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa)";
+public class CloudSpannerStatementTest {
+  private static final String INSERT_SQL =
+      "INSERT INTO FOO (COL1, COL2, COL3) VALUES (1, 'two', 0xaa)";
 
-	private static final String[] COLUMN_NAMES = new String[] { "COL1", "COL2", "COL3" };
+  private static final String[] COLUMN_NAMES = new String[] {"COL1", "COL2", "COL3"};
 
-	private static final int[] COLUMN_INDICES = new int[] { 1, 2, 3 };
+  private static final int[] COLUMN_INDICES = new int[] {1, 2, 3};
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
-	private CloudSpannerConnection createConnection() throws SQLException
-	{
-		CloudSpannerConnection connection = CloudSpannerTestObjects.createConnection();
-		Mockito.when(connection.createStatement()).thenCallRealMethod();
-		Mockito.when(connection.prepareStatement(Mockito.anyString())).thenCallRealMethod();
+  private CloudSpannerConnection createConnection() throws SQLException {
+    CloudSpannerConnection connection = CloudSpannerTestObjects.createConnection();
+    Mockito.when(connection.createStatement()).thenCallRealMethod();
+    Mockito.when(connection.prepareStatement(Mockito.anyString())).thenCallRealMethod();
 
-		return connection;
-	}
+    return connection;
+  }
 
-	@Test
-	public void testSelect() throws SQLException
-	{
-		String[] queries = new String[] { "SELECT * FROM FOO", "/* SELECT STATEMENT FOR TABLE FOO*/\nSELECT * FROM FOO",
-				"--SINGLE LINE COMMENT \nSELECT * FROM FOO" };
-		for (String sql : queries)
-		{
-			CloudSpannerConnection connection = createConnection();
-			CloudSpannerStatement statement = connection.createStatement();
-			boolean isResultSet = statement.execute(sql);
-			Assert.assertTrue(isResultSet);
-			ResultSet rs = statement.getResultSet();
-			Assert.assertNotNull(rs);
-			boolean moreResults = statement.getMoreResults();
-			Assert.assertFalse(moreResults);
-			Assert.assertTrue(rs.isClosed());
-			Assert.assertEquals(-1, statement.getUpdateCount());
+  @Test
+  public void testSelect() throws SQLException {
+    String[] queries =
+        new String[] {"SELECT * FROM FOO", "/* SELECT STATEMENT FOR TABLE FOO*/\nSELECT * FROM FOO",
+            "--SINGLE LINE COMMENT \nSELECT * FROM FOO"};
+    for (String sql : queries) {
+      CloudSpannerConnection connection = createConnection();
+      CloudSpannerStatement statement = connection.createStatement();
+      boolean isResultSet = statement.execute(sql);
+      Assert.assertTrue(isResultSet);
+      ResultSet rs = statement.getResultSet();
+      Assert.assertNotNull(rs);
+      boolean moreResults = statement.getMoreResults();
+      Assert.assertFalse(moreResults);
+      Assert.assertTrue(rs.isClosed());
+      Assert.assertEquals(-1, statement.getUpdateCount());
 
-			ResultSet rs2 = statement.executeQuery(sql);
-			Assert.assertNotNull(rs2);
-			Assert.assertFalse(statement.getMoreResults(Statement.KEEP_CURRENT_RESULT));
-			Assert.assertFalse(rs2.isClosed());
-		}
-	}
+      ResultSet rs2 = statement.executeQuery(sql);
+      Assert.assertNotNull(rs2);
+      Assert.assertFalse(statement.getMoreResults(Statement.KEEP_CURRENT_RESULT));
+      Assert.assertFalse(rs2.isClosed());
+    }
+  }
 
-	@Test
-	public void testInsert() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		boolean isResultSet = statement.execute(INSERT_SQL);
-		Assert.assertFalse(isResultSet);
-		int count = statement.getUpdateCount();
-		Assert.assertEquals(1, count);
-		boolean moreResults = statement.getMoreResults();
-		Assert.assertFalse(moreResults);
-		Assert.assertEquals(-1, statement.getUpdateCount());
+  @Test
+  public void testInsert() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    boolean isResultSet = statement.execute(INSERT_SQL);
+    Assert.assertFalse(isResultSet);
+    int count = statement.getUpdateCount();
+    Assert.assertEquals(1, count);
+    boolean moreResults = statement.getMoreResults();
+    Assert.assertFalse(moreResults);
+    Assert.assertEquals(-1, statement.getUpdateCount());
 
-		int count2 = statement.executeUpdate(INSERT_SQL);
-		Assert.assertEquals(1, count2);
-	}
+    int count2 = statement.executeUpdate(INSERT_SQL);
+    Assert.assertEquals(1, count2);
+  }
 
-	@Test
-	public void testExecuteNormalMode() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		boolean res = statement.execute("SELECT * FROM FOO");
-		assertTrue(res);
-		ResultSet rs = statement.getResultSet();
-		assertNotNull(rs);
-		assertFalse(rs.isClosed());
-		assertFalse(statement.getMoreResults());
-		assertNull(statement.getResultSet());
-	}
+  @Test
+  public void testExecuteNormalMode() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    boolean res = statement.execute("SELECT * FROM FOO");
+    assertTrue(res);
+    ResultSet rs = statement.getResultSet();
+    assertNotNull(rs);
+    assertFalse(rs.isClosed());
+    assertFalse(statement.getMoreResults());
+    assertNull(statement.getResultSet());
+  }
 
-	@Test
-	public void testExecuteBatchReadOnlyMode() throws SQLException
-	{
-		testExecuteBatchReadOnlyMode(false);
-		testExecuteBatchReadOnlyMode(true);
-	}
+  @Test
+  public void testExecuteBatchReadOnlyMode() throws SQLException {
+    testExecuteBatchReadOnlyMode(false);
+    testExecuteBatchReadOnlyMode(true);
+  }
 
-	private void testExecuteBatchReadOnlyMode(boolean keepCurrent) throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		connection.setAutoCommit(false);
-		connection.setBatchReadOnly(true);
-		CloudSpannerStatement statement = connection.createStatement();
-		boolean res = statement.execute("SELECT * FROM FOO");
-		int count = 0;
-		ResultSet prev = null;
-		assertTrue(res);
-		do
-		{
-			if (prev != null)
-				assertEquals(keepCurrent, !prev.isClosed());
-			ResultSet rs = statement.getResultSet();
-			assertNotNull(rs);
-			assertFalse(rs.isClosed());
-			prev = rs;
-			count++;
-		}
-		while (keepCurrent ? statement.getMoreResults(Statement.KEEP_CURRENT_RESULT) : statement.getMoreResults());
-		assertFalse(statement.getMoreResults());
-		assertNull(statement.getResultSet());
-		assertEquals(3, count);
-	}
+  private void testExecuteBatchReadOnlyMode(boolean keepCurrent) throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    connection.setAutoCommit(false);
+    connection.setBatchReadOnly(true);
+    CloudSpannerStatement statement = connection.createStatement();
+    boolean res = statement.execute("SELECT * FROM FOO");
+    int count = 0;
+    ResultSet prev = null;
+    assertTrue(res);
+    do {
+      if (prev != null)
+        assertEquals(keepCurrent, !prev.isClosed());
+      ResultSet rs = statement.getResultSet();
+      assertNotNull(rs);
+      assertFalse(rs.isClosed());
+      prev = rs;
+      count++;
+    } while (keepCurrent ? statement.getMoreResults(Statement.KEEP_CURRENT_RESULT)
+        : statement.getMoreResults());
+    assertFalse(statement.getMoreResults());
+    assertNull(statement.getResultSet());
+    assertEquals(3, count);
+  }
 
-	@Test
-	public void testExecuteAutoGeneratedKeys() throws SQLException
-	{
-		assertFalse(createConnection().createStatement().execute(INSERT_SQL, 0));
-	}
+  @Test
+  public void testExecuteAutoGeneratedKeys() throws SQLException {
+    assertFalse(createConnection().createStatement().execute(INSERT_SQL, 0));
+  }
 
-	@Test
-	public void testExecuteColumnIndices() throws SQLException
-	{
-		assertFalse(createConnection().createStatement().execute(INSERT_SQL, COLUMN_INDICES));
-	}
+  @Test
+  public void testExecuteColumnIndices() throws SQLException {
+    assertFalse(createConnection().createStatement().execute(INSERT_SQL, COLUMN_INDICES));
+  }
 
-	@Test
-	public void testExecuteColumnNames() throws SQLException
-	{
-		assertFalse(createConnection().createStatement().execute(INSERT_SQL, COLUMN_NAMES));
-	}
+  @Test
+  public void testExecuteColumnNames() throws SQLException {
+    assertFalse(createConnection().createStatement().execute(INSERT_SQL, COLUMN_NAMES));
+  }
 
-	@Test
-	public void testExecuteUpdateAutoGeneratedKeys() throws SQLException
-	{
-		assertEquals(1, createConnection().createStatement().executeUpdate(INSERT_SQL, 0));
-	}
+  @Test
+  public void testExecuteUpdateAutoGeneratedKeys() throws SQLException {
+    assertEquals(1, createConnection().createStatement().executeUpdate(INSERT_SQL, 0));
+  }
 
-	@Test
-	public void testExecuteUpdateColumnIndices() throws SQLException
-	{
-		assertEquals(1, createConnection().createStatement().executeUpdate(INSERT_SQL, COLUMN_INDICES));
-	}
+  @Test
+  public void testExecuteUpdateColumnIndices() throws SQLException {
+    assertEquals(1, createConnection().createStatement().executeUpdate(INSERT_SQL, COLUMN_INDICES));
+  }
 
-	@Test
-	public void testExecuteUpdateColumnNames() throws SQLException
-	{
-		assertEquals(1, createConnection().createStatement().executeUpdate(INSERT_SQL, COLUMN_NAMES));
-	}
+  @Test
+  public void testExecuteUpdateColumnNames() throws SQLException {
+    assertEquals(1, createConnection().createStatement().executeUpdate(INSERT_SQL, COLUMN_NAMES));
+  }
 
-	@Test
-	public void testIsDDLStatement() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		Assert.assertTrue(statement.isDDLStatement(statement
-				.getTokens("CREATE TABLE FOO (ID INT64 NOT NULL, COL1 STRING(100) NOT NULL) PRIMARY KEY (ID)")));
-		Assert.assertTrue(
-				statement.isDDLStatement(statement.getTokens("ALTER TABLE FOO ADD COLUMN COL2 STRING(100) NOT NULL")));
-		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP TABLE FOO")));
-		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("CREATE INDEX IDX_FOO ON FOO (COL1)")));
-		Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP INDEX IDX_FOO")));
-	}
+  @Test
+  public void testIsDDLStatement() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    Assert.assertTrue(statement.isDDLStatement(statement.getTokens(
+        "CREATE TABLE FOO (ID INT64 NOT NULL, COL1 STRING(100) NOT NULL) PRIMARY KEY (ID)")));
+    Assert.assertTrue(statement.isDDLStatement(
+        statement.getTokens("ALTER TABLE FOO ADD COLUMN COL2 STRING(100) NOT NULL")));
+    Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP TABLE FOO")));
+    Assert.assertTrue(
+        statement.isDDLStatement(statement.getTokens("CREATE INDEX IDX_FOO ON FOO (COL1)")));
+    Assert.assertTrue(statement.isDDLStatement(statement.getTokens("DROP INDEX IDX_FOO")));
+  }
 
-	@Test
-	public void testShowDdlOperations() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		Assert.assertTrue(statement.execute("SHOW_DDL_OPERATIONS"));
-	}
+  @Test
+  public void testShowDdlOperations() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    Assert.assertTrue(statement.execute("SHOW_DDL_OPERATIONS"));
+  }
 
-	@Test
-	public void testCleanDdlOperations() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		Assert.assertFalse(statement.execute("CLEAN_DDL_OPERATIONS"));
-	}
+  @Test
+  public void testCleanDdlOperations() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    Assert.assertFalse(statement.execute("CLEAN_DDL_OPERATIONS"));
+  }
 
-	@Test
-	public void testGetTokens() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
-				statement.getTokens("   CREATE  TABLE FOO (ID INT64)"));
-		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
-				statement.getTokens("CREATE TABLE FOO (ID INT64)"));
-		Assert.assertArrayEquals(new String[] { "CREATE", "TABLE", "FOO", "(ID", "INT64)" },
-				statement.getTokens("\t\nCREATE TABLE\n\tFOO (ID INT64)   "));
-		Assert.assertArrayEquals(new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true" },
-				statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true"));
-		Assert.assertArrayEquals(new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true" },
-				statement.getTokens("\t\tSET_CONNECTION_PROPERTY     AsyncDdlOperations\t=\ttrue"));
-		Assert.assertArrayEquals(
-				new String[] { "SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true",
-						"AND AllowExtendedMode=true" },
-				statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
-	}
+  @Test
+  public void testGetTokens() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    Assert.assertArrayEquals(new String[] {"CREATE", "TABLE", "FOO", "(ID", "INT64)"},
+        statement.getTokens("   CREATE  TABLE FOO (ID INT64)"));
+    Assert.assertArrayEquals(new String[] {"CREATE", "TABLE", "FOO", "(ID", "INT64)"},
+        statement.getTokens("CREATE TABLE FOO (ID INT64)"));
+    Assert.assertArrayEquals(new String[] {"CREATE", "TABLE", "FOO", "(ID", "INT64)"},
+        statement.getTokens("\t\nCREATE TABLE\n\tFOO (ID INT64)   "));
+    Assert.assertArrayEquals(
+        new String[] {"SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true"},
+        statement.getTokens("SET_CONNECTION_PROPERTY AsyncDdlOperations=true"));
+    Assert.assertArrayEquals(
+        new String[] {"SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true"},
+        statement.getTokens("\t\tSET_CONNECTION_PROPERTY     AsyncDdlOperations\t=\ttrue"));
+    Assert.assertArrayEquals(
+        new String[] {"SET_CONNECTION_PROPERTY", "AsyncDdlOperations", "=", "true",
+            "AND AllowExtendedMode=true"},
+        statement.getTokens(
+            "SET_CONNECTION_PROPERTY AsyncDdlOperations=true AND AllowExtendedMode=true"));
+  }
 
-	private static final String BATCH_DML = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (1,2,3)";
-	private static final String BATCH_DDL = "CREATE TABLE FOO (COL1 INT64, COL2 INT64) PRIMARY KEY (COL1)";
+  private static final String BATCH_DML = "INSERT INTO FOO (COL1, COL2, COL3) VALUES (1,2,3)";
+  private static final String BATCH_DDL =
+      "CREATE TABLE FOO (COL1 INT64, COL2 INT64) PRIMARY KEY (COL1)";
 
-	@Test
-	public void testBatchDML() throws SQLException
-	{
-		testBatch(BATCH_DML, BatchMode.DML);
-	}
+  @Test
+  public void testBatchDML() throws SQLException {
+    testBatch(BATCH_DML, BatchMode.DML);
+  }
 
-	@Test
-	public void testBatchDDL() throws SQLException
-	{
-		testBatch(BATCH_DDL, BatchMode.DDL);
-	}
+  @Test
+  public void testBatchDDL() throws SQLException {
+    testBatch(BATCH_DDL, BatchMode.DDL);
+  }
 
-	private void testBatch(String sql, BatchMode expectedMode) throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
+  private void testBatch(String sql, BatchMode expectedMode) throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
 
-		assertEquals(BatchMode.NONE, statement.getCurrentBatchMode());
-		assertEquals(0, statement.getBatch().size());
+    assertEquals(BatchMode.NONE, statement.getCurrentBatchMode());
+    assertEquals(0, statement.getBatch().size());
 
-		statement.addBatch(sql);
-		assertEquals(expectedMode, statement.getCurrentBatchMode());
-		assertEquals(1, statement.getBatch().size());
+    statement.addBatch(sql);
+    assertEquals(expectedMode, statement.getCurrentBatchMode());
+    assertEquals(1, statement.getBatch().size());
 
-		int[] res = statement.executeBatch();
-		assertEquals(1, res.length);
-		assertEquals(0, statement.getBatch().size());
-	}
+    int[] res = statement.executeBatch();
+    assertEquals(1, res.length);
+    assertEquals(0, statement.getBatch().size());
+  }
 
-	@Test
-	public void testBatchDMLThenDDL() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
+  @Test
+  public void testBatchDMLThenDDL() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
 
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		thrown.expectMessage("DDL statements may not be batched together with DML statements");
-		statement.addBatch(BATCH_DML);
-		statement.addBatch(BATCH_DDL);
-	}
+    thrown.expect(SQLFeatureNotSupportedException.class);
+    thrown.expectMessage("DDL statements may not be batched together with DML statements");
+    statement.addBatch(BATCH_DML);
+    statement.addBatch(BATCH_DDL);
+  }
 
-	@Test
-	public void testBatchDDLThenDML() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
+  @Test
+  public void testBatchDDLThenDML() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
 
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		thrown.expectMessage("DML statements may not be batched together with DDL statements");
-		statement.addBatch(BATCH_DDL);
-		statement.addBatch(BATCH_DML);
-	}
+    thrown.expect(SQLFeatureNotSupportedException.class);
+    thrown.expectMessage("DML statements may not be batched together with DDL statements");
+    statement.addBatch(BATCH_DDL);
+    statement.addBatch(BATCH_DML);
+  }
 
-	@Test
-	public void testBatchSelect() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
+  @Test
+  public void testBatchSelect() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
 
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		thrown.expectMessage("SELECT statements may not be batched");
-		statement.addBatch("SELECT * FROM FOO");
-	}
+    thrown.expect(SQLFeatureNotSupportedException.class);
+    thrown.expectMessage("SELECT statements may not be batched");
+    statement.addBatch("SELECT * FROM FOO");
+  }
 
-	@Test
-	public void testBatchCustom() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
+  @Test
+  public void testBatchCustom() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
 
-		thrown.expect(SQLFeatureNotSupportedException.class);
-		thrown.expectMessage("Custom statements may not be batched");
-		statement.addBatch("GET_CONNECTION_PROPERTY");
-	}
+    thrown.expect(SQLFeatureNotSupportedException.class);
+    thrown.expectMessage("Custom statements may not be batched");
+    statement.addBatch("GET_CONNECTION_PROPERTY");
+  }
 
-	@Test
-	public void testAutoBatch() throws SQLException, NoSuchFieldException, SecurityException, IllegalArgumentException,
-			IllegalAccessException
-	{
-		CloudSpannerConnection connection = createConnection();
-		Mockito.doCallRealMethod().when(connection).addAutoBatchedDdlOperation(Mockito.anyString());
-		Mockito.doCallRealMethod().when(connection).clearAutoBatchedDdlOperations();
-		Mockito.doCallRealMethod().when(connection).getAutoBatchedDdlOperations();
-		Mockito.when(connection.isAutoBatchDdlOperations()).then(new Returns(true));
-		Field field = CloudSpannerConnection.class.getDeclaredField("autoBatchedDdlOperations");
-		field.setAccessible(true);
-		field.set(connection, new ArrayList<String>());
+  @Test
+  public void testAutoBatch() throws SQLException, NoSuchFieldException, SecurityException,
+      IllegalArgumentException, IllegalAccessException {
+    CloudSpannerConnection connection = createConnection();
+    Mockito.doCallRealMethod().when(connection).addAutoBatchedDdlOperation(Mockito.anyString());
+    Mockito.doCallRealMethod().when(connection).clearAutoBatchedDdlOperations();
+    Mockito.doCallRealMethod().when(connection).getAutoBatchedDdlOperations();
+    Mockito.when(connection.isAutoBatchDdlOperations()).then(new Returns(true));
+    Field field = CloudSpannerConnection.class.getDeclaredField("autoBatchedDdlOperations");
+    field.setAccessible(true);
+    field.set(connection, new ArrayList<String>());
 
-		CloudSpannerStatement statement = connection.createStatement();
-		assertEquals(0, connection.getAutoBatchedDdlOperations().size());
-		statement.execute(BATCH_DDL);
-		assertEquals(1, connection.getAutoBatchedDdlOperations().size());
-		statement.execute(BATCH_DML);
-		assertEquals(1, connection.getAutoBatchedDdlOperations().size());
-		statement.execute("EXECUTE_DDL_BATCH");
-		assertEquals(0, connection.getAutoBatchedDdlOperations().size());
-	}
+    CloudSpannerStatement statement = connection.createStatement();
+    assertEquals(0, connection.getAutoBatchedDdlOperations().size());
+    statement.execute(BATCH_DDL);
+    assertEquals(1, connection.getAutoBatchedDdlOperations().size());
+    statement.execute(BATCH_DML);
+    assertEquals(1, connection.getAutoBatchedDdlOperations().size());
+    statement.execute("EXECUTE_DDL_BATCH");
+    assertEquals(0, connection.getAutoBatchedDdlOperations().size());
+  }
 
-	@Test
-	public void testGetGeneratedKeys() throws SQLException
-	{
-		CloudSpannerConnection connection = createConnection();
-		CloudSpannerStatement statement = connection.createStatement();
-		try (ResultSet rs = statement.getGeneratedKeys())
-		{
-			assertFalse(rs.next());
-		}
-	}
+  @Test
+  public void testGetGeneratedKeys() throws SQLException {
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    try (ResultSet rs = statement.getGeneratedKeys()) {
+      assertFalse(rs.next());
+    }
+  }
 
 }

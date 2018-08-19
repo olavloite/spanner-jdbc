@@ -2,7 +2,6 @@ package nl.topicus.jdbc.test.integration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.sql.Connection;
@@ -12,10 +11,8 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.spanner.Database;
 import com.google.cloud.spanner.Instance;
@@ -29,7 +26,6 @@ import com.google.cloud.spanner.SpannerOptions.Builder;
 import com.google.rpc.Code;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import com.google.spanner.admin.instance.v1.CreateInstanceMetadata;
-
 import nl.topicus.jdbc.CloudSpannerConnection;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
@@ -40,187 +36,165 @@ import nl.topicus.jdbc.test.integration.dml.DMLTester;
 import nl.topicus.jdbc.test.integration.xa.XATester;
 
 @Category(IntegrationTest.class)
-public class CloudSpannerIT
-{
-	private static final Logger log = Logger.getLogger(CloudSpannerIT.class.getName());
+public class CloudSpannerIT {
+  private static final Logger log = Logger.getLogger(CloudSpannerIT.class.getName());
 
-	private static final String DEFAULT_HOST = "https://emulator.googlecloudspanner.com:8443";
-	private static final String DEFAULT_PROJECT = "test-project";
-	private static final String DEFAULT_KEY_FILE = "cloudspanner-emulator-key.json";
+  private static final String DEFAULT_HOST = "https://emulator.googlecloudspanner.com:8443";
+  private static final String DEFAULT_PROJECT = "test-project";
+  private static final String DEFAULT_KEY_FILE = "cloudspanner-emulator-key.json";
 
-	private static final boolean CREATE_INSTANCE = true;
+  private static final boolean CREATE_INSTANCE = true;
 
-	private static final boolean CREATE_DATABASE = true;
+  private static final boolean CREATE_DATABASE = true;
 
-	private final String instanceId;
+  private final String instanceId;
 
-	private static final String DATABASE_ID = "test-database";
+  private static final String DATABASE_ID = "test-database";
 
-	private Spanner spanner;
+  private Spanner spanner;
 
-	private final String credentialsPath;
+  private final String credentialsPath;
 
-	public static String getHost()
-	{
-		return System.getProperty("host", DEFAULT_HOST);
-	}
+  public static String getHost() {
+    return System.getProperty("host", DEFAULT_HOST);
+  }
 
-	public static String getKeyFile()
-	{
-		return System.getProperty("keyfile", DEFAULT_KEY_FILE);
-	}
+  public static String getKeyFile() {
+    return System.getProperty("keyfile", DEFAULT_KEY_FILE);
+  }
 
-	public static String getProject()
-	{
-		return System.getProperty("project", DEFAULT_PROJECT);
-	}
+  public static String getProject() {
+    return System.getProperty("project", DEFAULT_PROJECT);
+  }
 
-	public CloudSpannerIT()
-	{
-		// generate a unique instance id for this test run
-		Random rnd = new Random();
-		this.instanceId = "test-instance-" + rnd.nextInt(1000000);
-		this.credentialsPath = getKeyFile();
-		GoogleCredentials credentials = null;
-		try
-		{
-			credentials = CloudSpannerConnection.getCredentialsFromFile(credentialsPath);
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("Could not read key file " + credentialsPath, e);
-		}
-		Builder builder = SpannerOptions.newBuilder();
-		builder.setProjectId(getProject());
-		builder.setCredentials(credentials);
-		builder.setHost(getHost());
+  public CloudSpannerIT() {
+    // generate a unique instance id for this test run
+    Random rnd = new Random();
+    this.instanceId = "test-instance-" + rnd.nextInt(1000000);
+    this.credentialsPath = getKeyFile();
+    GoogleCredentials credentials = null;
+    try {
+      credentials = CloudSpannerConnection.getCredentialsFromFile(credentialsPath);
+    } catch (IOException e) {
+      throw new RuntimeException("Could not read key file " + credentialsPath, e);
+    }
+    Builder builder = SpannerOptions.newBuilder();
+    builder.setProjectId(getProject());
+    builder.setCredentials(credentials);
+    builder.setHost(getHost());
 
-		SpannerOptions options = builder.build();
-		spanner = options.getService();
-	}
+    SpannerOptions options = builder.build();
+    spanner = options.getService();
+  }
 
-	/**
-	 * Run the different tests on the configured database.
-	 */
-	@Test
-	public void performDatabaseTests() throws Exception
-	{
-		try
-		{
-			log.info("Starting tests, about to create database");
-			if (CREATE_INSTANCE)
-				createInstance();
-			if (CREATE_DATABASE)
-				createDatabase();
-			log.info("Database created");
-			// Do the testing
-			log.info("Starting JDBC tests");
-			performJdbcTests();
-			log.info("JDBC tests completed");
-		}
-		finally
-		{
-			// Clean up test instance and test database.
-			log.info("Cleaning up database");
-			if (CREATE_DATABASE)
-				cleanUpDatabase();
-			if (CREATE_INSTANCE)
-				cleanUpInstance();
-			spanner.close();
-			log.info("Clean up completed");
-		}
-	}
+  /**
+   * Run the different tests on the configured database.
+   */
+  @Test
+  public void performDatabaseTests() throws Exception {
+    try {
+      log.info("Starting tests, about to create database");
+      if (CREATE_INSTANCE)
+        createInstance();
+      if (CREATE_DATABASE)
+        createDatabase();
+      log.info("Database created");
+      // Do the testing
+      log.info("Starting JDBC tests");
+      performJdbcTests();
+      log.info("JDBC tests completed");
+    } finally {
+      // Clean up test instance and test database.
+      log.info("Cleaning up database");
+      if (CREATE_DATABASE)
+        cleanUpDatabase();
+      if (CREATE_INSTANCE)
+        cleanUpInstance();
+      spanner.close();
+      log.info("Clean up completed");
+    }
+  }
 
-	private void performJdbcTests() throws Exception
-	{
-		// Get a JDBC connection
-		try (Connection connection = createConnection())
-		{
-			connection.setAutoCommit(false);
-			// Test connection validity
-			assertTrue(connection.isValid(0));
-			assertTrue(connection.isValid(1));
-			assertTrue(connection.isValid(1000));
-			// Check node count
-			assertEquals(1, ((CloudSpannerConnection) connection).getNodeCount());
-			// Test connection pooling
-			ConnectionPoolingTester poolingTester = new ConnectionPoolingTester();
-			poolingTester.testPooling((CloudSpannerConnection) connection);
+  private void performJdbcTests() throws Exception {
+    // Get a JDBC connection
+    try (Connection connection = createConnection()) {
+      connection.setAutoCommit(false);
+      // Test connection validity
+      assertTrue(connection.isValid(0));
+      assertTrue(connection.isValid(1));
+      assertTrue(connection.isValid(1000));
+      // Check node count
+      assertEquals(1, ((CloudSpannerConnection) connection).getNodeCount());
+      // Test connection pooling
+      ConnectionPoolingTester poolingTester = new ConnectionPoolingTester();
+      poolingTester.testPooling((CloudSpannerConnection) connection);
 
-			// Test Table DDL statements
-			TableDDLTester tableDDLTester = new TableDDLTester(connection);
-			tableDDLTester.runCreateTests();
-			// Test DML statements
-			DMLTester dmlTester = new DMLTester(connection);
-			dmlTester.runDMLTests();
-			// Test meta data functions
-			MetaDataTester metaDataTester = new MetaDataTester((CloudSpannerConnection) connection);
-			metaDataTester.runMetaDataTests();
-			// Test transaction functions
-			TransactionTester txTester = new TransactionTester(connection);
-			txTester.runTransactionTests();
-			// Test select statements
-			SelectStatementsTester selectTester = new SelectStatementsTester(connection);
-			selectTester.runSelectTests();
-			// Test XA transactions
-			XATester xaTester = new XATester();
-			xaTester.testXA(getProject(), instanceId, DATABASE_ID, credentialsPath);
+      // Test Table DDL statements
+      TableDDLTester tableDDLTester = new TableDDLTester(connection);
+      tableDDLTester.runCreateTests();
+      // Test DML statements
+      DMLTester dmlTester = new DMLTester(connection);
+      dmlTester.runDMLTests();
+      // Test meta data functions
+      MetaDataTester metaDataTester = new MetaDataTester((CloudSpannerConnection) connection);
+      metaDataTester.runMetaDataTests();
+      // Test transaction functions
+      TransactionTester txTester = new TransactionTester(connection);
+      txTester.runTransactionTests();
+      // Test select statements
+      SelectStatementsTester selectTester = new SelectStatementsTester(connection);
+      selectTester.runSelectTests();
+      // Test XA transactions
+      XATester xaTester = new XATester();
+      xaTester.testXA(getProject(), instanceId, DATABASE_ID, credentialsPath);
 
-			// Test drop statements
-			tableDDLTester.runDropTests();
-		}
-		catch (SQLException | PropertyVetoException | AssertionError e)
-		{
-			log.log(Level.WARNING, "Error during JDBC tests", e);
-			throw e;
-		}
-	}
+      // Test drop statements
+      tableDDLTester.runDropTests();
+    } catch (SQLException | PropertyVetoException | AssertionError e) {
+      log.log(Level.WARNING, "Error during JDBC tests", e);
+      throw e;
+    }
+  }
 
-	private Connection createConnection() throws SQLException
-	{
-		try
-		{
-			Class.forName(CloudSpannerDriver.class.getName());
-		}
-		catch (ClassNotFoundException e)
-		{
-			throw new CloudSpannerSQLException("Could not load JDBC driver", Code.UNKNOWN, e);
-		}
-		StringBuilder url = new StringBuilder("jdbc:cloudspanner:");
-		url.append(getHost());
-		url.append(";Project=").append(getProject());
-		url.append(";Instance=").append(instanceId);
-		url.append(";Database=").append(DATABASE_ID);
-		url.append(";PvtKeyPath=").append(credentialsPath);
-		url.append(";UseCustomHost=true");
-		return DriverManager.getConnection(url.toString());
-	}
+  private Connection createConnection() throws SQLException {
+    try {
+      Class.forName(CloudSpannerDriver.class.getName());
+    } catch (ClassNotFoundException e) {
+      throw new CloudSpannerSQLException("Could not load JDBC driver", Code.UNKNOWN, e);
+    }
+    StringBuilder url = new StringBuilder("jdbc:cloudspanner:");
+    url.append(getHost());
+    url.append(";Project=").append(getProject());
+    url.append(";Instance=").append(instanceId);
+    url.append(";Database=").append(DATABASE_ID);
+    url.append(";PvtKeyPath=").append(credentialsPath);
+    url.append(";UseCustomHost=true");
+    return DriverManager.getConnection(url.toString());
+  }
 
-	private void createInstance()
-	{
-		InstanceAdminClient instanceAdminClient = spanner.getInstanceAdminClient();
-		InstanceConfig config = instanceAdminClient.getInstanceConfig("regional-europe-west1");
-		Instance instance = instanceAdminClient.newInstanceBuilder(InstanceId.of(getProject(), instanceId))
-				.setDisplayName("Test Instance").setInstanceConfigId(config.getId()).setNodeCount(1).build();
-		Operation<Instance, CreateInstanceMetadata> createInstance = instanceAdminClient.createInstance(instance);
-		createInstance = createInstance.waitFor();
-	}
+  private void createInstance() {
+    InstanceAdminClient instanceAdminClient = spanner.getInstanceAdminClient();
+    InstanceConfig config = instanceAdminClient.getInstanceConfig("regional-europe-west1");
+    Instance instance = instanceAdminClient
+        .newInstanceBuilder(InstanceId.of(getProject(), instanceId)).setDisplayName("Test Instance")
+        .setInstanceConfigId(config.getId()).setNodeCount(1).build();
+    Operation<Instance, CreateInstanceMetadata> createInstance =
+        instanceAdminClient.createInstance(instance);
+    createInstance = createInstance.waitFor();
+  }
 
-	private void createDatabase()
-	{
-		Operation<Database, CreateDatabaseMetadata> createDatabase = spanner.getDatabaseAdminClient()
-				.createDatabase(instanceId, DATABASE_ID, Arrays.asList());
-		createDatabase = createDatabase.waitFor();
-	}
+  private void createDatabase() {
+    Operation<Database, CreateDatabaseMetadata> createDatabase =
+        spanner.getDatabaseAdminClient().createDatabase(instanceId, DATABASE_ID, Arrays.asList());
+    createDatabase = createDatabase.waitFor();
+  }
 
-	private void cleanUpInstance()
-	{
-		spanner.getInstanceAdminClient().deleteInstance(instanceId);
-	}
+  private void cleanUpInstance() {
+    spanner.getInstanceAdminClient().deleteInstance(instanceId);
+  }
 
-	private void cleanUpDatabase()
-	{
-		spanner.getDatabaseAdminClient().dropDatabase(instanceId, DATABASE_ID);
-	}
+  private void cleanUpDatabase() {
+    spanner.getDatabaseAdminClient().dropDatabase(instanceId, DATABASE_ID);
+  }
 
 }
