@@ -70,7 +70,7 @@ class ValueBinderExpressionVisitorAdapter<R> extends AbstractSpannerExpressionVi
       return binder.to(CloudSpannerConversionUtil.toCloudSpannerDate(dateValue));
     } else if (Timestamp.class.isAssignableFrom(value.getClass())) {
       Timestamp timeValue = (Timestamp) value;
-      if (timeValue.equals(CloudSpannerPreparedStatement.SPANNER_COMMIT_TIMESTAMP)) {
+      if (timeValue.equals(CloudSpannerPreparedStatement.getSpannerCommitTimestamp())) {
         return binder.to(CloudSpannerPreparedStatement.SPANNER_COMMIT_TIMESTAMP_PLACEHOLDER);
       } else {
         return binder.to(CloudSpannerConversionUtil.toCloudSpannerTimestamp(timeValue));

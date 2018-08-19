@@ -1,5 +1,6 @@
 package nl.topicus.jdbc.statement;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -52,7 +53,7 @@ import nl.topicus.jdbc.statement.AbstractTablePartWorker.DMLOperation;
  *
  */
 public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedStatement {
-  public static final Timestamp SPANNER_COMMIT_TIMESTAMP = new Timestamp(Long.MIN_VALUE);
+  private static final Timestamp SPANNER_COMMIT_TIMESTAMP = new Timestamp(Long.MIN_VALUE);
   public static final String SPANNER_COMMIT_TIMESTAMP_PLACEHOLDER = "spanner.commit_timestamp()";
 
   private static final String INVALID_WHERE_CLAUSE_DELETE_MESSAGE =
@@ -684,6 +685,17 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
 
   void setForceUpdate(boolean forceUpdate) {
     this.forceUpdate = forceUpdate;
+  }
+
+  /**
+   * 
+   * @return A timestamp value which automatically will be converted into the commit timestamp in
+   *         Cloud Spanner when set as a parameter for a {@link PreparedStatement}
+   */
+  public static Timestamp getSpannerCommitTimestamp() {
+    Timestamp res = new Timestamp(SPANNER_COMMIT_TIMESTAMP.getTime());
+    res.setNanos(SPANNER_COMMIT_TIMESTAMP.getNanos());
+    return res;
   }
 
 }
