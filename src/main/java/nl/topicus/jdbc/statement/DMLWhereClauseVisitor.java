@@ -12,97 +12,83 @@ import net.sf.jsqlparser.expression.TimestampValue;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.schema.Column;
 
-abstract class DMLWhereClauseVisitor extends DMLWhereClauseVisitorAdapter
-{
-	private Column col;
+abstract class DMLWhereClauseVisitor extends DMLWhereClauseVisitorAdapter {
+  private Column col;
 
-	private ParameterStore parameterStore;
+  private ParameterStore parameterStore;
 
-	/**
-	 * Only allow equals comparisons
-	 */
-	private boolean foundEquals = false;
+  /**
+   * Only allow equals comparisons
+   */
+  private boolean foundEquals = false;
 
-	DMLWhereClauseVisitor(ParameterStore parameterStore)
-	{
-		this.parameterStore = parameterStore;
-	}
+  DMLWhereClauseVisitor(ParameterStore parameterStore) {
+    this.parameterStore = parameterStore;
+  }
 
-	protected ParameterStore getParameterStore()
-	{
-		return parameterStore;
-	}
+  protected ParameterStore getParameterStore() {
+    return parameterStore;
+  }
 
-	@Override
-	public void visit(Column column)
-	{
-		// Ideally we should check here whether this column is actually part of
-		// the primary key, but that would involve another roundtrip to the
-		// database.
-		this.col = column;
-	}
+  @Override
+  public void visit(Column column) {
+    // Ideally we should check here whether this column is actually part of
+    // the primary key, but that would involve another roundtrip to the
+    // database.
+    this.col = column;
+  }
 
-	protected abstract void visitExpression(Column col, Expression expression);
+  protected abstract void visitExpression(Column col, Expression expression);
 
-	@Override
-	public void visit(EqualsTo expr)
-	{
-		// If it is an NOT ID=1, then it's not a valid equals clause
-		foundEquals = !expr.isNot();
-		super.visit(expr);
-	}
+  @Override
+  public void visit(EqualsTo expr) {
+    // If it is an NOT ID=1, then it's not a valid equals clause
+    foundEquals = !expr.isNot();
+    super.visit(expr);
+  }
 
-	@Override
-	public void visit(JdbcParameter parameter)
-	{
-		visitExpression(col, parameter);
-	}
+  @Override
+  public void visit(JdbcParameter parameter) {
+    visitExpression(col, parameter);
+  }
 
-	@Override
-	public void visit(DoubleValue value)
-	{
-		visitExpression(col, value);
-	}
+  @Override
+  public void visit(DoubleValue value) {
+    visitExpression(col, value);
+  }
 
-	@Override
-	public void visit(LongValue value)
-	{
-		visitExpression(col, value);
-	}
+  @Override
+  public void visit(LongValue value) {
+    visitExpression(col, value);
+  }
 
-	@Override
-	public void visit(DateValue value)
-	{
-		visitExpression(col, value);
-	}
+  @Override
+  public void visit(DateValue value) {
+    visitExpression(col, value);
+  }
 
-	@Override
-	public void visit(TimeValue value)
-	{
-		visitExpression(col, value);
-	}
+  @Override
+  public void visit(TimeValue value) {
+    visitExpression(col, value);
+  }
 
-	@Override
-	public void visit(TimestampValue value)
-	{
-		visitExpression(col, value);
-	}
+  @Override
+  public void visit(TimestampValue value) {
+    visitExpression(col, value);
+  }
 
-	@Override
-	public void visit(StringValue value)
-	{
-		visitExpression(col, value);
-	}
+  @Override
+  public void visit(StringValue value) {
+    visitExpression(col, value);
+  }
 
-	@Override
-	public void visit(HexValue value)
-	{
-		visitExpression(col, value);
-	}
+  @Override
+  public void visit(HexValue value) {
+    visitExpression(col, value);
+  }
 
-	public boolean isValid()
-	{
-		return foundEquals && !isInvalid();
-	}
+  public boolean isValid() {
+    return foundEquals && !isInvalid();
+  }
 
 }

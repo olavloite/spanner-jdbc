@@ -6,7 +6,6 @@ package nl.topicus.jdbc.test.category;
  * @author loite
  *
  */
-public interface IntegrationTest
-{
+public interface IntegrationTest {
 
 }
