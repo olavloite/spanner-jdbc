@@ -137,7 +137,7 @@ public class CommitTimestampIT extends AbstractSpecificIntegrationTest {
     try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
       statement.setLong(1, 1L);
       statement.setString(2, "test");
-      statement.setTimestamp(3, CloudSpannerPreparedStatement.SPANNER_COMMIT_TIMESTAMP);
+      statement.setTimestamp(3, CloudSpannerPreparedStatement.getSpannerCommitTimestamp());
       statement.executeUpdate();
     }
     getConnection().commit();

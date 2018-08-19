@@ -104,6 +104,8 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
     }
   }
 
+  private static final String GOOGLE_CLOUD_STORAGE_PREFIX = "gs://";
+
   private final CloudSpannerDriver driver;
 
   private final CloudSpannerDatabaseSpecification database;
@@ -261,7 +263,7 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
     if (credentialsPath == null || credentialsPath.length() == 0)
       throw new IllegalArgumentException("credentialsPath may not be null or empty");
     GoogleCredentials credentials = null;
-    if (credentialsPath.startsWith("gs://")) {
+    if (credentialsPath.startsWith(GOOGLE_CLOUD_STORAGE_PREFIX)) {
       try {
         Storage storage = StorageOptions.newBuilder().build().getService();
         String bucketName = getBucket(credentialsPath);
@@ -290,16 +292,16 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
   }
 
   static String getBucket(String storageUrl) {
-    Preconditions.checkArgument(storageUrl.startsWith("gs://"),
-        "Storage URL must start with gs://");
+    Preconditions.checkArgument(storageUrl.startsWith(GOOGLE_CLOUD_STORAGE_PREFIX),
+        String.format("Storage URL must start with %s", GOOGLE_CLOUD_STORAGE_PREFIX));
     Preconditions.checkArgument(storageUrl.substring(5).contains("/"),
         "Storage URL must contain a blob name");
     return storageUrl.substring(5, storageUrl.indexOf('/', 5));
   }
 
   static String getBlob(String storageUrl) {
-    Preconditions.checkArgument(storageUrl.startsWith("gs://"),
-        "Storage URL must start with gs://");
+    Preconditions.checkArgument(storageUrl.startsWith(GOOGLE_CLOUD_STORAGE_PREFIX),
+        String.format("Storage URL must start with %s", GOOGLE_CLOUD_STORAGE_PREFIX));
     Preconditions.checkArgument(storageUrl.substring(5).contains("/"),
         "Storage URL must contain a blob name");
     return storageUrl.substring(storageUrl.indexOf('/', 5) + 1);

@@ -229,7 +229,6 @@ public class CloudSpannerDriver implements Driver {
       builder.setCredentials(key.credentials);
     if (key.host != null)
       builder.setHost(key.host);
-    // builder.setHost("http://localhost:8443");
     SpannerOptions options = builder.build();
     return options.getService();
   }

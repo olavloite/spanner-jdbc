@@ -70,7 +70,7 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
 
   @Override
   public Connection getConnection() throws SQLException {
-    return DriverManager.getConnection(getURL(), getProperties());
+    return DriverManager.getConnection(getJdbcURL(), getProperties());
   }
 
   /**
@@ -82,7 +82,7 @@ public class CloudSpannerDataSource extends AbstractCloudSpannerWrapper implemen
     return getConnection();
   }
 
-  private String getURL() {
+  private String getJdbcURL() {
     if (getUrl() == null) {
       return String.format(URL_FORMAT, getHost());
     }
