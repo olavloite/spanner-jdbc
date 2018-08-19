@@ -1232,7 +1232,7 @@ public class CloudSpannerDatabaseMetaData extends AbstractCloudSpannerDatabaseMe
 	{
 		String sql = "SELECT * FROM (SELECT '' AS NAME, 0 AS MAX_LEN, '' AS DEFAULT_VALUE, '' AS DESCRIPTION "
 				+ FROM_STATEMENT_WITHOUT_RESULTS;
-		sql = sql + ") T ORDER BY NAME ";
+		sql = sql + ") T ORDER BY NAME";
 
 		PreparedStatement statement = prepareStatement(sql);
 		return statement.executeQuery();
