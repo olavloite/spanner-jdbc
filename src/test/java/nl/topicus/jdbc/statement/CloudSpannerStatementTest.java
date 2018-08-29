@@ -19,6 +19,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.Returns;
 import nl.topicus.jdbc.CloudSpannerConnection;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 import nl.topicus.jdbc.statement.CloudSpannerStatement.BatchMode;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.test.util.CloudSpannerTestObjects;
@@ -308,6 +309,19 @@ public class CloudSpannerStatementTest {
     try (ResultSet rs = statement.getGeneratedKeys()) {
       assertFalse(rs.next());
     }
+  }
+
+  @Test
+  public void testInsertWithGetTimestamp() throws SQLException {
+    thrown.expect(CloudSpannerSQLException.class);
+    thrown.expectMessage(
+        "Function calls such as for example GET_TIMESTAMP() are not allowed in client side insert/update statements");
+    CloudSpannerConnection connection = createConnection();
+    CloudSpannerStatement statement = connection.createStatement();
+    String sql = "INSERT INTO providers\n"
+        + "(provider_id, created, device_id, document_number, document_type_id, name, notification, phone, updated, last_access, deleted, token_fcm)\n"
+        + "VALUES('000000', CURRENT_DATE(), 'not-device-id', null, null, 'provider-promocion', false, null, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), false, 'not-token')";
+    statement.execute(sql);
   }
 
 }

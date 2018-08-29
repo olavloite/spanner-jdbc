@@ -2,6 +2,7 @@ package nl.topicus.jdbc.statement;
 
 import java.sql.Types;
 import javax.xml.bind.DatatypeConverter;
+import com.google.rpc.Code;
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
@@ -12,9 +13,11 @@ import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
 import net.sf.jsqlparser.expression.SignedExpression;
 import net.sf.jsqlparser.expression.StringValue;
+import net.sf.jsqlparser.expression.TimeKeyExpression;
 import net.sf.jsqlparser.expression.TimeValue;
 import net.sf.jsqlparser.expression.TimestampValue;
 import net.sf.jsqlparser.schema.Column;
+import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 abstract class AbstractSpannerExpressionVisitorAdapter extends ExpressionVisitorAdapter {
   private ParameterStore parameterStore;
@@ -109,6 +112,13 @@ abstract class AbstractSpannerExpressionVisitorAdapter extends ExpressionVisitor
     if (stringValue.equalsIgnoreCase("true") || stringValue.equalsIgnoreCase("false")) {
       setValue(Boolean.valueOf(stringValue), Types.BOOLEAN);
     }
+  }
+
+  @Override
+  public void visit(TimeKeyExpression timeKeyExpression) {
+    throw new IllegalArgumentException(new CloudSpannerSQLException(
+        "Function calls such as for example GET_TIMESTAMP() are not allowed in client side insert/update statements. Use an insert statement with a select statement instead: INSERT INTO COL1, COL2, COL3 SELECT 1, GET_TIMESTAMP(), 'test'",
+        Code.INVALID_ARGUMENT));
   }
 
 }
