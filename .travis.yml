@@ -1,6 +1,7 @@
 language: java
 before_install:
 - openssl aes-256-cbc -K $encrypted_941275d00872_key -iv $encrypted_941275d00872_iv -in cloudspanner-emulator-key.json.enc -out cloudspanner-emulator-key.json -d
+- openssl aes-256-cbc -K $encrypted_941275d00872_key -iv $encrypted_941275d00872_iv -in cloudspanner-key.json.enc -out cloudspanner-key.json -d
 
 install: true
 addons:
@@ -12,7 +13,11 @@ addons:
 jdk:
   - oraclejdk8
 script:
-  - mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
+  if [ ${TRAVIS_EVENT_TYPE} = "cron" ]; then
+    mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar || travis_terminate 1;
+  else
+    mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar || travis_terminate 1;
+  fi
 cache:
   directories:
     - '$HOME/.m2/repository'
