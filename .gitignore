@@ -4,4 +4,5 @@
 /.settings/
 /cloudspanner-key.json
 /cloudspanner-emulator-key.json
+/keys.tar
 /dependency-reduced-pom.xml
