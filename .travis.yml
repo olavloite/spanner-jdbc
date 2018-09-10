@@ -12,12 +12,15 @@ addons:
 
 jdk:
   - oraclejdk8
-script:
-  if [ ${TRAVIS_EVENT_TYPE} = "cron" ]; then
-    mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar || travis_terminate 1;
-  else
-    mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar || travis_terminate 1;
-  fi
+
+jobs:
+  include:
+    - stage: test-emulator
+      script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
+    - stage: test-spanner
+      script: "echo This is a cron job"
+      if: (type = cron)
+  
 cache:
   directories:
     - '$HOME/.m2/repository'
