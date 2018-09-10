@@ -20,6 +20,9 @@ jobs:
     - stage: test-spanner
       script: "echo This is a cron job"
       if: (type = cron)
+    - stage: test-pr
+      script: "echo This is a PR job"
+      if: (type = pull_request)
   
 cache:
   directories:
