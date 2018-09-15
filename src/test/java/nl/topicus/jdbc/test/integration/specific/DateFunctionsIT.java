@@ -9,6 +9,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.stream.LongStream;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,6 +20,12 @@ import nl.topicus.jdbc.test.category.IntegrationTest;
 public class DateFunctionsIT extends AbstractSpecificIntegrationTest {
 
   private void createNewsTables() throws SQLException {
+    // check whether the table already exists
+    try (ResultSet rs = getConnection().getMetaData().getTables(null, null, "news_types", null)) {
+      if (rs.next())
+        return;
+    }
+
     getConnection().createStatement().executeUpdate(
         "create table news_types (news_type_id int64 not null, name string(100), update_hours int64 not null, enabled bool not null, priority int64 not null, news_start timestamp) primary key (news_type_id)");
     getConnection().createStatement().executeUpdate(
@@ -162,6 +170,7 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest {
 
   @Test
   public void testSelectWithTimestampAdd() throws SQLException {
+    createNewsTables();
     String sql =
         "SELECT * FROM news_types WHERE TIMESTAMP_ADD(news_start, INTERVAL update_hours HOUR) > CURRENT_TIMESTAMP() and news_type_id=?";
     PreparedStatement ps = getConnection().prepareStatement(sql);
@@ -193,6 +202,7 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest {
 
   @Test
   public void testSelectWithTimestampSub() throws SQLException {
+    createNewsTables();
     String sql =
         "SELECT * FROM news_types WHERE TIMESTAMP_SUB(news_start, INTERVAL update_hours HOUR) > CURRENT_TIMESTAMP()";
     PreparedStatement ps = getConnection().prepareStatement(sql);
@@ -216,19 +226,39 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest {
   }
 
   @Test
+  public void testSelectCastStringToTimestamp() throws SQLException {
+    // No timestamp information, so Cloud Spanner will treat this as being in Los Angeles (this is
+    // UTC-08:00 as it is not during daylight saving time)
+    String sql = "SELECT CAST('2008-12-25 15:30:00' AS TIMESTAMP) AS TS";
+    PreparedStatement ps = getConnection().prepareStatement(sql);
+    try (ResultSet rs = ps.executeQuery()) {
+      assertEquals("TS", rs.getMetaData().getColumnLabel(1));
+      while (rs.next()) {
+        Calendar time = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        time.clear();
+        time.set(2008, 11, 25, 23, 30, 0);
+        assertEquals(new Timestamp(time.getTimeInMillis()), rs.getTimestamp("TS"));
+      }
+    }
+  }
+
+  @Test
   public void testSelectWithTimestampToStringWithTimezone() throws SQLException {
+    // No timestamp information, so Cloud Spanner will treat this as being in Los Angeles (this is
+    // UTC-08:00 as it is not during daylight saving time)
     String sql = "SELECT STRING(CAST('2008-12-25 15:30:00' AS TIMESTAMP), '-06:00') AS TS";
     PreparedStatement ps = getConnection().prepareStatement(sql);
     try (ResultSet rs = ps.executeQuery()) {
       assertEquals("TS", rs.getMetaData().getColumnLabel(1));
       while (rs.next()) {
-        assertEquals("2008-12-25 21:30:00", rs.getString(1));
+        assertEquals("2008-12-25 17:30:00-06", rs.getString(1));
       }
     }
   }
 
   @Test
   public void testSelectWithSubSelectWithUnionAll() throws SQLException {
+    createNewsTables();
     // @formatter:off
 		String sql = "SELECT news.news_type_id, news.text FROM ( \n" + 
 				"			SELECT n.news_type_id, n.text, nt.enabled, nt.priority, nt.news_start FROM news2 AS n INNER JOIN news_types nt ON nt.news_type_id = n.news_type_id WHERE n.seeker_id = ? \n" + 
