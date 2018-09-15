@@ -3,12 +3,14 @@ package nl.topicus.jdbc.test.integration.specific;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.stream.LongStream;
@@ -251,7 +253,8 @@ public class DateFunctionsIT extends AbstractSpecificIntegrationTest {
     try (ResultSet rs = ps.executeQuery()) {
       assertEquals("TS", rs.getMetaData().getColumnLabel(1));
       while (rs.next()) {
-        assertEquals("2008-12-25 17:30:00-06", rs.getString(1));
+        assertTrue(Arrays.asList("2008-12-25 17:30:00-06", "2008-12-25 15:30:00-08")
+            .contains(rs.getString(1)));
       }
     }
   }
