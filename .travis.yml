@@ -18,11 +18,9 @@ jobs:
     - stage: test-emulator
       script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
     - stage: test-spanner
-      script: "echo This is a cron job"
-      if: (type = cron)
-    - stage: test-pr
-      script: "echo This is a PR job"
-      if: (type = pull_request)
+      script:
+        - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
+      if: (type IN (cron, pull_request))
   
 cache:
   directories:
