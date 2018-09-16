@@ -21,10 +21,12 @@ stages:
 jobs:
   include:
     - stage: test-emulator
-      script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
+      script: echo test-emulator
+      # script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
     - stage: test-spanner
-      script:
-        - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
+      script: echo test-spanner
+      # script:
+      #  - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
 
 cache:
   directories:
