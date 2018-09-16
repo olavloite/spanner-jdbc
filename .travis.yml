@@ -13,14 +13,13 @@ addons:
 jdk:
   - oraclejdk8
 
-jobs:
-  include:
-    - stage: test-emulator
-      script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
-    - stage: test-spanner
-      script:
-        - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
-      if: (type IN (cron) OR commit_message !~ /(test-on-spanner)/)
+stages:
+  - stage: test-emulator
+    script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
+  - stage: test-spanner
+    script:
+      - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
+    if: (type IN (cron) OR commit_message !~ /(test-on-spanner)/)
   
 cache:
   directories:
