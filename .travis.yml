@@ -14,13 +14,18 @@ jdk:
   - oraclejdk8
 
 stages:
-  - stage: test-emulator
-    script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
-  - stage: test-spanner
-    script:
-      - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
+  - name: test-emulator
+  - name: test-spanner
     if: (type IN (cron) OR commit_message !~ /(test-on-spanner)/)
-  
+
+jobs:
+  include:
+    - stage: test-emulator
+      script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
+    - stage: test-spanner
+      script:
+        - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
+
 cache:
   directories:
     - '$HOME/.m2/repository'
