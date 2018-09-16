@@ -16,7 +16,7 @@ jdk:
 stages:
   - name: test-emulator
   - name: test-spanner
-    if: (type IN (cron) OR commit_message !~ /(test-on-spanner)/)
+    if: (type IN (cron))
 
 jobs:
   include:
