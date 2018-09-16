@@ -19,7 +19,7 @@ jobs:
       script: "mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar"
     - stage: test-spanner
       script:
-        - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
+        - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
       if: (type IN (cron, pull_request))
   
 cache:
