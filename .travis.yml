@@ -20,7 +20,7 @@ jobs:
     - stage: test-spanner
       script:
         - mvn -Dit.test=DateFunctionsIT -DargLine="-Dhost=https://spanner.googleapis.com -Dkeyfile=cloudspanner-key.json -Dproject=smart-period-213808" clean verify
-      if: (type IN (cron, pull_request))
+      if: (type IN (cron) OR commit_message !~ /(test-on-spanner)/)
   
 cache:
   directories:
