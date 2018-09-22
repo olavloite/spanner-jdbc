@@ -143,13 +143,31 @@ public abstract class AbstractTablePartWorker implements Callable<ConversionResu
 
   private long isRecordCountGreaterThan(Select select, long batchSize) throws SQLException {
     if (estimatedRecordCount == -1) {
-      try (ResultSet count =
-          connection.prepareStatement(createCountQuery(select, batchSize)).executeQuery()) {
+      PreparedStatement ps = connection.prepareStatement(createCountQuery(select, batchSize));
+      for (int i = 1; i <= parameters.getHighestIndex(); i++) {
+        setParameter(i, ps);
+      }
+      try (ResultSet count = ps.executeQuery()) {
         if (count.next())
           estimatedRecordCount = count.getLong(1);
       }
     }
     return estimatedRecordCount;
+  }
+
+  private void setParameter(int i, PreparedStatement ps) throws SQLException {
+    if (parameters.getParameter(i) == null && parameters.getType(i) != null) {
+      ps.setNull(i, parameters.getType(i));
+    } else if (parameters.getParameter(i) != null) {
+      if (parameters.getType(i) != null && parameters.getScaleOrLength(i) != null) {
+        ps.setObject(i, parameters.getParameter(i), parameters.getType(i),
+            parameters.getScaleOrLength(i));
+      } else if (parameters.getType(i) != null) {
+        ps.setObject(i, parameters.getParameter(i), parameters.getType(i));
+      } else {
+        ps.setObject(i, parameters.getParameter(i));
+      }
+    }
   }
 
   @VisibleForTesting

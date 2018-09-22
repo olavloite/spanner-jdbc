@@ -3,6 +3,7 @@ package nl.topicus.jdbc.test.integration.specific;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Random;
@@ -153,6 +154,12 @@ public abstract class AbstractSpecificIntegrationTest {
     if (connection != null) {
       connection.close();
       connection = null;
+    }
+  }
+
+  protected boolean tableExists(String name) throws SQLException {
+    try (ResultSet rs = getConnection().getMetaData().getTables(null, null, name, null)) {
+      return rs.next();
     }
   }
 
