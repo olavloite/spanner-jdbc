@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -103,6 +104,52 @@ public class ExtendedModeIT extends AbstractSpecificIntegrationTest {
     getConnection().commit();
     try (ResultSet rs = getConnection().createStatement()
         .executeQuery("select count(*) from test where id=30 and name like '3%'")) {
+      while (rs.next()) {
+        assertEquals(0L, rs.getLong(1));
+      }
+    }
+  }
+
+  @Test
+  public void test4_ExtendedModeUpdateWithNull() throws SQLException {
+    ((CloudSpannerConnection) getConnection()).setAllowExtendedMode(true);
+    try (ResultSet rs = getConnection().createStatement()
+        .executeQuery("select count(*) from test where id=40 and name like '4%'")) {
+      while (rs.next()) {
+        assertEquals(1L, rs.getLong(1));
+      }
+    }
+    PreparedStatement ps = getConnection()
+        .prepareStatement("delete from test where id=? and name like coalesce(?, '5%')");
+    ps.setLong(1, 40L);
+    ps.setNull(2, Types.NVARCHAR);
+    ps.executeUpdate();
+    getConnection().commit();
+    try (ResultSet rs = getConnection().createStatement()
+        .executeQuery("select count(*) from test where id=40 and name like '4%'")) {
+      while (rs.next()) {
+        assertEquals(1L, rs.getLong(1));
+      }
+    }
+  }
+
+  @Test
+  public void test5_ExtendedModeUpdateWithScaleOrLength() throws SQLException {
+    ((CloudSpannerConnection) getConnection()).setAllowExtendedMode(true);
+    try (ResultSet rs = getConnection().createStatement()
+        .executeQuery("select count(*) from test where id=40 and name like '4%'")) {
+      while (rs.next()) {
+        assertEquals(1L, rs.getLong(1));
+      }
+    }
+    PreparedStatement ps = getConnection()
+        .prepareStatement("delete from test where id=? and name like coalesce(?, '5%')");
+    ps.setLong(1, 40L);
+    ps.setObject(2, "4%", Types.NVARCHAR, 100);
+    ps.executeUpdate();
+    getConnection().commit();
+    try (ResultSet rs = getConnection().createStatement()
+        .executeQuery("select count(*) from test where id=40 and name like '4%'")) {
       while (rs.next()) {
         assertEquals(0L, rs.getLong(1));
       }
