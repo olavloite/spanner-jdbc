@@ -15,10 +15,15 @@ import nl.topicus.jdbc.test.category.UnitTest;
 
 @Category(UnitTest.class)
 public class AbstractTablePartWorkerTest {
+
   private AbstractTablePartWorker createWorker(String sql) throws JSQLParserException {
+    return createWorker(sql, new ParameterStore());
+  }
+
+  private AbstractTablePartWorker createWorker(String sql, ParameterStore parameters)
+      throws JSQLParserException {
     CloudSpannerConnection connection = mock(CloudSpannerConnection.class);
     Select select = (Select) CCJSqlParserUtil.parse(sql);
-    ParameterStore parameters = new ParameterStore();
     DMLOperation operation = DMLOperation.INSERT;
     AbstractTablePartWorker worker = mock(AbstractTablePartWorker.class,
         withSettings().useConstructor(connection, select, parameters, true, operation)
@@ -45,6 +50,12 @@ public class AbstractTablePartWorkerTest {
     assertEquals(
         "SELECT COUNT(*) AS C FROM ((SELECT * FROM FOO UNION ALL SELECT * FROM bar LIMIT 500) LIMIT 1000) Q",
         getTestCount("SELECT * FROM FOO union all select * from bar limit 500", 1000L));
+  }
+
+  @Test
+  public void testGetEstimatedRecordCountWithParameters() throws JSQLParserException {
+    assertEquals("SELECT COUNT(*) AS C FROM ((SELECT * FROM FOO WHERE BAR > ?) LIMIT 1000) Q",
+        getTestCount("SELECT * FROM FOO WHERE BAR > ?", 1000L));
   }
 
 }
