@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import com.google.auth.Credentials;
+import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.SpannerOptions;
@@ -227,6 +228,8 @@ public class CloudSpannerDriver implements Driver {
       builder.setProjectId(key.projectId);
     if (key.credentials != null)
       builder.setCredentials(key.credentials);
+    else
+      builder.setCredentials(NoCredentials.getInstance());
     if (key.host != null)
       builder.setHost(key.host);
     SpannerOptions options = builder.build();
