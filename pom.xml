@@ -273,6 +273,10 @@
 									<shadedPattern>nl.topicus.jdbc.shaded.org.apache.</shadedPattern>
 								</relocation>
 								<relocation>
+									<pattern>org.codehaus.</pattern>
+									<shadedPattern>nl.topicus.jdbc.shaded.org.codehaus.</shadedPattern>
+								</relocation>
+								<relocation>
 									<pattern>org.hamcrest.</pattern>
 									<shadedPattern>nl.topicus.jdbc.shaded.org.hamcrest.</shadedPattern>
 								</relocation>
