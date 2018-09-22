@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import com.google.common.base.Strings;
 import nl.topicus.jdbc.test.category.IntegrationTest;
 
 /**
@@ -102,6 +104,29 @@ public class SelectStatementsWithParametersIT extends AbstractSpecificIntegratio
 				+ "where description='Greater than two'";
 		// @formatter:on
     testSqlStatement(sql, 1, false, 1);
+  }
+
+  @Test
+  public void testSelectWithLargeNumberOfParametersForInClause() throws SQLException {
+    int numberOfParams = 100;
+    String sql = "select * from (select 1 as id) sub where id in ("
+        + Strings.repeat("?,", numberOfParams - 1) + "?)";
+    Object[] params = new Long[numberOfParams];
+    Arrays.fill(params, 1L);
+    testSqlStatement(sql, 1, false, params);
+  }
+
+  @Test
+  public void testSetParameterIndexOutOfBounds() throws SQLException {
+    int numberOfParams = 100;
+    String sql = "select * from (select 1 as id) sub where id in ("
+        + Strings.repeat("?,", numberOfParams - 1) + "?)";
+    PreparedStatement ps = getConnection().prepareStatement(sql);
+    // This used to cause an ArrayIndexOutOfBoundsException
+    ps.setObject(numberOfParams, Long.valueOf(1), Types.BIGINT);
+    Object[] params = new Long[numberOfParams];
+    Arrays.fill(params, 1L);
+    testSqlStatement(sql, 1, false, params);
   }
 
   private void testSqlStatement(String sql) throws SQLException {

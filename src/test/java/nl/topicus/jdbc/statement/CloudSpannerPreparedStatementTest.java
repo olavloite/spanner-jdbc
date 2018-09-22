@@ -1033,6 +1033,14 @@ public class CloudSpannerPreparedStatementTest {
       ps.setNull(1, Types.ARRAY);
       ps.getParameterMetaData();
     }
+
+    @Test
+    public void setHighParameterIndex() throws SQLException {
+      String sql = "INSERT INTO FOO (ID, COL1, COL2) VALUES (?, ?, ?)";
+      CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
+      // This used to cause an ArrayOutOfBoundsException
+      ps.setLong(21, 100L);
+    }
   }
 
   public static class SelectStatementTests {

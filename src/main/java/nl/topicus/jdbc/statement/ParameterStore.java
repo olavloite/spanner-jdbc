@@ -101,12 +101,12 @@ public class ParameterStore {
     highestIndex = Math.max(parameterIndex, highestIndex);
     int arrayIndex = parameterIndex - 1;
     if (arrayIndex >= parameters.length) {
-      parameters = Arrays.copyOf(parameters, Math.max(parameters.length * 2, arrayIndex));
-      types = Arrays.copyOf(types, Math.max(types.length * 2, arrayIndex));
-      nullable = Arrays.copyOf(nullable, Math.max(nullable.length * 2, arrayIndex));
+      parameters = Arrays.copyOf(parameters, Math.max(parameters.length * 2, arrayIndex + 1));
+      types = Arrays.copyOf(types, Math.max(types.length * 2, arrayIndex + 1));
+      nullable = Arrays.copyOf(nullable, Math.max(nullable.length * 2, arrayIndex + 1));
       scalesOrLengths =
-          Arrays.copyOf(scalesOrLengths, Math.max(scalesOrLengths.length * 2, arrayIndex));
-      columns = Arrays.copyOf(columns, Math.max(columns.length * 2, arrayIndex));
+          Arrays.copyOf(scalesOrLengths, Math.max(scalesOrLengths.length * 2, arrayIndex + 1));
+      columns = Arrays.copyOf(columns, Math.max(columns.length * 2, arrayIndex + 1));
     }
     parameters[arrayIndex] = value;
     types[arrayIndex] = sqlType;
