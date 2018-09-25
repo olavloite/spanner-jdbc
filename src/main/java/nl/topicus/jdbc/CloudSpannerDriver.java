@@ -1,5 +1,6 @@
 package nl.topicus.jdbc;
 
+import java.io.IOException;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -13,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import com.google.auth.Credentials;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerExceptionFactory;
@@ -228,12 +230,21 @@ public class CloudSpannerDriver implements Driver {
       builder.setProjectId(key.projectId);
     if (key.credentials != null)
       builder.setCredentials(key.credentials);
-    else
+    else if (!hasDefaultCredentials())
       builder.setCredentials(NoCredentials.getInstance());
     if (key.host != null)
       builder.setHost(key.host);
     SpannerOptions options = builder.build();
     return options.getService();
+  }
+
+  private boolean hasDefaultCredentials() {
+    try {
+      return GoogleCredentials.getApplicationDefault() != null;
+    } catch (IOException e) {
+      // ignore
+    }
+    return false;
   }
 
   @Override
