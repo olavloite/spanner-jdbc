@@ -34,15 +34,15 @@ public abstract class AbstractSpecificIntegrationTest {
   private static final String DEFAULT_HOST = "https://emulator.googlecloudspanner.com:8443";
   private static final String DEFAULT_PROJECT = "test-project";
   private static final String DEFAULT_KEY_FILE = "cloudspanner-emulator-key.json";
-  private static final String DATABASE_ID = "test-database";
+  protected static final String DATABASE_ID = "test-database";
 
   private static Spanner spanner;
-  private static String projectId;
-  private static String instanceId;
-  private static DatabaseId databaseId;
-  private static String credentialsPath;
+  protected static String projectId;
+  protected static String instanceId;
+  protected static DatabaseId databaseId;
+  protected static String credentialsPath;
 
-  private Connection connection;
+  protected Connection connection;
 
   public static String getHost() {
     return System.getProperty("host", DEFAULT_HOST);
