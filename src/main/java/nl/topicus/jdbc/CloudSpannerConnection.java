@@ -178,7 +178,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
     this.database = null;
     this.url = null;
     this.suppliedProperties = null;
-    this.logger = null;
+    int logLevel = CloudSpannerDriver.getLogLevel();
+    synchronized (CloudSpannerConnection.class) {
+      logger = new Logger(nextConnectionID++);
+      logger.setLogLevel(logLevel);
+    }
     this.dbClient = dbClient;
     this.transaction = new CloudSpannerTransaction(dbClient, batchClient, this);
     this.metaDataStore = new MetaDataStore(this);
@@ -190,7 +194,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
     this.database = database;
     this.url = null;
     this.suppliedProperties = null;
-    this.logger = null;
+    int logLevel = CloudSpannerDriver.getLogLevel();
+    synchronized (CloudSpannerConnection.class) {
+      logger = new Logger(nextConnectionID++);
+      logger.setLogLevel(logLevel);
+    }
     this.transaction = new CloudSpannerTransaction(null, null, this);
     this.metaDataStore = new MetaDataStore(this);
   }

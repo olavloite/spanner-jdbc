@@ -95,7 +95,7 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
       }
     } else {
       if (transactionThread == null) {
-        transactionThread = new TransactionThread(dbClient);
+        transactionThread = new TransactionThread(dbClient, connection.getLogger());
         transactionThread.start();
       }
     }

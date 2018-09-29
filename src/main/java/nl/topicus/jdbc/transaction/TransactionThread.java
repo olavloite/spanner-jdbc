@@ -25,6 +25,8 @@ import com.google.cloud.spanner.TransactionRunner;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
 import com.google.common.base.Preconditions;
 import com.google.rpc.Code;
+import nl.topicus.jdbc.CloudSpannerDriver;
+import nl.topicus.jdbc.Logger;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
 
 class TransactionThread extends Thread {
@@ -47,6 +49,10 @@ class TransactionThread extends Thread {
   private enum TransactionStopStatement {
     COMMIT, ROLLBACK, PREPARE, COMMIT_PREPARED, ROLLBACK_PREPARED;
   }
+
+  private final Logger logger;
+
+  private final StackTraceElement[] stackTraceElements;
 
   private final Object monitor = new Object();
 
@@ -87,10 +93,17 @@ class TransactionThread extends Thread {
     return threadInitNumber++;
   }
 
-  TransactionThread(DatabaseClient dbClient) {
+  TransactionThread(DatabaseClient dbClient, Logger logger) {
     super("Google Cloud Spanner JDBC Transaction Thread-" + nextThreadNum());
     Preconditions.checkNotNull(dbClient, "dbClient may not be null");
+    Preconditions.checkNotNull(logger, "logger may not be null");
     this.dbClient = dbClient;
+    this.logger = logger;
+    if (logger != null && logger.logDebug()) {
+      this.stackTraceElements = Thread.currentThread().getStackTrace();
+    } else {
+      this.stackTraceElements = null;
+    }
     setDaemon(true);
   }
 
@@ -103,6 +116,11 @@ class TransactionThread extends Thread {
 
           @Override
           public TransactionStatus run(TransactionContext transaction) throws Exception {
+            long startTime = System.currentTimeMillis();
+            long lastTriggerTime = startTime;
+            boolean stackTraceLoggedForKeepAlive = false;
+            boolean stackTraceLoggedForLongRunning = false;
+            logger.debug("Transaction started");
             status = TransactionStatus.RUNNING;
             while (!stop) {
               try {
@@ -114,11 +132,28 @@ class TransactionThread extends Thread {
                   }
                 } else {
                   // keep alive
+                  logger.info(
+                      "Transaction has been inactive for more than 5 seconds and will do a keep-alive query");
+                  if (!stackTraceLoggedForKeepAlive) {
+                    logStartStackTrace();
+                    stackTraceLoggedForKeepAlive = true;
+                  }
                   try (ResultSet rs = transaction.executeQuery(Statement.of("SELECT 1"))) {
                     rs.next();
                   }
                 }
+                if (!stop && logger.logInfo() && System.currentTimeMillis()
+                    - lastTriggerTime > CloudSpannerDriver.getLongTransactionTrigger()) {
+                  logger.info("Transaction has been running for "
+                      + (System.currentTimeMillis() - startTime) + "ms");
+                  if (!stackTraceLoggedForLongRunning) {
+                    logStartStackTrace();
+                    stackTraceLoggedForLongRunning = true;
+                  }
+                  lastTriggerTime = System.currentTimeMillis();
+                }
               } catch (InterruptedException e) {
+                logger.debug("Transaction interrupted");
                 stopped = true;
                 exception = e;
                 throw e;
@@ -127,35 +162,52 @@ class TransactionThread extends Thread {
 
             switch (stopStatement) {
               case COMMIT:
+                logger.debug("Transaction committed");
                 transaction.buffer(mutations);
                 break;
               case ROLLBACK:
                 // throw an exception to force a rollback
+                logger.debug("Transaction rolled back");
                 throw new RollbackException();
               case PREPARE:
+                logger.debug("Transaction prepare called");
                 XATransaction.prepareMutations(transaction, xid, mutations);
                 break;
               case COMMIT_PREPARED:
+                logger.debug("Transaction commit prepared called");
                 XATransaction.commitPrepared(transaction, xid);
                 break;
               case ROLLBACK_PREPARED:
+                logger.debug("Transaction rollback prepared called");
                 XATransaction.rollbackPrepared(transaction, xid);
                 break;
             }
+            logger.debug("Transaction successfully stopped");
             return TransactionStatus.SUCCESS;
           }
         });
         commitTimestamp = runner.getCommitTimestamp();
       } catch (Exception e) {
         if (e.getCause() instanceof RollbackException) {
+          logger.debug("Transaction successfully rolled back");
           status = TransactionStatus.SUCCESS;
         } else {
+          logger.debug("Transaction threw an exception: " + e.getMessage());
           status = TransactionStatus.FAIL;
           exception = e;
         }
       } finally {
         stopped = true;
         monitor.notifyAll();
+      }
+    }
+  }
+
+  private void logStartStackTrace() {
+    if (stackTraceElements != null) {
+      logger.debug("Transaction was started by: ");
+      for (StackTraceElement ste : stackTraceElements) {
+        logger.debug(ste.toString());
       }
     }
   }

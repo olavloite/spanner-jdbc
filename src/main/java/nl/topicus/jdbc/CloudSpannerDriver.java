@@ -20,6 +20,7 @@ import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.SpannerOptions.Builder;
+import com.google.common.base.Preconditions;
 import nl.topicus.jdbc.CloudSpannerConnection.CloudSpannerDatabaseSpecification;
 
 public class CloudSpannerDriver implements Driver {
@@ -38,6 +39,8 @@ public class CloudSpannerDriver implements Driver {
 
   private static final Logger logger = new Logger();
   static boolean logLevelSet = false;
+  // the number of milliseconds before a transaction is considered long-running
+  private static long longTransactionTrigger = 10000L;
 
   static final int MAJOR_VERSION = 1;
 
@@ -310,6 +313,30 @@ public class CloudSpannerDriver implements Driver {
     if (identifier.charAt(0) == '`' && identifier.charAt(identifier.length() - 1) == '`')
       res = identifier.substring(1, identifier.length() - 1);
     return res;
+  }
+
+  public static long getLongTransactionTrigger() {
+    return longTransactionTrigger;
+  }
+
+  /**
+   * Sets the number of milliseconds that should be used to consider a transaction long-running. If
+   * a log writer has been set for JDBC by calling
+   * {@link DriverManager#setLogWriter(java.io.PrintWriter)} and the log level of the Cloud Spanner
+   * Driver has been set to at least INFO, transactions that are running for more than this number
+   * of milliseconds will log this to the log writer. If the log level of the Cloud Spanner Driver
+   * is set to at least DEBUG, then the driver will also log the stack trace of the call that
+   * started the transaction, making it easier to find the part of your code that is responsible for
+   * the long-running transaction.
+   * 
+   * @param trigger The number of milliseconds that is to be considered a long-running transaction.
+   *        Only values larger than zero are allowed.
+   */
+  public static void setLongTransactionTrigger(long trigger) {
+    synchronized (CloudSpannerDriver.class) {
+      Preconditions.checkArgument(trigger > 0L);
+      longTransactionTrigger = trigger;
+    }
   }
 
   public static void setLogLevel(int logLevel) {
