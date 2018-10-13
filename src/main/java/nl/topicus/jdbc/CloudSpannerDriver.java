@@ -46,7 +46,7 @@ public class CloudSpannerDriver implements Driver {
 
   static final int MINOR_VERSION = 0;
 
-  private static class SpannerKey {
+  static class SpannerKey {
     private final String host;
 
     private final String projectId;

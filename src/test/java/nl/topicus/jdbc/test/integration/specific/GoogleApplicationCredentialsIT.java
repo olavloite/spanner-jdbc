@@ -1,18 +1,20 @@
 package nl.topicus.jdbc.test.integration.specific;
 
 import static org.junit.Assert.assertEquals;
-import java.lang.reflect.Field;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.experimental.categories.Category;
 import nl.topicus.jdbc.test.category.IntegrationTest;
+import nl.topicus.jdbc.test.util.EnvironmentVariablesUtil;
 
 /**
  * Check that connecting to Cloud Spanner works when there is no key file specified in the URL, but
@@ -25,15 +27,13 @@ import nl.topicus.jdbc.test.category.IntegrationTest;
  */
 @Category(IntegrationTest.class)
 public class GoogleApplicationCredentialsIT extends AbstractSpecificIntegrationTest {
+  @Rule
+  public final EnvironmentVariables env = new EnvironmentVariables();
 
   @Override
   @Before
   public void setupConnection() throws SQLException {
-    try {
-      injectEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", getKeyFile());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    env.set("GOOGLE_APPLICATION_CREDENTIALS", getKeyFile());
     StringBuilder url = new StringBuilder("jdbc:cloudspanner:");
     url.append(getHost());
     url.append(";Project=").append(projectId);
@@ -42,6 +42,12 @@ public class GoogleApplicationCredentialsIT extends AbstractSpecificIntegrationT
     url.append(";UseCustomHost=true");
     connection = DriverManager.getConnection(url.toString());
     connection.setAutoCommit(false);
+  }
+
+  @After
+  public void clearDefaultCredentials() throws Exception {
+    env.clear("GOOGLE_APPLICATION_CREDENTIALS");
+    EnvironmentVariablesUtil.clearCachedDefaultCredentials();
   }
 
   @Test
@@ -80,38 +86,5 @@ public class GoogleApplicationCredentialsIT extends AbstractSpecificIntegrationT
       }
     }
     assertEquals(expectedCount, count);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static void injectEnvironmentVariable(String key, String value) throws Exception {
-    Class<?> processEnvironment = Class.forName("java.lang.ProcessEnvironment");
-
-    Field unmodifiableMapField =
-        getAccessibleField(processEnvironment, "theUnmodifiableEnvironment");
-    Object unmodifiableMap = unmodifiableMapField.get(null);
-    injectIntoUnmodifiableMap(key, value, unmodifiableMap);
-
-    Field mapField = getAccessibleField(processEnvironment, "theEnvironment");
-    Map<String, String> map = (Map<String, String>) mapField.get(null);
-    map.put(key, value);
-  }
-
-  private static Field getAccessibleField(Class<?> clazz, String fieldName)
-      throws NoSuchFieldException {
-
-    Field field = clazz.getDeclaredField(fieldName);
-    field.setAccessible(true);
-    return field;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static void injectIntoUnmodifiableMap(String key, String value, Object map)
-      throws ReflectiveOperationException {
-
-    @SuppressWarnings("rawtypes")
-    Class unmodifiableMap = Class.forName("java.util.Collections$UnmodifiableMap");
-    Field field = getAccessibleField(unmodifiableMap, "m");
-    Object obj = field.get(map);
-    ((Map<String, String>) obj).put(key, value);
   }
 }
