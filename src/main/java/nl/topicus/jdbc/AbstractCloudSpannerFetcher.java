@@ -6,7 +6,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import nl.topicus.jdbc.metadata.AbstractCloudSpannerWrapper;
 
 public abstract class AbstractCloudSpannerFetcher extends AbstractCloudSpannerWrapper {
-  private int fetchSize = 1;
+  private int fetchSize = 0;
 
   private int direction = ResultSet.FETCH_FORWARD;
 
@@ -38,12 +38,12 @@ public abstract class AbstractCloudSpannerFetcher extends AbstractCloudSpannerWr
   /**
    * 
    * @param rows The number of rows to fetch
-   * @throws SQLException Thrown if <code>rows&lt;1</code>
+   * @throws SQLException Thrown if <code>rows&lt;0</code>
    * 
    */
   public void setFetchSize(int rows) throws SQLException {
-    if (rows < 1)
-      throw new SQLException("rows cannot be less than 1");
+    if (rows < 0)
+      throw new SQLException("rows cannot be less than 0");
     this.fetchSize = rows;
   }
 
@@ -55,8 +55,8 @@ public abstract class AbstractCloudSpannerFetcher extends AbstractCloudSpannerWr
    *         concrete subclasses
    */
   public int getFetchSize() throws SQLException {
-    if (fetchSize < 1)
-      throw new SQLException("fetchSize cannot be less than 1");
+    if (fetchSize < 0)
+      throw new SQLException("fetchSize cannot be less than 0");
     return fetchSize;
   }
 
