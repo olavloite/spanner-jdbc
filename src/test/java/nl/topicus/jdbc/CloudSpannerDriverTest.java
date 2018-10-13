@@ -24,8 +24,6 @@ import org.junit.runner.RunWith;
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.NoCredentials;
-import com.google.cloud.spanner.Spanner;
-import nl.topicus.jdbc.CloudSpannerDriver.SpannerKey;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.test.util.EnvironmentVariablesUtil;
 
@@ -290,34 +288,28 @@ public class CloudSpannerDriverTest {
     public void testCredentials() throws Exception {
       CloudSpannerDriver driver = CloudSpannerDriver.getDriver();
       assertNotNull(driver);
-      Field spannersField = CloudSpannerDriver.class.getDeclaredField("spanners");
-      spannersField.setAccessible(true);
-      @SuppressWarnings("unchecked")
-      Map<SpannerKey, Spanner> spanners = (Map<SpannerKey, Spanner>) spannersField.get(driver);
-      // Clear spanners to have a known initial situation
-      spanners.clear();
 
       // get connection without any credentials
-      DriverManager.getConnection(
+      CloudSpannerConnection connection = (CloudSpannerConnection) DriverManager.getConnection(
           "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
       // allow ComputeEngineCredentials as this is the default when running on Travis
-      assertTrue(NoCredentials.getInstance().equals(
-          spanners.get(spanners.keySet().stream().findFirst().get()).getOptions().getCredentials())
-          || spanners.get(spanners.keySet().stream().findFirst().get()).getOptions()
-              .getCredentials().getClass().equals(ComputeEngineCredentials.class));
+      assertTrue(
+          NoCredentials.getInstance().equals(connection.getSpanner().getOptions().getCredentials())
+              || connection.getSpanner().getOptions().getCredentials().getClass()
+                  .equals(ComputeEngineCredentials.class));
 
       // get connection with application default credentials
       env.set("GOOGLE_APPLICATION_CREDENTIALS", "cloudspanner-emulator-key.json");
-      DriverManager.getConnection(
+      connection = (CloudSpannerConnection) DriverManager.getConnection(
           "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
       assertEquals(
           GoogleCredentials.fromStream(new FileInputStream("cloudspanner-emulator-key.json")),
-          spanners.get(spanners.keySet().stream().findFirst().get()).getOptions().getCredentials());
+          connection.getSpanner().getOptions().getCredentials());
       EnvironmentVariablesUtil.clearCachedDefaultCredentials();
 
       // get connection without any credentials again
       env.clear("GOOGLE_APPLICATION_CREDENTIALS");
-      CloudSpannerConnection connection = (CloudSpannerConnection) DriverManager.getConnection(
+      connection = (CloudSpannerConnection) DriverManager.getConnection(
           "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
       // allow ComputeEngineCredentials as this is the default when running on Travis
       assertTrue(
