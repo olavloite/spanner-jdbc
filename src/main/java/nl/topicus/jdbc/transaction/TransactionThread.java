@@ -203,8 +203,11 @@ class TransactionThread extends Thread {
         if (e.getCause() instanceof RollbackException) {
           status = TransactionStatus.SUCCESS;
         } else {
-          logger.debug(String.format("%s, %s", getName(),
-              "Transaction threw an exception: " + e.getMessage()));
+          // if statement prevents unnecessary String.format(...) call
+          if (logger.logDebug()) {
+            logger.debug(String.format("%s, %s", getName(),
+                "Transaction threw an exception: " + e.getMessage()));
+          }
           status = TransactionStatus.FAIL;
           exception = e;
         }
