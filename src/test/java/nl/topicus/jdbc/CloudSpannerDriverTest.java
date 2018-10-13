@@ -297,6 +297,7 @@ public class CloudSpannerDriverTest {
           NoCredentials.getInstance().equals(connection.getSpanner().getOptions().getCredentials())
               || connection.getSpanner().getOptions().getCredentials().getClass()
                   .equals(ComputeEngineCredentials.class));
+      EnvironmentVariablesUtil.clearCachedDefaultCredentials();
 
       // get connection with application default credentials
       env.set("GOOGLE_APPLICATION_CREDENTIALS", "cloudspanner-emulator-key.json");
@@ -316,6 +317,7 @@ public class CloudSpannerDriverTest {
           NoCredentials.getInstance().equals(connection.getSpanner().getOptions().getCredentials())
               || connection.getSpanner().getOptions().getCredentials().getClass()
                   .equals(ComputeEngineCredentials.class));
+      EnvironmentVariablesUtil.clearCachedDefaultCredentials();
     }
   }
 
