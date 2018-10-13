@@ -118,9 +118,9 @@ class TransactionThread extends Thread {
           public TransactionStatus run(TransactionContext transaction) throws Exception {
             long startTime = System.currentTimeMillis();
             long lastTriggerTime = startTime;
+            boolean transactionStartedLogged = false;
             boolean stackTraceLoggedForKeepAlive = false;
             boolean stackTraceLoggedForLongRunning = false;
-            logger.debug("Transaction started");
             status = TransactionStatus.RUNNING;
             while (!stop) {
               try {
@@ -132,8 +132,10 @@ class TransactionThread extends Thread {
                   }
                 } else {
                   // keep alive
-                  logger.info(
-                      "Transaction has been inactive for more than 5 seconds and will do a keep-alive query");
+                  transactionStartedLogged =
+                      logTransactionStarted(transactionStartedLogged, startTime);
+                  logger.info(String.format("%s, %s", getName(),
+                      "Transaction has been inactive for more than 5 seconds and will do a keep-alive query"));
                   if (!stackTraceLoggedForKeepAlive) {
                     logStartStackTrace();
                     stackTraceLoggedForKeepAlive = true;
@@ -142,10 +144,13 @@ class TransactionThread extends Thread {
                     rs.next();
                   }
                 }
-                if (!stop && logger.logInfo() && System.currentTimeMillis()
-                    - lastTriggerTime > CloudSpannerDriver.getLongTransactionTrigger()) {
-                  logger.info("Transaction has been running for "
-                      + (System.currentTimeMillis() - startTime) + "ms");
+                if (!stop && logger.logInfo()
+                    && (System.currentTimeMillis() - lastTriggerTime) > CloudSpannerDriver
+                        .getLongTransactionTrigger()) {
+                  transactionStartedLogged =
+                      logTransactionStarted(transactionStartedLogged, startTime);
+                  logger.info(String.format("%s, %s", getName(), "Transaction has been running for "
+                      + (System.currentTimeMillis() - startTime) + "ms"));
                   if (!stackTraceLoggedForLongRunning) {
                     logStartStackTrace();
                     stackTraceLoggedForLongRunning = true;
@@ -153,7 +158,8 @@ class TransactionThread extends Thread {
                   lastTriggerTime = System.currentTimeMillis();
                 }
               } catch (InterruptedException e) {
-                logger.debug("Transaction interrupted");
+                logDebugIfTransactionStartedLogged(transactionStartedLogged,
+                    "Transaction interrupted");
                 stopped = true;
                 exception = e;
                 throw e;
@@ -162,37 +168,43 @@ class TransactionThread extends Thread {
 
             switch (stopStatement) {
               case COMMIT:
-                logger.debug("Transaction committed");
+                logDebugIfTransactionStartedLogged(transactionStartedLogged,
+                    "Transaction committed");
                 transaction.buffer(mutations);
                 break;
               case ROLLBACK:
                 // throw an exception to force a rollback
-                logger.debug("Transaction rolled back");
+                logDebugIfTransactionStartedLogged(transactionStartedLogged,
+                    "Transaction rolled back");
                 throw new RollbackException();
               case PREPARE:
-                logger.debug("Transaction prepare called");
+                logDebugIfTransactionStartedLogged(transactionStartedLogged,
+                    "Transaction prepare called");
                 XATransaction.prepareMutations(transaction, xid, mutations);
                 break;
               case COMMIT_PREPARED:
-                logger.debug("Transaction commit prepared called");
+                logDebugIfTransactionStartedLogged(transactionStartedLogged,
+                    "Transaction commit prepared called");
                 XATransaction.commitPrepared(transaction, xid);
                 break;
               case ROLLBACK_PREPARED:
-                logger.debug("Transaction rollback prepared called");
+                logDebugIfTransactionStartedLogged(transactionStartedLogged,
+                    "Transaction rollback prepared called");
                 XATransaction.rollbackPrepared(transaction, xid);
                 break;
             }
-            logger.debug("Transaction successfully stopped");
+            logDebugIfTransactionStartedLogged(transactionStartedLogged,
+                "Transaction successfully stopped");
             return TransactionStatus.SUCCESS;
           }
         });
         commitTimestamp = runner.getCommitTimestamp();
       } catch (Exception e) {
         if (e.getCause() instanceof RollbackException) {
-          logger.debug("Transaction successfully rolled back");
           status = TransactionStatus.SUCCESS;
         } else {
-          logger.debug("Transaction threw an exception: " + e.getMessage());
+          logger.debug(String.format("%s, %s", getName(),
+              "Transaction threw an exception: " + e.getMessage()));
           status = TransactionStatus.FAIL;
           exception = e;
         }
@@ -203,11 +215,25 @@ class TransactionThread extends Thread {
     }
   }
 
+  private void logDebugIfTransactionStartedLogged(boolean transactionStartedLogged, String log) {
+    if (transactionStartedLogged) {
+      logger.debug(String.format("%s, %s", getName(), log));
+    }
+  }
+
+  private boolean logTransactionStarted(boolean transactionStartedLogged, long startTime) {
+    if (!transactionStartedLogged) {
+      logger.debug(String.format("%s, %s", getName(),
+          "This transaction started at " + new java.sql.Timestamp(startTime).toString()));
+    }
+    return true;
+  }
+
   private void logStartStackTrace() {
     if (stackTraceElements != null) {
-      logger.debug("Transaction was started by: ");
+      logger.debug(String.format("%s, %s", getName(), "Transaction was started by: "));
       for (StackTraceElement ste : stackTraceElements) {
-        logger.debug(ste.toString());
+        logger.debug("\t" + ste.toString());
       }
     }
   }
