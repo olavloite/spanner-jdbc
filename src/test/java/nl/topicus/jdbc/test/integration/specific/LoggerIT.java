@@ -17,16 +17,6 @@ import nl.topicus.jdbc.test.category.IntegrationTest;
 public class LoggerIT extends AbstractSpecificIntegrationTest {
 
   @Test
-  public void testLogDebug() throws SQLException {
-    testLog(CloudSpannerDriver.DEBUG);
-  }
-
-  @Test
-  public void testLogInfo() throws SQLException {
-    testLog(CloudSpannerDriver.INFO);
-  }
-
-  @Test
   public void testLogInfoLongTransaction() throws SQLException, InterruptedException {
     testLogLongTransaction(CloudSpannerDriver.INFO);
   }
@@ -54,24 +44,6 @@ public class LoggerIT extends AbstractSpecificIntegrationTest {
         "Transaction has been inactive for more than 5 seconds and will do a keep-alive query"));
     assertEquals(logLevel >= CloudSpannerDriver.DEBUG,
         writer.toString().contains("Transaction was started by: "));
-  }
-
-  private void testLog(int logLevel) throws SQLException {
-    StringWriter writer = new StringWriter();
-    DriverManager.setLogWriter(new PrintWriter(writer));
-    CloudSpannerConnection connection = (CloudSpannerConnection) getConnection();
-    connection.setAutoCommit(false);
-    connection.getLogger().setLogLevel(logLevel);
-    try (ResultSet rs = connection.createStatement().executeQuery("SELECT 1")) {
-      while (rs.next()) {
-        assertEquals(logLevel >= CloudSpannerDriver.DEBUG,
-            writer.toString().contains("Transaction started"));
-      }
-    }
-    connection.commit();
-    assertEquals(logLevel >= CloudSpannerDriver.DEBUG,
-        writer.toString().contains("Transaction committed"));
-    assertEquals(logLevel < CloudSpannerDriver.DEBUG, writer.toString().isEmpty());
   }
 
 }
