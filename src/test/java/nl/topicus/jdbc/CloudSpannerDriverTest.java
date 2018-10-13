@@ -21,6 +21,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.NoCredentials;
 import com.google.cloud.spanner.Spanner;
@@ -300,8 +301,11 @@ public class CloudSpannerDriverTest {
       DriverManager.getConnection(
           "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
       assertEquals(1, spanners.size());
-      assertEquals(NoCredentials.getInstance(),
-          spanners.get(spanners.keySet().stream().findFirst().get()).getOptions().getCredentials());
+      // allow ComputeEngineCredentials as this is the default when running on Travis
+      assertTrue(NoCredentials.getInstance().equals(
+          spanners.get(spanners.keySet().stream().findFirst().get()).getOptions().getCredentials())
+          || spanners.get(spanners.keySet().stream().findFirst().get()).getOptions()
+              .getCredentials().getClass().equals(ComputeEngineCredentials.class));
 
       // get connection with application default credentials
       env.set("GOOGLE_APPLICATION_CREDENTIALS", "cloudspanner-emulator-key.json");
@@ -318,8 +322,11 @@ public class CloudSpannerDriverTest {
       CloudSpannerConnection connection = (CloudSpannerConnection) DriverManager.getConnection(
           "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
       assertEquals(2, spanners.size());
-      assertEquals(NoCredentials.getInstance(),
-          connection.getSpanner().getOptions().getCredentials());
+      // allow ComputeEngineCredentials as this is the default when running on Travis
+      assertTrue(
+          NoCredentials.getInstance().equals(connection.getSpanner().getOptions().getCredentials())
+              || connection.getSpanner().getOptions().getCredentials().getClass()
+                  .equals(ComputeEngineCredentials.class));
     }
   }
 
