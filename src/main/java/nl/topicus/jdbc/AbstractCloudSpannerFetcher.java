@@ -38,12 +38,11 @@ public abstract class AbstractCloudSpannerFetcher extends AbstractCloudSpannerWr
   /**
    * 
    * @param rows The number of rows to fetch
-   * @throws SQLException Thrown if <code>rows&lt;0</code>
-   * 
+   * @throws SQLException Cannot be thrown by this method, but is added to the method signature in
+   *         order to comply with the interfaces that will be implemented by this abstract class'
+   *         concrete subclasses
    */
   public void setFetchSize(int rows) throws SQLException {
-    if (rows < 0)
-      throw new SQLException("rows cannot be less than 0");
     this.fetchSize = rows;
   }
 
@@ -55,8 +54,6 @@ public abstract class AbstractCloudSpannerFetcher extends AbstractCloudSpannerWr
    *         concrete subclasses
    */
   public int getFetchSize() throws SQLException {
-    if (fetchSize < 0)
-      throw new SQLException("fetchSize cannot be less than 0");
     return fetchSize;
   }
 
