@@ -223,6 +223,12 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
         credentials = getCredentialsFromFile(credentialsPath);
       } else if (oauthToken != null) {
         credentials = getCredentialsFromOAuthToken(oauthToken);
+      } else {
+        try {
+          credentials = GoogleCredentials.getApplicationDefault();
+        } catch (Exception e) {
+          // ignore
+        }
       }
       if (credentials != null) {
         if (credentials instanceof UserCredentials) {

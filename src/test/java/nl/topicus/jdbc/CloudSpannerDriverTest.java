@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -15,11 +16,17 @@ import java.util.Map;
 import java.util.Properties;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.NoCredentials;
+import com.google.cloud.spanner.Spanner;
+import nl.topicus.jdbc.CloudSpannerDriver.SpannerKey;
 import nl.topicus.jdbc.test.category.UnitTest;
+import nl.topicus.jdbc.test.util.EnvironmentVariablesUtil;
 
 @RunWith(Enclosed.class)
 @Category(UnitTest.class)
@@ -271,6 +278,48 @@ public class CloudSpannerDriverTest {
           "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2;OAuthAccessToken="
               + token);
       assertEquals(4, spanners.size());
+    }
+  }
+
+  public static class CredentialsTest {
+    @Rule
+    public final EnvironmentVariables env = new EnvironmentVariables();
+
+    @Test
+    public void testCredentials() throws Exception {
+      CloudSpannerDriver driver = CloudSpannerDriver.getDriver();
+      assertNotNull(driver);
+      Field spannersField = CloudSpannerDriver.class.getDeclaredField("spanners");
+      spannersField.setAccessible(true);
+      @SuppressWarnings("unchecked")
+      Map<SpannerKey, Spanner> spanners = (Map<SpannerKey, Spanner>) spannersField.get(driver);
+      // Clear spanners to have a known initial situation
+      spanners.clear();
+
+      // get connection without any credentials
+      DriverManager.getConnection(
+          "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
+      assertEquals(1, spanners.size());
+      assertEquals(NoCredentials.getInstance(),
+          spanners.get(spanners.keySet().stream().findFirst().get()).getOptions().getCredentials());
+
+      // get connection with application default credentials
+      env.set("GOOGLE_APPLICATION_CREDENTIALS", "cloudspanner-emulator-key.json");
+      DriverManager.getConnection(
+          "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
+      assertEquals(2, spanners.size());
+      assertEquals(
+          GoogleCredentials.fromStream(new FileInputStream("cloudspanner-emulator-key.json")),
+          spanners.get(spanners.keySet().stream().findFirst().get()).getOptions().getCredentials());
+      EnvironmentVariablesUtil.clearCachedDefaultCredentials();
+
+      // get connection without any credentials again
+      env.clear("GOOGLE_APPLICATION_CREDENTIALS");
+      CloudSpannerConnection connection = (CloudSpannerConnection) DriverManager.getConnection(
+          "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
+      assertEquals(2, spanners.size());
+      assertEquals(NoCredentials.getInstance(),
+          connection.getSpanner().getOptions().getCredentials());
     }
   }
 
