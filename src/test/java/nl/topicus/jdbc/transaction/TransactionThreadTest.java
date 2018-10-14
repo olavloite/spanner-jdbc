@@ -13,6 +13,7 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.TransactionRunner;
+import nl.topicus.jdbc.Logger;
 import nl.topicus.jdbc.test.category.UnitTest;
 import nl.topicus.jdbc.transaction.TransactionThread.TransactionStatus;
 
@@ -76,7 +77,7 @@ public class TransactionThreadTest {
     MockTransactionRunner runner = new MockTransactionRunner();
     DatabaseClient dbClient = mock(DatabaseClient.class);
     when(dbClient.readWriteTransaction()).then(new Returns(runner));
-    return new TestSubject(new TransactionThread(dbClient), runner.mock);
+    return new TestSubject(new TransactionThread(dbClient, new Logger()), runner.mock);
   }
 
   @Test
