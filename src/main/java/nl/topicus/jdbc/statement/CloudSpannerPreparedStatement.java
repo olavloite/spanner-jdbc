@@ -15,6 +15,7 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
 import com.google.cloud.spanner.Partition;
 import com.google.cloud.spanner.ReadContext;
+import com.google.cloud.spanner.ValueBinder;
 import com.google.rpc.Code;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -152,6 +153,45 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
     throw new CloudSpannerSQLException(
         "SQL statement not suitable for executeQuery. Expected SELECT-statement.",
         Code.INVALID_ARGUMENT);
+  }
+
+  private com.google.cloud.spanner.Statement.Builder createDMLBuilder(String sql) {
+    String namedSql = convertPositionalParametersToNamedParameters(sql);
+    com.google.cloud.spanner.Statement.Builder builder =
+        com.google.cloud.spanner.Statement.newBuilder(namedSql);
+    setDMLParameters(namedSql, builder);
+
+    return builder;
+  }
+
+  private void setDMLParameters(String sql, com.google.cloud.spanner.Statement.Builder builder) {
+    Character currentEndChar = null;
+    int i = 0;
+    int parIndex = 1;
+
+    while (i < sql.length()) {
+      char c = sql.charAt(i);
+      if (currentEndChar == null) {
+        if (c == '\'' || c == '"' || c == '{') {
+          currentEndChar = c == '{' ? '}' : c;
+        } else if (c == '@') {
+          ValueBinder<com.google.cloud.spanner.Statement.Builder> binder =
+              builder.bind("p" + parIndex);
+          setParamValue(binder, parIndex);
+          parIndex++;
+        }
+      } else if (c == currentEndChar) {
+        currentEndChar = null;
+      }
+      i++;
+    }
+  }
+
+  private <R> void setParamValue(ValueBinder<R> binder, int parIndex) {
+    ValueBinderExpressionVisitorAdapter<R> adapter =
+        new ValueBinderExpressionVisitorAdapter<>(getParameterStore(), binder, null);
+    adapter.setValue(getParameterStore().getParameter(parIndex),
+        getParameterStore().getType(parIndex));
   }
 
   private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement,
@@ -364,8 +404,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
       String ddl = formatDDLStatement(sql);
       return executeDDL(ddl);
     }
-    Mutations mutations = createMutations();
-    return (int) writeMutations(mutations);
+    if (getConnection().isUseServerDML()) {
+      return (int) getConnection().getTransaction().executeUpdate(createDMLBuilder(sql).build());
+    } else {
+      Mutations mutations = createMutations();
+      return (int) writeMutations(mutations);
+    }
   }
 
   private Mutations createMutations() throws SQLException {

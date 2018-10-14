@@ -137,6 +137,9 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
 
   private final Properties suppliedProperties;
 
+  private boolean originalUseServerDML;
+  private boolean useServerDML;
+
   private boolean originalAllowExtendedMode;
   private boolean allowExtendedMode;
 
@@ -658,6 +661,25 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
   }
 
   @Override
+  public boolean isUseServerDML() {
+    return useServerDML;
+  }
+
+  @Override
+  public int setUseServerDML(boolean useServerDML) {
+    this.useServerDML = useServerDML;
+    return 1;
+  }
+
+  boolean isOriginalUseServerDML() {
+    return originalUseServerDML;
+  }
+
+  void setOriginalUseServerDML(boolean useServerDML) {
+    this.originalUseServerDML = useServerDML;
+  }
+
+  @Override
   public boolean isAllowExtendedMode() {
     return allowExtendedMode;
   }
@@ -762,6 +784,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
 
   private Supplier<Boolean> getOriginalValueGetter(String propertyName) {
     if (propertyName.equalsIgnoreCase(
+        ConnectionProperties.getPropertyName(ConnectionProperties.USE_SERVER_DML))) {
+      return this::isOriginalUseServerDML;
+    }
+    if (propertyName.equalsIgnoreCase(
         ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE))) {
       return this::isOriginalAllowExtendedMode;
     }
@@ -791,6 +817,10 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
   }
 
   private SqlFunction<Boolean, Integer> getPropertySetter(String propertyName) {
+    if (propertyName.equalsIgnoreCase(
+        ConnectionProperties.getPropertyName(ConnectionProperties.USE_SERVER_DML))) {
+      return this::setUseServerDML;
+    }
     if (propertyName.equalsIgnoreCase(
         ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE))) {
       return this::setAllowExtendedMode;
@@ -823,6 +853,11 @@ public class CloudSpannerConnection extends AbstractCloudSpannerConnection {
   public ResultSet getDynamicConnectionProperty(CloudSpannerStatement statement,
       String propertyName) throws SQLException {
     Map<String, String> values = new HashMap<>();
+    if (propertyName == null || propertyName.equalsIgnoreCase(
+        ConnectionProperties.getPropertyName(ConnectionProperties.USE_SERVER_DML))) {
+      values.put(ConnectionProperties.getPropertyName(ConnectionProperties.USE_SERVER_DML),
+          String.valueOf(isUseServerDML()));
+    }
     if (propertyName == null || propertyName.equalsIgnoreCase(
         ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE))) {
       values.put(ConnectionProperties.getPropertyName(ConnectionProperties.ALLOW_EXTENDED_MODE),

@@ -50,6 +50,44 @@ class TransactionThread extends Thread {
     COMMIT, ROLLBACK, PREPARE, COMMIT_PREPARED, ROLLBACK_PREPARED;
   }
 
+  private enum StatementType {
+    QUERY, UPDATE;
+  }
+
+  private static class GeneralStatement {
+    private final Statement statement;
+    private final StatementType type;
+
+    private GeneralStatement(Statement statement, StatementType type) {
+      this.statement = statement;
+      this.type = type;
+    }
+  }
+
+  private static class StatementResult {
+    private final ResultSet resultSet;
+    private final Long updateCount;
+    private final RuntimeException exception;
+
+    private static StatementResult of(ResultSet resultSet) {
+      return new StatementResult(resultSet, null, null);
+    }
+
+    private static StatementResult of(Long updateCount) {
+      return new StatementResult(null, updateCount, null);
+    }
+
+    private static StatementResult of(RuntimeException exception) {
+      return new StatementResult(null, null, exception);
+    }
+
+    private StatementResult(ResultSet resultSet, Long updateCount, RuntimeException exception) {
+      this.resultSet = resultSet;
+      this.updateCount = updateCount;
+      this.exception = exception;
+    }
+  }
+
   private final Logger logger;
 
   private final StackTraceElement[] stackTraceElements;
@@ -83,9 +121,9 @@ class TransactionThread extends Thread {
 
   private Map<Savepoint, Integer> savepoints = new HashMap<>();
 
-  private BlockingQueue<Statement> statements = new LinkedBlockingQueue<>();
+  private BlockingQueue<GeneralStatement> statements = new LinkedBlockingQueue<>();
 
-  private BlockingQueue<ResultSet> resultSets = new LinkedBlockingQueue<>();
+  private BlockingQueue<StatementResult> statementResults = new LinkedBlockingQueue<>();
 
   private static int threadInitNumber;
 
@@ -124,11 +162,28 @@ class TransactionThread extends Thread {
             status = TransactionStatus.RUNNING;
             while (!stop) {
               try {
-                Statement statement = statements.poll(5, TimeUnit.SECONDS);
+                GeneralStatement statement = statements.poll(5, TimeUnit.SECONDS);
                 if (statement != null) {
-                  String sql = statement.getSql();
+                  String sql = statement.statement.getSql();
                   if (!stopStatementStrings.contains(sql)) {
-                    resultSets.put(transaction.executeQuery(statement));
+                    try {
+                      switch (statement.type) {
+                        case QUERY:
+                          statementResults.put(
+                              StatementResult.of(transaction.executeQuery(statement.statement)));
+                          break;
+                        case UPDATE:
+                          statementResults.put(
+                              StatementResult.of(transaction.executeUpdate(statement.statement)));
+                          break;
+                        default:
+                          throw new IllegalStateException(
+                              "Unknown statement type: " + statement.type);
+                      }
+                    } catch (RuntimeException e) {
+                      statementResults.put(StatementResult.of(e));
+                      throw e;
+                    }
                   }
                 } else {
                   // keep alive
@@ -243,8 +298,15 @@ class TransactionThread extends Thread {
 
   ResultSet executeQuery(Statement statement) {
     try {
-      statements.put(statement);
-      return resultSets.take();
+      statements.put(new GeneralStatement(statement, StatementType.QUERY));
+      StatementResult res = statementResults.take();
+      if (res.exception != null) {
+        throw res.exception;
+      } else if (res.resultSet != null) {
+        return res.resultSet;
+      } else {
+        throw new IllegalStateException("Statement did not return a resultset");
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new QueryException("Query execution interrupted", e);
@@ -269,6 +331,23 @@ class TransactionThread extends Thread {
     Iterator<Mutation> it = mutations.iterator();
     while (it.hasNext())
       buffer(it.next());
+  }
+
+  long executeUpdate(Statement statement) {
+    try {
+      statements.put(new GeneralStatement(statement, StatementType.UPDATE));
+      StatementResult res = statementResults.take();
+      if (res.exception != null) {
+        throw res.exception;
+      } else if (res.updateCount != null) {
+        return res.updateCount;
+      } else {
+        throw new IllegalStateException("Statement did not return an update count");
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new QueryException("Update execution interrupted", e);
+    }
   }
 
   void setSavepoint(Savepoint savepoint) {
@@ -341,7 +420,7 @@ class TransactionThread extends Thread {
     stop = true;
     // Add a statement object in order to get the transaction thread to
     // proceed
-    statements.add(Statement.of(statement.name()));
+    statements.add(new GeneralStatement(Statement.of(statement.name()), StatementType.QUERY));
     synchronized (monitor) {
       while (!stopped || status == TransactionStatus.NOT_STARTED
           || status == TransactionStatus.RUNNING) {

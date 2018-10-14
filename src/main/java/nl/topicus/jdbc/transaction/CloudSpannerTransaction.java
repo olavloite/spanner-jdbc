@@ -235,6 +235,14 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
   }
 
   @Override
+  public long executeUpdate(Statement statement) {
+    checkTransaction();
+    if (transactionThread == null)
+      throw new IllegalStateException("Updates are not allowed in read-only mode");
+    return transactionThread.executeUpdate(statement);
+  }
+
+  @Override
   public ResultSet executeQuery(Statement statement, QueryOption... options) {
     checkTransaction();
     if (batchReadOnlyTransaction != null)

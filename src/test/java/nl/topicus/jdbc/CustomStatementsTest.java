@@ -28,8 +28,8 @@ import nl.topicus.jdbc.test.category.UnitTest;
 @Category(UnitTest.class)
 public class CustomStatementsTest {
   private static final List<String> CONNECTION_PROPERTIES =
-      Arrays.asList("AllowExtendedMode", "AsyncDdlOperations", "AutoBatchDdlOperations",
-          "ReportDefaultSchemaAsNull", "BatchReadOnlyMode");
+      Arrays.asList("UseServerDML", "AllowExtendedMode", "AsyncDdlOperations",
+          "AutoBatchDdlOperations", "ReportDefaultSchemaAsNull", "BatchReadOnlyMode");
 
   private Connection connection;
 

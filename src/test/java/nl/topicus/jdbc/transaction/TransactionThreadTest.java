@@ -55,6 +55,11 @@ public class TransactionThreadTest {
       return commitTimestamp;
     }
 
+    @Override
+    public TransactionRunner allowNestedTransaction() {
+      return this;
+    }
+
   }
 
   @FunctionalInterface
