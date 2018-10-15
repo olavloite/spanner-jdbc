@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runners.MethodSorters;
 import nl.topicus.jdbc.test.category.IntegrationTest;
+import nl.topicus.jdbc.util.EnglishNumberToWords;
 
 @Category(IntegrationTest.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -117,6 +118,30 @@ public class UseServerDmlIT extends AbstractSpecificIntegrationTest {
       }
       getConnection().commit();
     }
+  }
+
+  @Test
+  public void test7_BatchedInsert() throws SQLException {
+    try (PreparedStatement ps =
+        getConnection().prepareStatement("insert into test (id, name) values (?, ?)")) {
+      for (long l = 1L; l <= 10L; l++) {
+        ps.setLong(1, l);
+        ps.setString(2, EnglishNumberToWords.convert(l));
+        ps.addBatch();
+      }
+      ps.executeBatch();
+    }
+    try (ResultSet rs =
+        getConnection().createStatement().executeQuery("select * from test order by id")) {
+      int count = 0;
+      while (rs.next()) {
+        count++;
+        assertEquals(count, rs.getInt(1));
+        assertEquals(EnglishNumberToWords.convert(count), rs.getString(2));
+      }
+      assertEquals(10, count);
+    }
+    getConnection().commit();
   }
 
 }

@@ -79,6 +79,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
   private boolean forceUpdate;
 
   private List<Mutations> batchMutations = new ArrayList<>();
+  private List<com.google.cloud.spanner.Statement> batchStatements = new ArrayList<>();
 
   public CloudSpannerPreparedStatement(String sql, CloudSpannerConnection connection,
       DatabaseClient dbClient) {
@@ -370,26 +371,52 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
     if (isSelectStatement(sqlTokens)) {
       throw new SQLFeatureNotSupportedException("SELECT statements may not be batched");
     }
-    Mutations mutations = createMutations();
-    batchMutations.add(mutations);
+    if (getConnection().isUseServerDML()) {
+      if (!batchMutations.isEmpty()) {
+        throw new CloudSpannerSQLException(
+            "Mixing batched mutations and dml statements is not allowed", Code.FAILED_PRECONDITION);
+      }
+      batchStatements.add(createDMLBuilder(sql).build());
+    } else {
+      if (!batchStatements.isEmpty()) {
+        throw new CloudSpannerSQLException(
+            "Mixing batched mutations and dml statements is not allowed", Code.FAILED_PRECONDITION);
+      }
+      Mutations mutations = createMutations();
+      batchMutations.add(mutations);
+    }
     getParameterStore().clearParameters();
   }
 
   @Override
   public void clearBatch() throws SQLException {
     batchMutations.clear();
+    batchStatements.clear();
     getParameterStore().clearParameters();
   }
 
   @Override
   public int[] executeBatch() throws SQLException {
-    int[] res = new int[batchMutations.size()];
-    int index = 0;
-    for (Mutations mutation : batchMutations) {
-      res[index] = (int) writeMutations(mutation);
-      index++;
+    int[] res;
+    if (!batchMutations.isEmpty()) {
+      res = new int[batchMutations.size()];
+      int index = 0;
+      for (Mutations mutation : batchMutations) {
+        res[index] = (int) writeMutations(mutation);
+        index++;
+      }
+      batchMutations.clear();
+    } else if (!batchStatements.isEmpty()) {
+      res = new int[batchStatements.size()];
+      int index = 0;
+      for (com.google.cloud.spanner.Statement statement : batchStatements) {
+        res[index] = (int) getConnection().getTransaction().executeUpdate(statement);
+        index++;
+      }
+      batchStatements.clear();
+    } else {
+      res = new int[0];
     }
-    batchMutations.clear();
     getParameterStore().clearParameters();
     return res;
   }
