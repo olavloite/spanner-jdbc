@@ -129,6 +129,13 @@ public class SelectStatementsWithParametersIT extends AbstractSpecificIntegratio
     testSqlStatement(sql, 1, false, params);
   }
 
+  @Test
+  public void testSelectArrayIndex() throws SQLException {
+    String sql =
+        "SELECT DISTINCT DOMAIN FROM (SELECT 'test' as DOMAIN, 4 as client_id, 42 as profile_id, array (select 1 union all select 2 union all select 3) as visits) foo WHERE client_id=4 AND profile_id=42 AND visits[0] > 0";
+    testSqlStatement(sql, 1, false);
+  }
+
   private void testSqlStatement(String sql) throws SQLException {
     testSqlStatement(sql, 1, true);
   }
