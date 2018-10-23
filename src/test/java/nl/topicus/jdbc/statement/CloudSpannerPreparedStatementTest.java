@@ -1092,7 +1092,7 @@ public class CloudSpannerPreparedStatementTest {
     public void testInvalidSQL() throws SQLException, MalformedURLException {
       thrown.expect(SQLException.class);
       thrown.expectMessage(CloudSpannerPreparedStatement.PARSE_ERROR);
-      String sql = "SELECT * FOO";
+      String sql = "SELECT * FOO WHERE some_param=?";
       CloudSpannerPreparedStatement ps = CloudSpannerTestObjects.createPreparedStatement(sql);
       try (ResultSet rs = ps.executeQuery()) {
       }
@@ -1249,10 +1249,10 @@ public class CloudSpannerPreparedStatementTest {
       try {
         Statement statement = CCJSqlParserUtil.parse(ps.sanitizeSQL(sql));
         Method createSelectBuilder = CloudSpannerPreparedStatement.class
-            .getDeclaredMethod("createSelectBuilder", Statement.class, String.class);
+            .getDeclaredMethod("createSelectBuilder", boolean.class, Statement.class, String.class);
         createSelectBuilder.setAccessible(true);
-        res = (com.google.cloud.spanner.Statement.Builder) createSelectBuilder.invoke(ps, statement,
-            sql);
+        res = (com.google.cloud.spanner.Statement.Builder) createSelectBuilder.invoke(ps, true,
+            statement, sql);
       } catch (NoSuchMethodException | SecurityException | IllegalAccessException
           | IllegalArgumentException | JSQLParserException e) {
         throw new RuntimeException(e);

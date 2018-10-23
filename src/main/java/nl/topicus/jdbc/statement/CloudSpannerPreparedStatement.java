@@ -15,6 +15,7 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
 import com.google.cloud.spanner.Partition;
 import com.google.cloud.spanner.ReadContext;
+import com.google.common.base.Preconditions;
 import com.google.rpc.Code;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -135,15 +136,24 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
       return custom.executeQuery(sqlTokens);
     }
     Statement statement;
+    boolean containsParameters = containsParameters(sql);
     try {
       statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
     } catch (JSQLParserException | TokenMgrException e) {
-      throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
-          Code.INVALID_ARGUMENT, e);
+      if (containsParameters) {
+        throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
+            Code.INVALID_ARGUMENT, e);
+      } else {
+        // accept unparseable statement
+        statement = null;
+      }
     }
-    if (statement instanceof Select) {
-      determineForceSingleUseReadContext((Select) statement);
-      com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement, sql);
+    if (statement == null || statement instanceof Select) {
+      if (statement != null) {
+        determineForceSingleUseReadContext((Select) statement);
+      }
+      com.google.cloud.spanner.Statement.Builder builder =
+          createSelectBuilder(containsParameters, statement, sql);
       try (ReadContext context = getReadContext()) {
         com.google.cloud.spanner.ResultSet rs = context.executeQuery(builder.build());
         return new CloudSpannerResultSet(this, rs, sql);
@@ -154,14 +164,33 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
         Code.INVALID_ARGUMENT);
   }
 
-  private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement,
-      String sql) {
-    String namedSql = convertPositionalParametersToNamedParameters(sql);
+  private com.google.cloud.spanner.Statement.Builder createSelectBuilder(boolean containsParameters,
+      Statement statement, String sql) {
+    Preconditions.checkArgument(!containsParameters || statement != null,
+        "The statement may not be null if it contains parameters");
+    String namedSql = containsParameters ? convertPositionalParametersToNamedParameters(sql) : sql;
     com.google.cloud.spanner.Statement.Builder builder =
         com.google.cloud.spanner.Statement.newBuilder(namedSql);
-    setSelectParameters(((Select) statement).getSelectBody(), builder);
+    if (containsParameters) {
+      setSelectParameters(((Select) statement).getSelectBody(), builder);
+    }
 
     return builder;
+  }
+
+  private boolean containsParameters(String sql) {
+    boolean inString = false;
+    int i = 0;
+    while (i < sql.length()) {
+      char c = sql.charAt(i);
+      if (c == '\'') {
+        inString = !inString;
+      } else if (c == '?' && !inString) {
+        return true;
+      }
+      i++;
+    }
+    return false;
   }
 
   private String convertPositionalParametersToNamedParameters(String sql) {
@@ -434,7 +463,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
     ItemsList items = insert.getItemsList();
     if (generateParameterMetaData && items == null && insert.getSelect() != null) {
       // Just initialize the parameter meta data of the select statement
-      createSelectBuilder(insert.getSelect(), insert.getSelect().toString());
+      createSelectBuilder(true, insert.getSelect(), insert.getSelect().toString());
       return null;
     }
     if (!(items instanceof ExpressionList)) {
@@ -588,18 +617,25 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
     if (custom != null)
       return custom.execute(sqlTokens);
     Statement statement = null;
+    boolean containsParameters = containsParameters(sql);
     boolean ddl = isDDLStatement();
     if (!ddl) {
       try {
         statement = CCJSqlParserUtil.parse(sanitizeSQL(sql));
       } catch (JSQLParserException | TokenMgrException e) {
-        throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
-            Code.INVALID_ARGUMENT, e);
+        if (containsParameters) {
+          throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
+              Code.INVALID_ARGUMENT, e);
+        }
+        // no parameters --> ignore
       }
     }
-    if (!ddl && statement instanceof Select) {
-      determineForceSingleUseReadContext((Select) statement);
-      com.google.cloud.spanner.Statement.Builder builder = createSelectBuilder(statement, sql);
+    if (!ddl && (statement == null || statement instanceof Select)) {
+      if (statement != null) {
+        determineForceSingleUseReadContext((Select) statement);
+      }
+      com.google.cloud.spanner.Statement.Builder builder =
+          createSelectBuilder(containsParameters, statement, sql);
       if (!isForceSingleUseReadContext() && getConnection().isBatchReadOnly()) {
         List<Partition> partitions = partitionQuery(builder.build());
         currentResultSets = new ArrayList<>(partitions.size());
@@ -641,7 +677,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
       } else if (statement instanceof Select) {
         // Create select builder, but don't do anything with it. This
         // initializes column names of the parameter store.
-        createSelectBuilder(statement, sql);
+        createSelectBuilder(true, statement, sql);
       }
     } catch (JSQLParserException | TokenMgrException e) {
       throw new CloudSpannerSQLException(PARSE_ERROR + sql + ": " + e.getLocalizedMessage(),
