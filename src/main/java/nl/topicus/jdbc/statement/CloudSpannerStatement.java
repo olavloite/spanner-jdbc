@@ -38,8 +38,7 @@ public class CloudSpannerStatement extends AbstractCloudSpannerStatement {
 
   protected int lastUpdateCount = -1;
 
-  private Pattern commentPattern =
-      Pattern.compile("//.*|/\\*((.|\\n)(?!=*/))+\\*/|--.*(?=\\n)", Pattern.DOTALL);
+  private Pattern commentPattern = Pattern.compile("//.*|/\\*(.|[\\r\\n])*?\\*/|--.*(?=\\n)");
 
   private BatchMode batchMode = BatchMode.NONE;
 
