@@ -163,11 +163,6 @@ public class CloudSpannerConnectionTest {
   }
 
   @Test
-  public void testGetClientId() {
-    Assert.assertNull(subject.getClientId());
-  }
-
-  @Test
   public void testCreateArrayOf() throws SQLException {
     Assert.assertNotNull(subject.createArrayOf("INT64", new Long[] {1L, 2L, 3L}));
     Assert.assertNotNull(subject.createArrayOf("STRING", new String[] {"one", "two", "three"}));
