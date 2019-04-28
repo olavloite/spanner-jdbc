@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -293,10 +294,17 @@ public class CloudSpannerDriverTest {
       CloudSpannerConnection connection = (CloudSpannerConnection) DriverManager.getConnection(
           "jdbc:cloudspanner://localhost;Project=adroit-hall-123;Instance=test-instance;Database=testdb2");
       // allow ComputeEngineCredentials as this is the default when running on Travis
-      assertTrue(
-          NoCredentials.getInstance().equals(connection.getSpanner().getOptions().getCredentials())
-              || connection.getSpanner().getOptions().getCredentials().getClass()
-                  .equals(ComputeEngineCredentials.class));
+      GoogleCredentials def = null;
+      try {
+        def = GoogleCredentials.getApplicationDefault();
+      } catch (IOException e) {
+        // ignore
+      }
+      assertTrue(NoCredentials.getInstance()
+          .equals(connection.getSpanner().getOptions().getCredentials())
+          || connection.getSpanner().getOptions().getCredentials().getClass()
+              .equals(ComputeEngineCredentials.class)
+          || (def != null && connection.getSpanner().getOptions().getCredentials().equals(def)));
       EnvironmentVariablesUtil.clearCachedDefaultCredentials();
 
       // get connection with application default credentials
