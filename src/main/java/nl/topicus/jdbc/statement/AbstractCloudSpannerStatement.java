@@ -74,7 +74,9 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
       sql = sql + " FOO=BAR";
     }
     // Remove @{FORCE_INDEX...} statements
-    sql = sql.replaceAll("(?is)\\@\\{\\s*FORCE_INDEX.*\\}", "");
+    // sql = sql.replaceAll("(?is)\\@\\{(FORCE_INDEX|JOIN_TYPE)([^}]+)\\}", "");
+    sql = sql.replaceAll("(?is)\\@\\{\\s*FORCE_INDEX.*?\\}", "");
+    sql = sql.replaceAll("(?is)\\@\\{\\s*JOIN_TYPE.*?\\}", "");
     // Remove 'INTERVAL INT64_expr date_part' calls
     sql = sql.replaceAll("(?is),\\s*INTERVAL\\s+", ",");
     sql = sql.replaceAll("(?is)\\s+DAY\\s*\\)", ")");

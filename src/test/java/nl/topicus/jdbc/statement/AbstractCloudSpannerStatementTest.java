@@ -39,6 +39,8 @@ public class AbstractCloudSpannerStatementTest {
   public void testSanitizeSQL() {
     assertEquals("SELECT * FROM FOO WHERE ID=?",
         subject.sanitizeSQL("SELECT * FROM FOO@{FORCE_INDEX=BAR_INDEX} WHERE ID=?"));
+    assertEquals("SELECT * FROM FOO WHERE ID=?",
+        subject.sanitizeSQL("SELECT * FROM FOO@{FORCE_INDEX=BAR_INDEX} WHERE ID=?"));
     assertEquals("SELECT *\nFROM FOO\nWHERE ID=?",
         subject.sanitizeSQL("SELECT *\nFROM FOO@{FORCE_INDEX=BAR_INDEX}\nWHERE ID=?"));
     assertEquals("SELECT *\n\tFROM FOO\n\tWHERE ID=?",
@@ -51,6 +53,25 @@ public class AbstractCloudSpannerStatementTest {
         .sanitizeSQL("SELECT *\n\t   FROM  FOO@{ force_index = BAR_INDEX }\n\t   WHERE ID = ?"));
     assertEquals("SELECT *\n\t   FROM  FOO\n\t   WHERE ID = ?", subject
         .sanitizeSQL("SELECT *\n\t   FROM  FOO@{ force_index =\n BAR_INDEX }\n\t   WHERE ID = ?"));
+
+    String sql = "SELECT AlbumId, AlbumTitle, MarketingBudget\n"
+        + "FROM Albums@{FORCE_INDEX=AlbumsByAlbumTitle}\n"
+        + "WHERE SingerId = 1 AND AlbumTitle >= 'Aardvark' AND AlbumTitle < 'Goo'";
+    String sanitized = "SELECT AlbumId, AlbumTitle, MarketingBudget\n" + "FROM Albums\n"
+        + "WHERE SingerId = 1 AND AlbumTitle >= 'Aardvark' AND AlbumTitle < 'Goo'";
+    assertEquals(sanitized, subject.sanitizeSQL(sql));
+    sql = "SELECT * FROM tbl_a@{FORCE_INDEX=abc} LEFT JOIN@{JOIN_TYPE=LOOP_JOIN} tbl_b";
+    sanitized = "SELECT * FROM tbl_a LEFT JOIN tbl_b";
+    assertEquals(sanitized, subject.sanitizeSQL(sql));
+    sql = "SELECT * FROM tbl_a@{FORCE_INDEX=abc} LEFT JOIN tbl_b";
+    sanitized = "SELECT * FROM tbl_a LEFT JOIN tbl_b";
+    assertEquals(sanitized, subject.sanitizeSQL(sql));
+    sql = "SELECT * FROM tbl_a LEFT JOIN@{JOIN_TYPE=LOOP_JOIN} tbl_b";
+    sanitized = "SELECT * FROM tbl_a LEFT JOIN tbl_b";
+    assertEquals(sanitized, subject.sanitizeSQL(sql));
+    sql = "SELECT * FROM tbl_a@{FORCE_INDEX=abc} LEFT JOIN tbl_b";
+    sanitized = "SELECT * FROM tbl_a LEFT JOIN tbl_b";
+    assertEquals(sanitized, subject.sanitizeSQL(sql));
 
     assertEquals("INSERT INTO TAB (ID, COL1) VALUES (?, ?) ON DUPLICATE KEY UPDATE FOO=BAR",
         subject.sanitizeSQL("INSERT INTO TAB (ID, COL1) VALUES (?, ?) ON DUPLICATE KEY UPDATE"));
