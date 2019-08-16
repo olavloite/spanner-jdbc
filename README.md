@@ -6,13 +6,13 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=nl.topicus%3Aspanner-jdbc&metric=security_rating)](https://sonarcloud.io/dashboard/index/nl.topicus%3Aspanner-jdbc)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=nl.topicus%3Aspanner-jdbc&metric=sqale_rating)](https://sonarcloud.io/dashboard/index/nl.topicus%3Aspanner-jdbc)
 
+**Note: There is now a Google backed open source JDBC driver for Google Cloud Spanner.**
+It is recommended that you use that driver. It can be found here: https://github.com/googleapis/google-cloud-java/tree/master/google-cloud-clients/google-cloud-contrib/google-cloud-spanner-jdbc
+
+This community driver will continue to exist in its current form. It will however not implement any new features that Cloud Spanner might add in the future.
 
 # spanner-jdbc
-JDBC Driver for Google Cloud Spanner
-
-**NEW: Google Cloud Spanner Emulator:** [Emulator test project](https://github.com/olavloite/spanner-emulator-tester)
-
-Sign up for a free trial account for a Google Cloud Spanner Emulator on https://emulator.googlecloudspanner.com . A tutorial on how to set it up can be found on http://www.googlecloudspanner.com/2018/07/create-trial-account-for-cloud-spanner.html
+Community Open Source JDBC Driver for Google Cloud Spanner
 
 An open source JDBC Driver for Google Cloud Spanner, the horizontally scalable, globally consistent, relational database service from Google. The JDBC Driver that is supplied by Google is quite limited, as it does not allow any inserts, updates or deletes, nor does it allow DDL-statements.
 
