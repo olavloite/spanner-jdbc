@@ -85,19 +85,23 @@ public class CloudSpannerTransaction implements TransactionContext, BatchReadOnl
   }
 
   public void begin() throws SQLException {
-    if (connection.isBatchReadOnly()) {
-      if (batchReadOnlyTransaction == null) {
-        batchReadOnlyTransaction = batchClient.batchReadOnlyTransaction(TimestampBound.strong());
+    try {
+      if (connection.isBatchReadOnly()) {
+        if (batchReadOnlyTransaction == null) {
+          batchReadOnlyTransaction = batchClient.batchReadOnlyTransaction(TimestampBound.strong());
+        }
+      } else if (connection.isReadOnly()) {
+        if (readOnlyTransaction == null) {
+          readOnlyTransaction = dbClient.readOnlyTransaction();
+        }
+      } else {
+        if (transactionThread == null) {
+          transactionThread = new TransactionThread(dbClient, connection.getLogger());
+          transactionThread.start();
+        }
       }
-    } else if (connection.isReadOnly()) {
-      if (readOnlyTransaction == null) {
-        readOnlyTransaction = dbClient.readOnlyTransaction();
-      }
-    } else {
-      if (transactionThread == null) {
-        transactionThread = new TransactionThread(dbClient, connection.getLogger());
-        transactionThread.start();
-      }
+    } catch (SpannerException e) {
+      throw new CloudSpannerSQLException(e);
     }
   }
 

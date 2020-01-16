@@ -191,10 +191,14 @@ abstract class AbstractCloudSpannerStatement extends AbstractCloudSpannerFetcher
   }
 
   protected ReadContext getReadContext() throws SQLException {
-    if (connection.getAutoCommit() || forceSingleUseReadContext) {
-      return dbClient.singleUse();
+    try {
+      if (connection.getAutoCommit() || forceSingleUseReadContext) {
+        return dbClient.singleUse();
+      }
+      return connection.getTransaction();
+    } catch (SpannerException e) {
+      throw new CloudSpannerSQLException(e);
     }
-    return connection.getTransaction();
   }
 
   protected List<Partition> partitionQuery(com.google.cloud.spanner.Statement statement) {

@@ -14,17 +14,27 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import com.google.cloud.ByteArray;
+import com.google.cloud.Date;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseClient;
+import com.google.cloud.spanner.Key;
+import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.Options.QueryOption;
+import com.google.cloud.spanner.Options.ReadOption;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.SpannerException;
+import com.google.cloud.spanner.SpannerExceptionFactory;
 import com.google.cloud.spanner.Statement;
+import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TransactionContext;
 import com.google.cloud.spanner.TransactionRunner;
 import com.google.cloud.spanner.TransactionRunner.TransactionCallable;
+import com.google.cloud.spanner.Type;
 import com.google.common.base.Preconditions;
 import com.google.rpc.Code;
+import com.google.spanner.v1.ResultSetStats;
 import nl.topicus.jdbc.CloudSpannerDriver;
 import nl.topicus.jdbc.Logger;
 import nl.topicus.jdbc.exception.CloudSpannerSQLException;
@@ -107,9 +117,328 @@ class TransactionThread extends Thread {
     setDaemon(true);
   }
 
+  private static final class FailedResultSet implements ResultSet {
+    private final SpannerException e;
+
+    private FailedResultSet(SpannerException e) {
+      this.e = e;
+    }
+
+    @Override
+    public Type getType() {
+      throw e;
+    }
+
+    @Override
+    public int getColumnCount() {
+      throw e;
+    }
+
+    @Override
+    public int getColumnIndex(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public Type getColumnType(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public Type getColumnType(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public boolean isNull(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public boolean isNull(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public boolean getBoolean(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public boolean getBoolean(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public long getLong(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public long getLong(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public double getDouble(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public double getDouble(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public String getString(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public String getString(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public ByteArray getBytes(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public ByteArray getBytes(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public Timestamp getTimestamp(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public Timestamp getTimestamp(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public Date getDate(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public Date getDate(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public boolean[] getBooleanArray(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public boolean[] getBooleanArray(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<Boolean> getBooleanList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<Boolean> getBooleanList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public long[] getLongArray(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public long[] getLongArray(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<Long> getLongList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<Long> getLongList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public double[] getDoubleArray(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public double[] getDoubleArray(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<Double> getDoubleList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<Double> getDoubleList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<String> getStringList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<String> getStringList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<ByteArray> getBytesList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<ByteArray> getBytesList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<Timestamp> getTimestampList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<Timestamp> getTimestampList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<Date> getDateList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<Date> getDateList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public List<Struct> getStructList(int columnIndex) {
+      throw e;
+    }
+
+    @Override
+    public List<Struct> getStructList(String columnName) {
+      throw e;
+    }
+
+    @Override
+    public boolean next() throws SpannerException {
+      throw e;
+    }
+
+    @Override
+    public Struct getCurrentRowAsStruct() {
+      throw e;
+    }
+
+    @Override
+    public void close() {}
+
+    @Override
+    public ResultSetStats getStats() {
+      throw e;
+    }
+  }
+
+  private static final class FailedTransactionContext implements TransactionContext {
+    private final SpannerException e;
+    private final FailedResultSet rs;
+
+    private FailedTransactionContext(SpannerException e) {
+      this.e = e;
+      this.rs = new FailedResultSet(e);
+    }
+
+    @Override
+    public ResultSet read(String table, KeySet keys, Iterable<String> columns,
+        ReadOption... options) {
+      return rs;
+    }
+
+    @Override
+    public ResultSet readUsingIndex(String table, String index, KeySet keys,
+        Iterable<String> columns, ReadOption... options) {
+      return rs;
+    }
+
+    @Override
+    public Struct readRow(String table, Key key, Iterable<String> columns) {
+      throw e;
+    }
+
+    @Override
+    public Struct readRowUsingIndex(String table, String index, Key key, Iterable<String> columns) {
+      throw e;
+    }
+
+    @Override
+    public ResultSet executeQuery(Statement statement, QueryOption... options) {
+      return rs;
+    }
+
+    @Override
+    public ResultSet analyzeQuery(Statement statement, QueryAnalyzeMode queryMode) {
+      return rs;
+    }
+
+    @Override
+    public void close() {}
+
+    @Override
+    public void buffer(Mutation mutation) {}
+
+    @Override
+    public void buffer(Iterable<Mutation> mutations) {}
+  }
+
+  private static final class FailedTransactionRunner implements TransactionRunner {
+    private final SpannerException e;
+
+    private FailedTransactionRunner(SpannerException e) {
+      this.e = e;
+    }
+
+    @Override
+    public <T> T run(TransactionCallable<T> callable) {
+      try {
+        return callable.run(new FailedTransactionContext(e));
+      } catch (Exception e) {
+        throw SpannerExceptionFactory.newSpannerException(e);
+      }
+    }
+
+    @Override
+    public Timestamp getCommitTimestamp() {
+      throw e;
+    }
+  }
+
   @Override
   public void run() {
-    TransactionRunner runner = dbClient.readWriteTransaction();
+    TransactionRunner runner = null;
+    try {
+      runner = dbClient.readWriteTransaction();
+    } catch (SpannerException e) {
+      runner = new FailedTransactionRunner(e);
+    }
     synchronized (monitor) {
       try {
         status = runner.run(new TransactionCallable<TransactionStatus>() {
