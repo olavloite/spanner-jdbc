@@ -145,9 +145,12 @@ public abstract class AbstractSpecificIntegrationTest {
     url.append(";Database=").append(DATABASE_ID);
     url.append(";PvtKeyPath=").append(credentialsPath);
     url.append(";UseCustomHost=true");
+    appendConnectionUrl(url);
     connection = DriverManager.getConnection(url.toString());
     connection.setAutoCommit(false);
   }
+
+  protected void appendConnectionUrl(StringBuilder url) {}
 
   @After
   public void closeConnection() throws SQLException {

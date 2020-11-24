@@ -250,7 +250,8 @@ public class CloudSpannerConnectionTest {
   public void testGetDynamicConnectionProperties() throws SQLException {
     Properties properties = createDefaultProperties();
     try (CloudSpannerConnection connection = createConnection(properties)) {
-      testGetDynamicConnectionProperty(connection, null, 5);
+      testGetDynamicConnectionProperty(connection, null, 6);
+      testGetDynamicConnectionProperty(connection, "USESERVERDML", 1);
       testGetDynamicConnectionProperty(connection, "ALLOWEXTENDEDMODE", 1);
       testGetDynamicConnectionProperty(connection, "ASYNCDDLOPERATIONS", 1);
       testGetDynamicConnectionProperty(connection, "AUTOBATCHDDLOPERATIONS", 1);

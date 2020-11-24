@@ -15,6 +15,7 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Mutation.WriteBuilder;
 import com.google.cloud.spanner.Partition;
 import com.google.cloud.spanner.ReadContext;
+import com.google.cloud.spanner.ValueBinder;
 import com.google.rpc.Code;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -78,6 +79,7 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
   private boolean forceUpdate;
 
   private List<Mutations> batchMutations = new ArrayList<>();
+  private List<com.google.cloud.spanner.Statement> batchStatements = new ArrayList<>();
 
   public CloudSpannerPreparedStatement(String sql, CloudSpannerConnection connection,
       DatabaseClient dbClient) {
@@ -152,6 +154,45 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
     throw new CloudSpannerSQLException(
         "SQL statement not suitable for executeQuery. Expected SELECT-statement.",
         Code.INVALID_ARGUMENT);
+  }
+
+  private com.google.cloud.spanner.Statement.Builder createDMLBuilder(String sql) {
+    String namedSql = convertPositionalParametersToNamedParameters(sql);
+    com.google.cloud.spanner.Statement.Builder builder =
+        com.google.cloud.spanner.Statement.newBuilder(namedSql);
+    setDMLParameters(namedSql, builder);
+
+    return builder;
+  }
+
+  private void setDMLParameters(String sql, com.google.cloud.spanner.Statement.Builder builder) {
+    Character currentEndChar = null;
+    int i = 0;
+    int parIndex = 1;
+
+    while (i < sql.length()) {
+      char c = sql.charAt(i);
+      if (currentEndChar == null) {
+        if (c == '\'' || c == '"' || c == '{') {
+          currentEndChar = c == '{' ? '}' : c;
+        } else if (c == '@') {
+          ValueBinder<com.google.cloud.spanner.Statement.Builder> binder =
+              builder.bind("p" + parIndex);
+          setParamValue(binder, parIndex);
+          parIndex++;
+        }
+      } else if (c == currentEndChar) {
+        currentEndChar = null;
+      }
+      i++;
+    }
+  }
+
+  private <R> void setParamValue(ValueBinder<R> binder, int parIndex) {
+    ValueBinderExpressionVisitorAdapter<R> adapter =
+        new ValueBinderExpressionVisitorAdapter<>(getParameterStore(), binder, null);
+    adapter.setValue(getParameterStore().getParameter(parIndex),
+        getParameterStore().getType(parIndex));
   }
 
   private com.google.cloud.spanner.Statement.Builder createSelectBuilder(Statement statement,
@@ -330,26 +371,52 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
     if (isSelectStatement(sqlTokens)) {
       throw new SQLFeatureNotSupportedException("SELECT statements may not be batched");
     }
-    Mutations mutations = createMutations();
-    batchMutations.add(mutations);
+    if (getConnection().isUseServerDML()) {
+      if (!batchMutations.isEmpty()) {
+        throw new CloudSpannerSQLException(
+            "Mixing batched mutations and dml statements is not allowed", Code.FAILED_PRECONDITION);
+      }
+      batchStatements.add(createDMLBuilder(sql).build());
+    } else {
+      if (!batchStatements.isEmpty()) {
+        throw new CloudSpannerSQLException(
+            "Mixing batched mutations and dml statements is not allowed", Code.FAILED_PRECONDITION);
+      }
+      Mutations mutations = createMutations();
+      batchMutations.add(mutations);
+    }
     getParameterStore().clearParameters();
   }
 
   @Override
   public void clearBatch() throws SQLException {
     batchMutations.clear();
+    batchStatements.clear();
     getParameterStore().clearParameters();
   }
 
   @Override
   public int[] executeBatch() throws SQLException {
-    int[] res = new int[batchMutations.size()];
-    int index = 0;
-    for (Mutations mutation : batchMutations) {
-      res[index] = (int) writeMutations(mutation);
-      index++;
+    int[] res;
+    if (!batchMutations.isEmpty()) {
+      res = new int[batchMutations.size()];
+      int index = 0;
+      for (Mutations mutation : batchMutations) {
+        res[index] = (int) writeMutations(mutation);
+        index++;
+      }
+      batchMutations.clear();
+    } else if (!batchStatements.isEmpty()) {
+      res = new int[batchStatements.size()];
+      int index = 0;
+      for (com.google.cloud.spanner.Statement statement : batchStatements) {
+        res[index] = (int) getConnection().getTransaction().executeUpdate(statement);
+        index++;
+      }
+      batchStatements.clear();
+    } else {
+      res = new int[0];
     }
-    batchMutations.clear();
     getParameterStore().clearParameters();
     return res;
   }
@@ -364,8 +431,12 @@ public class CloudSpannerPreparedStatement extends AbstractCloudSpannerPreparedS
       String ddl = formatDDLStatement(sql);
       return executeDDL(ddl);
     }
-    Mutations mutations = createMutations();
-    return (int) writeMutations(mutations);
+    if (getConnection().isUseServerDML()) {
+      return (int) getConnection().getTransaction().executeUpdate(createDMLBuilder(sql).build());
+    } else {
+      Mutations mutations = createMutations();
+      return (int) writeMutations(mutations);
+    }
   }
 
   private Mutations createMutations() throws SQLException {

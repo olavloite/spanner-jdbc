@@ -143,6 +143,8 @@ public class CloudSpannerDriver implements Driver {
     connection.setSimulateProductName(properties.productName);
     connection.setSimulateMajorVersion(properties.majorVersion);
     connection.setSimulateMinorVersion(properties.minorVersion);
+    connection.setUseServerDML(properties.useServerDML);
+    connection.setOriginalUseServerDML(properties.useServerDML);
     connection.setAllowExtendedMode(properties.allowExtendedMode);
     connection.setOriginalAllowExtendedMode(properties.allowExtendedMode);
     connection.setAsyncDdlOperations(properties.asyncDdlOperations);

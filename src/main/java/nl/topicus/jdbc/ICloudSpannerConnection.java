@@ -24,6 +24,10 @@ public interface ICloudSpannerConnection extends Connection {
 
   public Properties getSuppliedProperties();
 
+  public boolean isUseServerDML();
+
+  public int setUseServerDML(boolean useServerDML);
+
   public boolean isAllowExtendedMode();
 
   public int setAllowExtendedMode(boolean allowExtendedMode);

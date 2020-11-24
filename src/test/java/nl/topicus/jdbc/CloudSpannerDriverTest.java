@@ -160,7 +160,8 @@ public class CloudSpannerDriverTest {
           driver.getPropertyInfo("jdbc:cloudspanner://localhost", null);
       assertEquals(ConnectionProperties.NUMBER_OF_PROPERTIES, properties.length);
       for (DriverPropertyInfo property : properties) {
-        if (property.name.equals("AllowExtendedMode") || property.name.equals("AsyncDdlOperations")
+        if (property.name.equals("UseServerDML") || property.name.equals("AllowExtendedMode")
+            || property.name.equals("AsyncDdlOperations")
             || property.name.equals("AutoBatchDdlOperations")
             || property.name.equals("BatchReadOnlyMode") || property.name.equals("UseCustomHost"))
           assertEquals("false", property.value);
